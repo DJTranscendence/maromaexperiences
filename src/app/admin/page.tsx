@@ -64,7 +64,7 @@ export default function AdminPage() {
       durationHours: parseInt(newTour.duration) || 1,
       minimumGroupSize: newTour.minGroupSize,
       locationId: "default_location",
-      location: newTour.location || "The Maroma Campus",
+      location: newTour.location || "Maroma Campus",
       duration: newTour.duration,
       capacity: newTour.capacity,
       type: newTour.type,
@@ -157,8 +157,8 @@ export default function AdminPage() {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="The Maroma Campus">The Maroma Campus</SelectItem>
-                        <SelectItem value="The Maroma Spa">The Maroma Spa</SelectItem>
+                        <SelectItem value="Maroma Campus">Maroma Campus</SelectItem>
+                        <SelectItem value="Maroma Spa">Maroma Spa</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
