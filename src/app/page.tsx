@@ -44,10 +44,10 @@ export default function Home() {
             From Campus Tours to Artisan-led workshops, discover the heart of Maroma through our bespoke group tours.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14">
+            <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
               Explore Tours
             </Button>
-            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 rounded-full px-10 text-lg h-14 backdrop-blur-sm">
+            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 rounded-full px-10 text-lg h-14 backdrop-blur-sm font-bold drop-shadow-sm">
               Our Story
             </Button>
           </div>
