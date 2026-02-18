@@ -12,7 +12,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Plus, Trash2, Edit, Save, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Trash2, Edit, Save, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
@@ -82,9 +82,9 @@ export default function AdminPage() {
       pricePerPerson: newTour.price,
       durationHours: parseInt(newTour.duration) || 1,
       minimumGroupSize: newTour.minGroupSize,
-      locationId: "default_location", // Reference to a real location if implemented
-      location: newTour.location, // Denormalized for simpler UI
-      duration: newTour.duration, // Denormalized for simpler UI
+      locationId: "default_location",
+      location: newTour.location,
+      duration: newTour.duration,
       capacity: newTour.capacity,
       type: newTour.type,
       highlights: newTour.highlights.split(", ").filter(h => h.length > 0),
@@ -140,7 +140,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Admin Dashboard</h1>
         </div>
@@ -149,7 +149,7 @@ export default function AdminPage() {
           
           {/* Create Tour Form */}
           <div className="lg:col-span-1">
-            <Card className="rounded-2xl border-none shadow-xl sticky top-24">
+            <Card className="rounded-2xl border-none shadow-xl">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">Create Experience</CardTitle>
               </CardHeader>
@@ -164,20 +164,26 @@ export default function AdminPage() {
                 </div>
                 
                 <div className="space-y-3">
-                  <Label>Experience Media</Label>
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    {newTour.imageUrls.map((url, i) => (
-                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
-                        <NextImage src={url} alt="Tour image" fill className="object-cover" />
-                        <button 
-                          onClick={() => removeImage(url)}
-                          className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  <Label>Experience Media Selection</Label>
+                  
+                  {/* Selected Previews */}
+                  {newTour.imageUrls.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mb-4 p-2 border rounded-xl bg-muted/20">
+                      {newTour.imageUrls.map((url, i) => (
+                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden border shadow-sm group">
+                          <NextImage src={url} alt="Tour preview" fill className="object-cover" />
+                          <button 
+                            onClick={() => removeImage(url)}
+                            className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black transition-colors"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Inline Image Browser */}
                   <ImageLibrary 
                     selectedUrls={newTour.imageUrls}
                     onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 

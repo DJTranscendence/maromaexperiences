@@ -2,15 +2,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { Image, Upload, Check, Trash2, Plus, Loader2 } from 'lucide-react';
+import { Check, Plus, Loader2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MediaItem {
   id: string;
@@ -29,10 +29,9 @@ interface ImageLibraryProps {
 export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }: ImageLibraryProps) {
   const { firestore } = useFirestore();
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
-  const [localSelection, setLocalSelection] = useState<string[]>(selectedUrls);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -61,105 +60,107 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
   };
 
   const toggleSelection = (url: string) => {
+    let nextSelection: string[];
     if (multiSelect) {
-      setLocalSelection(prev => 
-        prev.includes(url) ? prev.filter(u => u !== url) : [...prev, url]
-      );
+      nextSelection = selectedUrls.includes(url) 
+        ? selectedUrls.filter(u => u !== url) 
+        : [...selectedUrls, url];
     } else {
-      setLocalSelection([url]);
+      nextSelection = [url];
     }
+    onSelect(nextSelection);
   };
 
-  const handleConfirm = () => {
-    onSelect(localSelection);
-    setIsOpen(false);
-  };
+  const filteredMedia = media?.filter(item => 
+    item.url.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    item.altText?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2 rounded-xl border-dashed border-2 h-24 w-full">
-          <Upload className="w-5 h-5 text-muted-foreground" />
-          <span className="text-muted-foreground">Open Image Library</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-3xl">
-        <DialogHeader>
-          <DialogTitle className="font-headline text-3xl text-primary">Media Library</DialogTitle>
-        </DialogHeader>
+    <div className="space-y-4 border rounded-2xl p-4 bg-muted/10">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-bold text-primary">Media Library</Label>
+          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+            {selectedUrls.length} Selected
+          </span>
+        </div>
         
-        <div className="flex-grow overflow-y-auto p-1 space-y-6">
-          {/* Add New Media */}
-          <div className="bg-muted/30 p-4 rounded-2xl space-y-4 border border-border">
-            <Label className="font-bold text-primary">Add New Image URL</Label>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="Paste image URL here..." 
-                value={newUrl}
-                onChange={e => setNewUrl(e.target.value)}
-                className="rounded-full"
-              />
-              <Button 
-                onClick={handleAddMedia} 
-                disabled={isAdding || !newUrl}
-                className="bg-accent rounded-full px-6"
+        {/* Add New Media Inline */}
+        <div className="flex gap-2">
+          <Input 
+            placeholder="Paste new image URL..." 
+            value={newUrl}
+            onChange={e => setNewUrl(e.target.value)}
+            className="h-9 text-xs rounded-full bg-white"
+          />
+          <Button 
+            onClick={handleAddMedia} 
+            disabled={isAdding || !newUrl}
+            size="sm"
+            className="bg-accent hover:bg-accent/90 rounded-full h-9"
+          >
+            {isAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+          </Button>
+        </div>
+
+        {/* Search Media */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+          <Input 
+            placeholder="Search library..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="h-8 text-xs pl-8 rounded-full bg-white"
+          />
+        </div>
+      </div>
+
+      <ScrollArea className="h-64 rounded-xl border bg-white p-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-6 h-6 animate-spin text-accent" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {filteredMedia?.map((item) => (
+              <div 
+                key={item.id} 
+                className={`group relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                  selectedUrls.includes(item.url) ? "border-accent ring-2 ring-accent/20" : "border-transparent"
+                }`}
+                onClick={() => toggleSelection(item.url)}
               >
-                {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                Add
-              </Button>
-            </div>
-          </div>
-
-          {/* Library Grid */}
-          {isLoading ? (
-            <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {media?.map((item) => (
-                <div 
-                  key={item.id} 
-                  className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-4 transition-all ${
-                    localSelection.includes(item.url) ? "border-accent" : "border-transparent"
-                  }`}
-                  onClick={() => toggleSelection(item.url)}
-                >
-                  <NextImage 
-                    src={item.url} 
-                    alt={item.altText || 'Media'} 
-                    fill 
-                    className="object-cover"
-                  />
-                  {localSelection.includes(item.url) && (
-                    <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
-                      <div className="bg-accent text-white rounded-full p-1 shadow-lg">
-                        <Check className="w-6 h-6" />
-                      </div>
+                <NextImage 
+                  src={item.url} 
+                  alt={item.altText || 'Media'} 
+                  fill 
+                  className="object-cover"
+                />
+                {selectedUrls.includes(item.url) && (
+                  <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                    <div className="bg-accent text-white rounded-full p-0.5 shadow-lg">
+                      <Check className="w-3 h-3" />
                     </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-[10px] text-white truncate">{item.url}</p>
                   </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="text-[8px] text-white truncate">{item.url}</p>
                 </div>
-              ))}
-              {(!media || media.length === 0) && (
-                <div className="col-span-full text-center py-12 border-2 border-dashed rounded-3xl">
-                  <p className="text-muted-foreground">Your library is empty. Add your first image URL above!</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex justify-between items-center pt-4 border-t">
-          <p className="text-sm text-muted-foreground">
-            {localSelection.length} item{localSelection.length !== 1 ? 's' : ''} selected
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)} className="rounded-full px-6">Cancel</Button>
-            <Button onClick={handleConfirm} className="bg-primary rounded-full px-8">Confirm Selection</Button>
+              </div>
+            ))}
+            {(!filteredMedia || filteredMedia.length === 0) && (
+              <div className="col-span-full text-center py-10">
+                <p className="text-xs text-muted-foreground">No images found</p>
+              </div>
+            )}
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        )}
+      </ScrollArea>
+      
+      <p className="text-[10px] text-muted-foreground italic">
+        * Click images to select/deselect them for this experience.
+      </p>
+    </div>
   );
 }
