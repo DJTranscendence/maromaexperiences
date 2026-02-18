@@ -1,7 +1,8 @@
 
+"use client";
+
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { MOCK_TOURS } from "@/lib/mock-data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -9,15 +10,41 @@ import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import IndividualBookingForm from "@/components/booking/IndividualBookingForm";
 import SchoolBookingForm from "@/components/booking/SchoolBookingForm";
 import CorporateBookingForm from "@/components/booking/CorporateBookingForm";
-import { MapPin, Clock, Users, ShieldCheck, Share2, Heart, Calendar } from "lucide-react";
+import { MapPin, Clock, Users, ShieldCheck, Share2, Heart, Calendar, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { Tour } from "@/lib/types";
+import { useParams } from "next/navigation";
 
-export default async function TourDetailsPage({ params }: { params: { id: string } }) {
-  const tourId = (await params).id;
-  const tour = MOCK_TOURS.find(t => t.id === tourId);
+export default function TourDetailsPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const { firestore } = useFirestore();
 
-  if (!tour) notFound();
+  const tourRef = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, "tours", id);
+  }, [firestore, id]);
+
+  const { data: tour, isLoading } = useDoc<Tour>(tourRef);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (!tour) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-headline font-bold">Tour not found</h1>
+        <Loader2 className="w-8 h-8 mt-4 animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -122,7 +149,7 @@ export default async function TourDetailsPage({ params }: { params: { id: string
                     <div className="space-y-6">
                       <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl mb-4">
                         <p className="text-sm text-primary font-medium flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-accent" /> Next Date: {tour.scheduledDates[0]}
+                          <Calendar className="w-4 h-4 text-accent" /> Next Date: {tour.scheduledDates?.[0] || 'TBA'}
                         </p>
                       </div>
                       <IndividualBookingForm tour={tour} />

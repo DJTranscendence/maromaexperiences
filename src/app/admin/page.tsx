@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -10,21 +11,36 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_TOURS } from "@/lib/mock-data";
 import { useState } from "react";
-import { Plus, Trash2, Edit, Save } from "lucide-react";
+import { Plus, Trash2, Edit, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, serverTimestamp, doc } from "firebase/firestore";
+import { Tour } from "@/lib/types";
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const [tours, setTours] = useState(MOCK_TOURS);
+  const { firestore } = useFirestore();
+  const { user } = useUser();
+  
+  const toursQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "tours");
+  }, [firestore]);
+
+  const { data: tours, isLoading } = useCollection<Tour>(toursQuery);
+
   const [newTour, setNewTour] = useState({
     name: "",
     highlights: "",
     location: "",
     duration: "",
     audience: "",
-    description: ""
+    description: "",
+    price: 0,
+    capacity: 20,
+    minGroupSize: 8,
+    type: "group" as const
   });
 
   const HIGHLIGHT_OPTIONS = [
@@ -47,19 +63,54 @@ export default function AdminPage() {
   };
 
   const handleSaveTour = () => {
-    if (!newTour.name) {
+    if (!newTour.name || !firestore || !user) {
       toast({
         variant: "destructive",
-        title: "Missing Info",
-        description: "Please provide at least a tour name."
+        title: "Error",
+        description: !user ? "You must be signed in to save tours." : "Please provide at least a tour name."
       });
       return;
     }
     
-    // In a real app, this would save to Firestore
+    const tourData = {
+      ...newTour,
+      highlights: newTour.highlights.split(", ").filter(h => h.length > 0),
+      isActive: true, // Default to true for this prototype
+      tourOwnerId: user.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      bookedSpaces: 0,
+      imageUrl: `https://picsum.photos/seed/${Math.random()}/1200/800`, // Placeholder
+      scheduledDates: ["2024-08-15"]
+    };
+
+    addDocumentNonBlocking(collection(firestore, "tours"), tourData);
+    
     toast({
       title: "Experience Saved",
-      description: "The new experience has been added to the system."
+      description: "The new experience has been added to the system.",
+    });
+
+    setNewTour({
+      name: "",
+      highlights: "",
+      location: "",
+      duration: "",
+      audience: "",
+      description: "",
+      price: 0,
+      capacity: 20,
+      minGroupSize: 8,
+      type: "group"
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!firestore) return;
+    deleteDocumentNonBlocking(doc(firestore, "tours", id));
+    toast({
+      title: "Tour Deleted",
+      description: "The experience has been removed."
     });
   };
 
@@ -87,7 +138,7 @@ export default function AdminPage() {
                 <div className="space-y-2">
                   <Label>Experience Name</Label>
                   <Input 
-                    placeholder="e.g. Moonlight Kayaking" 
+                    placeholder="e.g. Maroma Perfum Experience" 
                     value={newTour.name}
                     onChange={e => setNewTour({...newTour, name: e.target.value})}
                   />
@@ -147,6 +198,26 @@ export default function AdminPage() {
                     </Select>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price ($)</Label>
+                    <Input 
+                      type="number"
+                      value={newTour.price}
+                      onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Capacity</Label>
+                    <Input 
+                      type="number"
+                      value={newTour.capacity}
+                      onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Description</Label>
                   <Textarea 
@@ -172,33 +243,49 @@ export default function AdminPage() {
               <CardHeader className="bg-white">
                 <CardTitle className="font-headline text-2xl">Manage Tours</CardTitle>
               </CardHeader>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Experience</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tours.map((tour) => (
-                    <TableRow key={tour.id}>
-                      <TableCell className="font-medium">{tour.name}</TableCell>
-                      <TableCell className="capitalize">{tour.type}</TableCell>
-                      <TableCell>{tour.bookedSpaces} / {tour.capacity}</TableCell>
-                      <TableCell>${tour.price}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="icon" variant="ghost" className="hover:text-accent"><Edit className="w-4 h-4" /></Button>
-                          <Button size="icon" variant="ghost" className="hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
-                        </div>
-                      </TableCell>
+              {isLoading ? (
+                <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Capacity</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {tours?.map((tour) => (
+                      <TableRow key={tour.id}>
+                        <TableCell className="font-medium">{tour.name}</TableCell>
+                        <TableCell className="capitalize">{tour.type}</TableCell>
+                        <TableCell>{tour.bookedSpaces} / {tour.capacity}</TableCell>
+                        <TableCell>${tour.price}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="icon" variant="ghost" className="hover:text-accent"><Edit className="w-4 h-4" /></Button>
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="hover:text-destructive"
+                              onClick={() => handleDelete(tour.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(!tours || tours.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No experiences found. Create your first one!</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </Card>
 
             <div className="bg-primary/5 p-8 rounded-3xl border border-primary/10 flex items-center justify-between">

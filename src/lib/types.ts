@@ -15,6 +15,10 @@ export interface Tour {
   imageUrl: string;
   minGroupSize: number;
   scheduledDates: string[];
+  isActive?: boolean;
+  tourOwnerId?: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface UserAccount {
