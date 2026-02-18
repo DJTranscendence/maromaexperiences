@@ -101,12 +101,10 @@ export default function MediaLibraryPage() {
 
   const handleBatchUpload = async () => {
     if (selectedFiles.length === 0) {
-      toast({ title: "No files", description: "Please select at least one file to upload." });
+      toast({ title: "No files", description: "Please select at least one image to upload." });
       return;
     }
 
-    // We can assume firestore and user are present because of AuthProvider gating
-    // but we add a safety check just in case.
     if (!firestore || !user) {
       toast({ 
         variant: "destructive", 
@@ -135,7 +133,6 @@ export default function MediaLibraryPage() {
             uploadedAt: serverTimestamp(),
           };
           
-          // mutation call - not awaited per guidelines
           addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
           successCount++;
         } catch (fileErr) {
@@ -148,7 +145,7 @@ export default function MediaLibraryPage() {
       if (successCount > 0) {
         toast({
           title: "Upload Process Started",
-          description: `Processing ${successCount} assets. They will appear in your gallery shortly.`,
+          description: `Processing ${successCount} images. They will appear in your gallery shortly.`,
         });
         setSelectedFiles([]);
         setIsUploadDialogOpen(false);
@@ -175,7 +172,7 @@ export default function MediaLibraryPage() {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, "media", id));
     toast({
-      title: "Media Removed",
+      title: "Image Removed",
       description: "The item has been deleted from your library."
     });
   };
@@ -205,13 +202,13 @@ export default function MediaLibraryPage() {
               <Button 
                 className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 h-12 flex items-center gap-2 shadow-lg shadow-accent/20"
               >
-                <Plus className="w-5 h-5" /> Add Assets
+                <Plus className="w-5 h-5" /> Add Images
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline flex items-center gap-2">
-                  <Upload className="w-6 h-6 text-accent" /> New Assets
+                  <Upload className="w-6 h-6 text-accent" /> New Images
                 </DialogTitle>
                 <DialogDescription>
                   Upload high-quality photos for your tours. Images will be optimized automatically.
@@ -234,7 +231,7 @@ export default function MediaLibraryPage() {
                   onClick={() => !isUploading && fileInputRef.current?.click()}
                 >
                   <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm font-medium">Click to select files</p>
+                  <p className="text-sm font-medium">Click to select images</p>
                   <p className="text-xs text-muted-foreground mt-1">JPG or PNG supported.</p>
                   <input 
                     type="file" 
@@ -270,7 +267,7 @@ export default function MediaLibraryPage() {
                 {isUploading && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs font-medium">
-                      <span>Processing Assets...</span>
+                      <span>Processing Images...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
@@ -320,7 +317,7 @@ export default function MediaLibraryPage() {
             {isMediaLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-accent" />
-                <p className="text-muted-foreground font-body">Syncing assets...</p>
+                <p className="text-muted-foreground font-body">Syncing images...</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
