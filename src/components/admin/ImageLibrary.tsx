@@ -3,13 +3,11 @@
 import { useState, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { Check, Plus, Loader2, Search, Upload, ImageIcon, Grid, X } from 'lucide-react';
+import { Check, Loader2, Search, Upload, ImageIcon, Grid } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 interface MediaItem {
@@ -26,9 +24,6 @@ interface ImageLibraryProps {
   multiSelect?: boolean;
 }
 
-/**
- * Resizes an image file to ensure it fits within Firestore document limits and performance guidelines.
- */
 const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -40,7 +35,6 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-
         if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
@@ -52,7 +46,6 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
             height = maxHeight;
           }
         }
-
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
@@ -71,7 +64,7 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
 
 export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }: ImageLibraryProps) {
   const { firestore } = useFirestore();
-  const { user, isUserLoading: isAuthLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,7 +100,6 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     if (e.target.files && e.target.files.length > 0 && firestore && user) {
       setIsAdding(true);
       const file = e.target.files[0];
-      
       try {
         const compressedDataUrl = await resizeImage(file);
         const mediaData = {
@@ -116,15 +108,10 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
           altText: file.name,
           uploadedAt: serverTimestamp(),
         };
-
         addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
         toast({ title: "Image Uploaded", description: "Successfully added to your library." });
       } catch (err: any) {
-        toast({ 
-          variant: "destructive", 
-          title: "Process Error", 
-          description: "Could not optimize image. Try a smaller file." 
-        });
+        toast({ variant: "destructive", title: "Process Error", description: "Could not optimize image." });
       } finally {
         setIsAdding(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -144,10 +131,10 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  const isSyncing = isMediaLoading || isAuthLoading || (!!mediaQuery && media === null);
+  const isSyncing = isMediaLoading || isUserLoading || (!!mediaQuery && media === null);
 
   return (
-    <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white mt-4">
+    <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
       <CardHeader className="bg-white border-b px-6 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full max-w-md">
@@ -170,13 +157,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
               {isAdding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
               {isAdding ? "Uploading..." : "Add Images"}
             </Button>
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
             <Button variant="ghost" size="icon" className="text-primary rounded-full bg-muted/50 h-10 w-10">
               <Grid className="w-4 h-4" />
             </Button>
@@ -184,75 +165,58 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         </div>
       </CardHeader>
       <CardContent className="p-6">
-        <ScrollArea className="h-[400px] pr-4">
-          {isSyncing ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-accent" />
-              <p className="text-muted-foreground font-body">Syncing your gallery...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {filteredMedia?.map((item) => (
-                <div 
-                  key={item.id} 
-                  className={`group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-4 transition-all duration-300 ${
-                    selectedUrls.includes(item.url) ? "border-accent shadow-lg scale-[0.98]" : "border-transparent hover:shadow-xl"
-                  }`}
-                  onClick={() => toggleSelection(item.url)}
-                >
-                  <NextImage 
-                    src={item.url} 
-                    alt={item.altText || 'Media'} 
-                    fill 
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    unoptimized
-                  />
-                  
-                  {/* Selection Overlay */}
-                  {selectedUrls.includes(item.url) && (
-                    <div className="absolute inset-0 bg-accent/20 flex items-center justify-center backdrop-blur-[1px]">
-                      <div className="bg-accent text-white rounded-full p-2 shadow-xl scale-110">
-                        <Check className="w-5 h-5 stroke-[3px]" />
-                      </div>
+        {isSyncing ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 animate-spin text-accent" />
+            <p className="text-muted-foreground font-body">Syncing images...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {filteredMedia?.map((item) => (
+              <div 
+                key={item.id} 
+                className={`group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-4 transition-all duration-300 ${
+                  selectedUrls.includes(item.url) ? "border-accent shadow-lg scale-[0.98]" : "border-transparent hover:shadow-xl"
+                }`}
+                onClick={() => toggleSelection(item.url)}
+              >
+                <NextImage 
+                  src={item.url} 
+                  alt={item.altText || 'Media'} 
+                  fill 
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  unoptimized
+                />
+                {selectedUrls.includes(item.url) && (
+                  <div className="absolute inset-0 bg-accent/20 flex items-center justify-center backdrop-blur-[1px]">
+                    <div className="bg-accent text-white rounded-full p-2 shadow-xl scale-110">
+                      <Check className="w-5 h-5 stroke-[3px]" />
                     </div>
-                  )}
-
-                  {/* Info Badge */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-[10px] text-white font-medium truncate uppercase tracking-widest">
-                      {item.altText || 'Tour Image'}
-                    </p>
                   </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="text-[10px] text-white font-medium truncate uppercase tracking-widest">
+                    {item.altText || 'Tour Image'}
+                  </p>
                 </div>
-              ))}
-              
-              {(!filteredMedia || filteredMedia.length === 0) && (
-                <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
-                  <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-bold text-primary font-headline">Gallery Empty</p>
-                  <p className="text-muted-foreground font-body">Upload your first images to start creating experiences.</p>
-                </div>
-              )}
-            </div>
-          )}
-        </ScrollArea>
-        
+              </div>
+            ))}
+            {(!filteredMedia || filteredMedia.length === 0) && (
+              <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
+                <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-bold text-primary font-headline">Gallery Empty</p>
+                <p className="text-muted-foreground font-body">Upload your first images to start creating experiences.</p>
+              </div>
+            )}
+          </div>
+        )}
         {selectedUrls.length > 0 && (
           <div className="mt-6 flex items-center justify-between p-4 bg-accent/5 rounded-2xl border border-accent/10">
             <div className="flex items-center gap-2">
-              <span className="bg-accent text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                {selectedUrls.length}
-              </span>
-              <span className="text-sm font-medium text-primary">Images ready for this experience</span>
+              <span className="bg-accent text-white text-xs font-bold px-2.5 py-1 rounded-full">{selectedUrls.length}</span>
+              <span className="text-sm font-medium text-primary">Images selected</span>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-xs text-muted-foreground hover:text-destructive"
-              onClick={() => onSelect([])}
-            >
-              Clear Selection
-            </Button>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={() => onSelect([])}>Clear Selection</Button>
           </div>
         )}
       </CardContent>
