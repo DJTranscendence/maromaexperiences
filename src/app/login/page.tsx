@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    phone: "",
   });
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -53,6 +54,8 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
+      // Note: Phone number is captured in state but not used by Firebase Auth create user directly.
+      // In a full implementation, you'd save this to a Firestore user profile document.
       await initiateEmailSignUp(auth, formData.email, formData.password);
       toast({ title: "Account created", description: "Welcome to Maroma Experiences!" });
       router.push("/");
@@ -76,8 +79,8 @@ export default function LoginPage() {
         <Card className="w-full max-w-md border-none shadow-2xl rounded-3xl overflow-hidden">
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2 rounded-none h-14 bg-muted/30">
-              <TabsTrigger value="signin" className="data-[state=active]:bg-background">Sign In</TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-background">Sign Up</TabsTrigger>
+              <TabsTrigger value="signin" className="data-[state=active]:bg-background font-headline">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-background font-headline">Sign Up</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin" className="mt-0">
@@ -147,6 +150,16 @@ export default function LoginPage() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <Input 
+                      id="signup-phone" 
+                      type="tel" 
+                      placeholder="+91 98765 43210" 
+                      value={formData.phone}
+                      onChange={e => setFormData({...formData, phone: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <div className="relative">
                       <Input 
@@ -168,7 +181,7 @@ export default function LoginPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full bg-accent rounded-full h-12" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90 rounded-full h-12" disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
                     Create Account
                   </Button>
