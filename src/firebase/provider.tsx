@@ -64,21 +64,22 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       return;
     }
 
+    // Keep track of the initial auth check
     let isInitialCheck = true;
 
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
         if (!firebaseUser && isInitialCheck) {
+          // If no user is present on the very first check, attempt anonymous sign-in
           isInitialCheck = false;
           try {
-            // Attempt to sign in anonymously if no user exists on initial load
             await signInAnonymously(auth);
-            // onAuthStateChanged will fire again with the new user
           } catch (err: any) {
             setUserAuthState({ user: null, isUserLoading: false, userError: err });
           }
         } else {
+          // A user exists (either previously signed in, or just signed in anonymously/email)
           setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
           isInitialCheck = false;
         }
@@ -87,6 +88,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
+
     return () => unsubscribe();
   }, [auth]);
 

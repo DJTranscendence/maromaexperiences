@@ -8,12 +8,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { useState, useRef } from "react";
-import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
+import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MediaItem {
   id: string;
@@ -92,22 +91,12 @@ export default function MediaLibraryPage() {
   };
 
   const handleBatchUpload = async () => {
-    if (selectedFiles.length === 0) return;
-    
-    if (!firestore || !user) {
-      toast({
-        variant: "destructive",
-        title: "Connection Pending",
-        description: "Please wait a moment while we secure your connection.",
-      });
-      return;
-    }
+    if (selectedFiles.length === 0 || !firestore || !user) return;
     
     setIsUploading(true);
     setUploadProgress(0);
     
     let successCount = 0;
-    let failCount = 0;
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
@@ -126,7 +115,6 @@ export default function MediaLibraryPage() {
           successCount++;
         } catch (fileErr) {
           console.error(`Error processing ${file.name}:`, fileErr);
-          failCount++;
         }
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
@@ -138,12 +126,6 @@ export default function MediaLibraryPage() {
         });
         setSelectedFiles([]);
         setIsUploadDialogOpen(false);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Processing Failed",
-          description: "No assets could be processed. Please try different files.",
-        });
       }
     } catch (error: any) {
       toast({
