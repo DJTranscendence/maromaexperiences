@@ -7,14 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
-import { useState } from "react";
-import { Trash2, Plus, Loader2, Search, Grid, List, Image as ImageIcon, X, Check } from "lucide-react";
+import { useState, useRef } from "react";
+import { Trash2, Plus, Loader2, Search, Grid, List, Image as ImageIcon, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
 interface MediaItem {
@@ -30,8 +27,9 @@ export default function MediaLibraryPage() {
   const { firestore } = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [urlsToUpload, setUrlsToUpload] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -40,18 +38,33 @@ export default function MediaLibraryPage() {
 
   const { data: media, isLoading } = useCollection<MediaItem>(mediaQuery);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleBatchUpload = async () => {
-    if (!urlsToUpload.trim() || !firestore) return;
+    if (selectedFiles.length === 0 || !firestore) return;
     
     setIsUploading(true);
-    const urls = urlsToUpload.split('\n').map(u => u.trim()).filter(u => u.length > 0);
     
     try {
-      for (const url of urls) {
+      for (const file of selectedFiles) {
+        const dataUrl = await readFileAsDataURL(file);
         const mediaData = {
-          url,
+          url: dataUrl,
           type: 'image',
-          altText: 'Uploaded experience image',
+          altText: file.name,
           uploadedAt: serverTimestamp(),
         };
         addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
@@ -59,15 +72,15 @@ export default function MediaLibraryPage() {
       
       toast({
         title: "Success",
-        description: `Successfully added ${urls.length} images to the library.`,
+        description: `Successfully added ${selectedFiles.length} images to the library.`,
       });
-      setUrlsToUpload('');
+      setSelectedFiles([]);
       setIsUploadDialogOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: "There was an error adding the images.",
+        description: "There was an error processing the images.",
       });
     } finally {
       setIsUploading(false);
@@ -112,29 +125,48 @@ export default function MediaLibraryPage() {
             <DialogContent className="sm:max-w-[500px] rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline flex items-center gap-2">
-                  <ImageIcon className="w-6 h-6 text-accent" /> Batch Upload Images
+                  <Upload className="w-6 h-6 text-accent" /> Upload Experience Images
                 </DialogTitle>
               </DialogHeader>
               <div className="py-4 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="urls">Image URLs (one per line)</Label>
-                  <Textarea 
-                    id="urls"
-                    placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
-                    className="min-h-[200px] rounded-2xl"
-                    value={urlsToUpload}
-                    onChange={(e) => setUrlsToUpload(e.target.value)}
-                  />
-                  <p className="text-[10px] text-muted-foreground italic">
-                    * For this prototype, please provide direct image URLs.
-                  </p>
+                <div className="space-y-4">
+                  <div 
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-2xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-sm font-medium">Click to select files or drag and drop</p>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or WEBP (Max 1MB per file recommended for prototypes)</p>
+                    <Input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      className="hidden" 
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                  
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider">Selected Files ({selectedFiles.length})</Label>
+                      <div className="max-h-40 overflow-y-auto space-y-1">
+                        {selectedFiles.map((file, i) => (
+                          <div key={i} className="flex items-center justify-between p-2 bg-muted rounded-lg text-xs">
+                            <span className="truncate flex-1">{file.name}</span>
+                            <span className="text-muted-foreground ml-2">{(file.size / 1024).toFixed(0)} KB</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)} className="rounded-full">Cancel</Button>
+                <Button variant="outline" onClick={() => { setIsUploadDialogOpen(false); setSelectedFiles([]); }} className="rounded-full">Cancel</Button>
                 <Button 
                   onClick={handleBatchUpload} 
-                  disabled={isUploading || !urlsToUpload.trim()}
+                  disabled={isUploading || selectedFiles.length === 0}
                   className="bg-accent hover:bg-accent/90 rounded-full min-w-[120px]"
                 >
                   {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Start Upload"}
@@ -188,7 +220,7 @@ export default function MediaLibraryPage() {
                         </Button>
                       </div>
                       <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform">
-                        <p className="text-[10px] text-white truncate text-center">{item.url.split('/').pop()}</p>
+                        <p className="text-[10px] text-white truncate text-center">{item.altText}</p>
                       </div>
                     </div>
                   ))}
@@ -201,14 +233,14 @@ export default function MediaLibraryPage() {
                         </div>
                         <div>
                           <p className="text-lg font-bold text-primary">No assets found</p>
-                          <p className="text-muted-foreground max-w-xs mx-auto">Upload some images to start building your experience library.</p>
+                          <p className="text-muted-foreground max-w-xs mx-auto">Select images from your computer to start building your library.</p>
                         </div>
                         <Button 
                           variant="outline" 
                           onClick={() => setIsUploadDialogOpen(true)}
                           className="rounded-full mt-2"
                         >
-                          Upload First Image
+                          Select First Image
                         </Button>
                       </div>
                     </div>

@@ -1,13 +1,12 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { Check, Plus, Loader2, Search } from 'lucide-react';
+import { Check, Plus, Loader2, Search, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -29,9 +28,9 @@ interface ImageLibraryProps {
 export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }: ImageLibraryProps) {
   const { firestore } = useFirestore();
   const { toast } = useToast();
-  const [newUrl, setNewUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -40,23 +39,29 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
 
   const { data: media, isLoading } = useCollection<MediaItem>(mediaQuery);
 
-  const handleAddMedia = () => {
-    if (!newUrl || !firestore) return;
-    setIsAdding(true);
-    
-    const mediaData = {
-      url: newUrl,
-      type: 'image',
-      altText: 'Uploaded experience image',
-      uploadedAt: serverTimestamp(),
-    };
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && firestore) {
+      setIsAdding(true);
+      const file = e.target.files[0];
+      
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        const mediaData = {
+          url: dataUrl,
+          type: 'image',
+          altText: file.name,
+          uploadedAt: serverTimestamp(),
+        };
 
-    addDocumentNonBlocking(collection(firestore, 'media'), mediaData)
-      .then(() => {
-        toast({ title: "Media Added", description: "Image successfully added to the library." });
-        setNewUrl('');
-      })
-      .finally(() => setIsAdding(false));
+        addDocumentNonBlocking(collection(firestore, 'media'), mediaData)
+          .then(() => {
+            toast({ title: "Media Added", description: "Image successfully added to the library." });
+          })
+          .finally(() => setIsAdding(false));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const toggleSelection = (url: string) => {
@@ -88,20 +93,23 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         
         {/* Add New Media Inline */}
         <div className="flex gap-2">
-          <Input 
-            placeholder="Paste new image URL..." 
-            value={newUrl}
-            onChange={e => setNewUrl(e.target.value)}
-            className="h-9 text-xs rounded-full bg-white"
-          />
           <Button 
-            onClick={handleAddMedia} 
-            disabled={isAdding || !newUrl}
+            onClick={() => fileInputRef.current?.click()} 
+            disabled={isAdding}
             size="sm"
-            className="bg-accent hover:bg-accent/90 rounded-full h-9"
+            variant="outline"
+            className="w-full flex items-center gap-2 rounded-full h-9 bg-white border-accent/20 text-accent hover:bg-accent/5"
           >
-            {isAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+            {isAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+            <span className="text-xs">Select Image from Device</span>
           </Button>
+          <input 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
         </div>
 
         {/* Search Media */}
@@ -145,7 +153,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
                   </div>
                 )}
                 <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-[8px] text-white truncate">{item.url}</p>
+                  <p className="text-[8px] text-white truncate">{item.altText}</p>
                 </div>
               </div>
             ))}
