@@ -77,22 +77,22 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
 
   const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
-  const filteredMedia = useMemo(() => {
+  const displayMedia = useMemo(() => {
     if (!media) return null;
     
-    const items = media.filter(item => {
+    const filtered = media.filter(item => {
       if (!searchQuery) return true;
-      const searchLower = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase();
       return (
-        (item.altText?.toLowerCase().includes(searchLower)) ||
-        (item.url.toLowerCase().includes(searchLower))
+        (item.altText?.toLowerCase().includes(q)) ||
+        (item.url.toLowerCase().includes(q))
       );
     });
 
-    return [...items].sort((a, b) => {
-      const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
-      const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
-      return timeB - timeA;
+    return [...filtered].sort((a, b) => {
+      const tA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
+      const tB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
+      return tB - tA;
     });
   }, [media, searchQuery]);
 
@@ -131,7 +131,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  const isSyncing = isMediaLoading || isUserLoading || (!!mediaQuery && media === null);
+  const isSyncing = isMediaLoading || isUserLoading || (media === null && !!mediaQuery);
 
   return (
     <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
@@ -172,7 +172,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filteredMedia?.map((item) => (
+            {displayMedia?.map((item) => (
               <div 
                 key={item.id} 
                 className={`group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-4 transition-all duration-300 ${
@@ -201,7 +201,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
                 </div>
               </div>
             ))}
-            {(!filteredMedia || filteredMedia.length === 0) && (
+            {(!displayMedia || displayMedia.length === 0) && (
               <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
                 <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-bold text-primary font-headline">Gallery Empty</p>
