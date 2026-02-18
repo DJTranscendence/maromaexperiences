@@ -136,12 +136,14 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     );
   }).sort((a, b) => {
     // Sort by uploadedAt timestamp, handling potential nulls from optimistic updates
-    const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || 0;
-    const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || 0;
+    const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
+    const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
     return timeB - timeA;
   });
 
-  const showLoading = isMediaLoading || isAuthLoading;
+  // We are loading if the database query is loading, the auth is loading, 
+  // or we haven't received the initial data snapshot yet.
+  const isSyncing = isMediaLoading || isAuthLoading || (media === null);
 
   return (
     <div className="space-y-4 border rounded-3xl p-6 bg-white shadow-inner">
@@ -189,7 +191,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
       </div>
 
       <ScrollArea className="h-[300px] rounded-2xl border bg-muted/10 p-4">
-        {showLoading && !media ? (
+        {isSyncing ? (
           <div className="flex flex-col items-center justify-center h-full gap-2">
             <Loader2 className="w-8 h-8 animate-spin text-accent" />
             <p className="text-xs text-muted-foreground font-medium">Syncing images...</p>
