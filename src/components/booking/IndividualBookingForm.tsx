@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, CreditCard, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
+import { Users, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -167,10 +167,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
-
-        <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-          <CreditCard className="w-3 h-3" /> Secure checkout powered by Stripe
-        </p>
       </form>
 
       <Dialog open={!!aiResponse} onOpenChange={() => setAiResponse(null)}>
