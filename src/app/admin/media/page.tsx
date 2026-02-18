@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
-import { useState, useRef } from "react";
-import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MediaItem {
   id: string;
@@ -91,12 +92,25 @@ export default function MediaLibraryPage() {
   };
 
   const handleBatchUpload = async () => {
-    if (selectedFiles.length === 0 || !firestore || !user) return;
+    if (selectedFiles.length === 0) {
+      toast({ title: "No files", description: "Please select at least one file to upload." });
+      return;
+    }
+
+    if (!firestore || !user) {
+      toast({ 
+        variant: "destructive", 
+        title: "System Not Ready", 
+        description: "Authentication or database service is still initializing. Please wait a moment." 
+      });
+      return;
+    }
     
     setIsUploading(true);
     setUploadProgress(0);
     
     let successCount = 0;
+    let failCount = 0;
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
@@ -111,27 +125,35 @@ export default function MediaLibraryPage() {
             uploadedAt: serverTimestamp(),
           };
           
+          // No await here per mutation guidelines
           addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
           successCount++;
         } catch (fileErr) {
           console.error(`Error processing ${file.name}:`, fileErr);
+          failCount++;
         }
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
       
       if (successCount > 0) {
         toast({
-          title: "Assets Prepared",
-          description: `Successfully processed ${successCount} assets. They will appear in your library shortly.`,
+          title: "Upload Initiated",
+          description: `Processing ${successCount} assets. They will appear in your library shortly.${failCount > 0 ? ` (${failCount} failed)` : ''}`,
         });
         setSelectedFiles([]);
         setIsUploadDialogOpen(false);
+      } else if (failCount > 0) {
+        toast({
+          variant: "destructive",
+          title: "Upload Failed",
+          description: "Could not process any of the selected files. Please ensure they are valid images.",
+        });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Upload Error",
-        description: error.message || "An unexpected error occurred.",
+        description: error.message || "An unexpected error occurred during batch processing.",
       });
     } finally {
       setIsUploading(false);
@@ -171,10 +193,9 @@ export default function MediaLibraryPage() {
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                disabled={isUserLoading}
                 className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 h-12 flex items-center gap-2 shadow-lg shadow-accent/20"
               >
-                <Plus className="w-5 h-5" /> {isUserLoading ? "Initializing..." : "Upload Assets"}
+                <Plus className="w-5 h-5" /> Add Assets
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] rounded-3xl">
@@ -186,6 +207,17 @@ export default function MediaLibraryPage() {
                   Choose high-quality photos from your device to add to your Maroma collection.
                 </DialogDescription>
               </DialogHeader>
+
+              {!user && !isUserLoading && (
+                <Alert variant="destructive" className="rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Authentication Required</AlertTitle>
+                  <AlertDescription>
+                    You must be signed in to upload assets.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="py-4 space-y-4">
                 <div 
                   className="border-2 border-dashed border-muted-foreground/25 rounded-2xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors"
