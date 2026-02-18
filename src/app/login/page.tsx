@@ -25,29 +25,39 @@ export default function LoginPage() {
     password: "",
   });
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      initiateEmailSignIn(auth, formData.email, formData.password);
+      await initiateEmailSignIn(auth, formData.email, formData.password);
       toast({ title: "Welcome back", description: "You are being signed in..." });
       router.push("/");
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Sign In Failed", description: err.message });
+      console.error(err);
+      toast({ 
+        variant: "destructive", 
+        title: "Sign In Failed", 
+        description: err.message || "Please check your credentials and try again." 
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      initiateEmailSignUp(auth, formData.email, formData.password);
+      await initiateEmailSignUp(auth, formData.email, formData.password);
       toast({ title: "Account created", description: "Welcome to Maroma Experiences!" });
       router.push("/");
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Sign Up Failed", description: err.message });
+      console.error(err);
+      toast({ 
+        variant: "destructive", 
+        title: "Sign Up Failed", 
+        description: err.message || "An error occurred during account creation." 
+      });
     } finally {
       setIsLoading(false);
     }
