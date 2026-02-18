@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
-import { useState, useRef, useEffect } from "react";
-import { Trash2, Plus, Loader2, Search, Grid, List, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -27,10 +27,8 @@ interface MediaItem {
 const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
+    reader.onload = (e) => {
       const img = new Image();
-      img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let width = img.width;
@@ -51,12 +49,18 @@ const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<strin
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', 0.6));
       };
       img.onerror = () => reject(new Error("Failed to load image for resizing"));
+      img.src = e.target?.result as string;
     };
     reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
   });
 };
 
@@ -76,7 +80,7 @@ export default function MediaLibraryPage() {
     return collection(firestore, 'media');
   }, [firestore]);
 
-  const { data: media, isLoading } = useCollection<MediaItem>(mediaQuery);
+  const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -89,23 +93,26 @@ export default function MediaLibraryPage() {
   };
 
   const handleBatchUpload = async () => {
-    if (selectedFiles.length === 0 || !firestore || !user) {
-      if (!user) {
-        toast({
-          variant: "destructive",
-          title: "Authentication Required",
-          description: "Please wait for anonymous sign-in to complete before uploading.",
-        });
-      }
+    if (selectedFiles.length === 0) return;
+    
+    if (!firestore || !user) {
+      toast({
+        variant: "destructive",
+        title: "System Not Ready",
+        description: "Please wait for authentication to complete or refresh the page.",
+      });
       return;
-    };
+    }
     
     setIsUploading(true);
     setUploadProgress(0);
     
+    let successCount = 0;
+    let failCount = 0;
+
     try {
-      let count = 0;
-      for (const file of selectedFiles) {
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
         try {
           const compressedDataUrl = await resizeImage(file);
           
@@ -117,24 +124,33 @@ export default function MediaLibraryPage() {
           };
           
           addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
-          count++;
-          setUploadProgress(Math.round((count / selectedFiles.length) * 100));
+          successCount++;
         } catch (fileErr) {
           console.error(`Error processing ${file.name}:`, fileErr);
+          failCount++;
         }
+        setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
       
-      toast({
-        title: "Upload Successful",
-        description: `Successfully processed ${count} images. They will appear in the library momentarily.`,
-      });
-      setSelectedFiles([]);
-      setIsUploadDialogOpen(false);
+      if (successCount > 0) {
+        toast({
+          title: "Processing Complete",
+          description: `Successfully prepared ${successCount} images. ${failCount > 0 ? `${failCount} failed.` : ''} They will appear in the library shortly.`,
+        });
+        setSelectedFiles([]);
+        setIsUploadDialogOpen(false);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Upload Failed",
+          description: "No images could be processed. Please try different files.",
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Upload Error",
-        description: error.message || "Failed to process images.",
+        description: error.message || "An unexpected error occurred during upload.",
       });
     } finally {
       setIsUploading(false);
@@ -166,11 +182,11 @@ export default function MediaLibraryPage() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
         {!user && !isUserLoading && (
-          <Alert variant="destructive" className="mb-6 rounded-2xl">
+          <Alert variant="destructive" className="mb-6 rounded-2xl bg-destructive/5 text-destructive border-destructive/20">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Not Authenticated</AlertTitle>
+            <AlertTitle className="font-headline font-bold">Authentication Pending</AlertTitle>
             <AlertDescription>
-              You must be signed in to upload media. The app should sign you in automatically; please check your connection.
+              We are connecting you to our secure services. Please wait a moment before attempting to upload.
             </AlertDescription>
           </Alert>
         )}
@@ -183,8 +199,11 @@ export default function MediaLibraryPage() {
           
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 h-12 flex items-center gap-2 shadow-lg shadow-accent/20">
-                <Plus className="w-5 h-5" /> Upload Media
+              <Button 
+                disabled={!user}
+                className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 h-12 flex items-center gap-2 shadow-lg shadow-accent/20"
+              >
+                <Plus className="w-5 h-5" /> {user ? "Upload Media" : "Initializing..."}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] rounded-3xl">
@@ -220,7 +239,7 @@ export default function MediaLibraryPage() {
                           <span className="truncate flex-1">{file.name}</span>
                           {!isUploading && (
                             <button 
-                              className="text-muted-foreground hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive p-1"
                               onClick={() => removeSelectedFile(i)}
                             >
                               <X className="w-3 h-3" />
@@ -235,7 +254,7 @@ export default function MediaLibraryPage() {
                 {isUploading && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs font-medium">
-                      <span>Processing images...</span>
+                      <span>Processing...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
@@ -247,12 +266,12 @@ export default function MediaLibraryPage() {
                   </div>
                 )}
               </div>
-              <DialogFooter>
+              <DialogFooter className="gap-2 sm:gap-0">
                 <Button variant="outline" onClick={() => { setIsUploadDialogOpen(false); setSelectedFiles([]); }} className="rounded-full" disabled={isUploading}>Cancel</Button>
                 <Button 
                   onClick={handleBatchUpload} 
                   disabled={isUploading || selectedFiles.length === 0 || !user}
-                  className="bg-accent hover:bg-accent/90 rounded-full min-w-[120px]"
+                  className="bg-accent hover:bg-accent/90 rounded-full min-w-[140px]"
                 >
                   {isUploading ? (
                     <>
@@ -283,10 +302,10 @@ export default function MediaLibraryPage() {
               </div>
             </CardHeader>
             <CardContent className="p-8">
-              {isLoading ? (
+              {isMediaLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <Loader2 className="w-10 h-10 animate-spin text-accent" />
-                  <p className="text-muted-foreground animate-pulse">Synchronizing assets...</p>
+                  <p className="text-muted-foreground animate-pulse font-body">Synchronizing assets...</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -315,9 +334,9 @@ export default function MediaLibraryPage() {
                   {(!filteredMedia || filteredMedia.length === 0) && (
                     <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
                       <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-lg font-bold text-primary">Your library is empty</p>
-                      <p className="text-muted-foreground mb-6">Upload photos from your experiences to get started.</p>
-                      <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full">Upload First Image</Button>
+                      <p className="text-lg font-bold text-primary font-headline">Your library is empty</p>
+                      <p className="text-muted-foreground mb-6 font-body">Upload photos from your experiences to get started.</p>
+                      <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full" disabled={!user}>Upload First Image</Button>
                     </div>
                   )}
                 </div>
