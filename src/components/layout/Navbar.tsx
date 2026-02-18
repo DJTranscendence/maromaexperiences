@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Compass, Calendar, Settings } from "lucide-react";
+import { User, Menu, X, Compass, Calendar, Settings, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -24,9 +23,16 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Tours</Link>
             <Link href="/account" className="text-sm font-medium hover:text-accent transition-colors">My Bookings</Link>
-            <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-              <Settings className="w-4 h-4" /> Admin
-            </Link>
+            
+            <div className="flex items-center gap-4 pl-4 border-l border-border">
+              <Link href="/admin/media" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                <ImageIcon className="w-4 h-4" /> Media
+              </Link>
+              <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                <Settings className="w-4 h-4" /> Admin
+              </Link>
+            </div>
+
             <Button variant="default" size="sm" className="bg-primary text-white hover:bg-primary/90 rounded-full px-6">
               Book Now
             </Button>
@@ -48,14 +54,22 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Nav */}
-      <div className={cn("md:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-64" : "max-h-0")}>
+      <div className={cn("md:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-80" : "max-h-0")}>
         <div className="px-4 pt-2 pb-6 space-y-4">
           <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Tours</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
-          <Link href="/admin" className="block text-lg font-medium text-muted-foreground" onClick={() => setIsOpen(false)}>Admin Panel</Link>
+          <Separator />
+          <Link href="/admin/media" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
+            <ImageIcon className="w-5 h-5" /> Media Library
+          </Link>
+          <Link href="/admin" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
+            <Settings className="w-5 h-5" /> Admin Panel
+          </Link>
           <Button className="w-full bg-primary text-white">Sign In</Button>
         </div>
       </div>
     </nav>
   );
 }
+
+import { Separator } from "@/components/ui/separator";
