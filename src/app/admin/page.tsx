@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_TOURS } from "@/lib/mock-data";
 import { useState } from "react";
 import { Plus, Wand2, Trash2, Edit, Save } from "lucide-react";
@@ -136,11 +137,18 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Location</Label>
-                    <Input 
-                      placeholder="Maroma Bay" 
+                    <Select 
                       value={newTour.location}
-                      onChange={e => setNewTour({...newTour, location: e.target.value})}
-                    />
+                      onValueChange={value => setNewTour({...newTour, location: value})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="The Maroma Campus">The Maroma Campus</SelectItem>
+                        <SelectItem value="The Maroma Spa">The Maroma Spa</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Duration</Label>
