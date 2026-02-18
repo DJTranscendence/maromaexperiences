@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, CreditCard, ChevronRight, MessageSquare } from "lucide-react";
+import { Users, CreditCard, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface IndividualBookingFormProps {
   tour: Tour;
@@ -19,6 +20,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const [guests, setGuests] = useState(1);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,6 +30,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       // Simulate booking process
@@ -35,27 +38,33 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       
       const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
       
-      // Call GenAI notification flow
-      const notification = await generateBookingNotification({
-        eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
-        recipientType: 'booker',
-        bookingDetails: {
-          bookingId: Math.random().toString(36).substring(7).toUpperCase(),
-          tourName: tour.name,
-          tourDate: tour.scheduledDates[0],
-          tourTime: "10:00 AM",
-          numberOfGuests: guests,
-          bookedBy: formData.name,
-          bookerEmail: formData.email,
-          bookerPhone: formData.phone
-        },
-        currentBookedSpaces: tour.bookedSpaces + guests,
-        minGroupSize: tour.minGroupSize,
-        bookingDetailsBaseUrl: "https://maroma.com/bookings",
-        supportEmailAddress: "support@maroma.com"
-      });
+      try {
+        // Call GenAI notification flow
+        const notification = await generateBookingNotification({
+          eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
+          recipientType: 'booker',
+          bookingDetails: {
+            bookingId: Math.random().toString(36).substring(7).toUpperCase(),
+            tourName: tour.name,
+            tourDate: tour.scheduledDates?.[0] || "TBA",
+            tourTime: "10:00 AM",
+            numberOfGuests: guests,
+            bookedBy: formData.name,
+            bookerEmail: formData.email,
+            bookerPhone: formData.phone
+          },
+          currentBookedSpaces: tour.bookedSpaces + guests,
+          minGroupSize: tour.minGroupSize,
+          bookingDetailsBaseUrl: "https://maroma.com/bookings",
+          supportEmailAddress: "support@maroma.com"
+        });
 
-      setAiResponse(notification.message);
+        setAiResponse(notification.message);
+      } catch (aiErr: any) {
+        console.warn("AI Notification failed:", aiErr);
+        // Fallback message if AI fails
+        setAiResponse(`Hello ${formData.name}, your booking for ${tour.name} is confirmed for ${guests} guests. Thank you!`);
+      }
 
       toast({
         title: "Booking Successful!",
@@ -64,11 +73,12 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           : `Your reservation for ${guests} guests has been confirmed.`,
       });
 
-    } catch (error) {
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again later.");
       toast({
         variant: "destructive",
         title: "Booking Failed",
-        description: "Something went wrong. Please try again later.",
+        description: "Could not complete your booking.",
       });
     } finally {
       setLoading(false);
@@ -80,6 +90,13 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <Alert variant="destructive" className="rounded-2xl">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>

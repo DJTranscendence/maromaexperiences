@@ -69,15 +69,17 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       (firebaseUser) => {
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
         
-        // If no user is present, ensure we sign in anonymously to keep Firestore operations functional
+        // Ensure Firestore operations work for unauthenticated visitors
         if (!firebaseUser) {
           signInAnonymously(auth).catch(err => {
-            console.warn("FirebaseProvider: Automatic anonymous sign-in failed:", err);
+            // Silently handle if anonymous auth is not enabled yet in console
+            if (process.env.NODE_ENV === 'development') {
+              console.warn("FirebaseProvider: Automatic anonymous sign-in failed. Ensure Anonymous Auth is enabled in Firebase Console.");
+            }
           });
         }
       },
       (error) => {
-        console.error("FirebaseProvider: Auth state error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
@@ -127,8 +129,11 @@ export const useFirebase = (): FirebaseServicesAndUser => {
 };
 
 export const useAuth = (): Auth => {
-  const { auth } = useFirebase();
-  return auth;
+  const context = useContext(FirebaseContext);
+  if (!context || !context.auth) {
+    throw new Error('Auth service not available. Ensure FirebaseClientProvider is at the root.');
+  }
+  return context.auth;
 };
 
 export const useFirestore = (): Firestore => {
@@ -147,12 +152,23 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
   const memoized = useMemo(factory, deps);
   
   if(typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
+  try {
+    (memoized as MemoFirebase<T>).__memo = true;
+  } catch (e) {
+    // Handle frozen objects
+  }
   
   return memoized;
 }
 
 export const useUser = (): UserHookResult => {
-  const { user, isUserLoading, userError } = useFirebase();
-  return { user, isUserLoading, userError };
+  const context = useContext(FirebaseContext);
+  if (!context) {
+    return { user: null, isUserLoading: true, userError: null };
+  }
+  return { 
+    user: context.user, 
+    isUserLoading: context.isUserLoading, 
+    userError: context.userError 
+  };
 };
