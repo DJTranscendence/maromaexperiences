@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MOCK_TOURS } from "@/lib/mock-data";
 import { useState } from "react";
 import { Plus, Wand2, Trash2, Edit, Save } from "lucide-react";
@@ -27,12 +28,31 @@ export default function AdminPage() {
     description: ""
   });
 
+  const HIGHLIGHT_OPTIONS = [
+    "Tour",
+    "Q&A",
+    "Presentation",
+    "Refreshments",
+    "Take-home Gift"
+  ];
+
+  const handleHighlightChange = (option: string, checked: boolean) => {
+    const currentHighlights = newTour.highlights ? newTour.highlights.split(", ").filter(h => h.length > 0) : [];
+    let updated;
+    if (checked) {
+      updated = [...currentHighlights, option];
+    } else {
+      updated = currentHighlights.filter(h => h !== option);
+    }
+    setNewTour({ ...newTour, highlights: updated.join(", ") });
+  };
+
   const handleGenerateAI = async () => {
     if (!newTour.name || !newTour.highlights) {
       toast({
         variant: "destructive",
         title: "Missing Info",
-        description: "Please provide a tour name and highlights for the AI to work with."
+        description: "Please provide a tour name and select at least one highlight for the AI to work with."
       });
       return;
     }
@@ -82,7 +102,7 @@ export default function AdminPage() {
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">Create Experience</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Experience Name</Label>
                   <Input 
@@ -91,14 +111,28 @@ export default function AdminPage() {
                     onChange={e => setNewTour({...newTour, name: e.target.value})}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Highlights (comma separated)</Label>
-                  <Input 
-                    placeholder="Kayaks, stars, night snacks" 
-                    value={newTour.highlights}
-                    onChange={e => setNewTour({...newTour, highlights: e.target.value})}
-                  />
+                
+                <div className="space-y-3">
+                  <Label>Highlights</Label>
+                  <div className="grid grid-cols-1 gap-3 p-4 border rounded-xl bg-muted/20">
+                    {HIGHLIGHT_OPTIONS.map((option) => (
+                      <div key={option} className="flex items-center space-x-3">
+                        <Checkbox 
+                          id={`highlight-${option}`}
+                          checked={newTour.highlights.split(", ").includes(option)}
+                          onCheckedChange={(checked) => handleHighlightChange(option, checked === true)}
+                        />
+                        <Label 
+                          htmlFor={`highlight-${option}`} 
+                          className="text-sm font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Location</Label>
