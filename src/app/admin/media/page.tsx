@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -181,7 +180,7 @@ export default function MediaLibraryPage() {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
-        {!user && !isUserLoading && (
+        {(!user && !isUserLoading) && (
           <Alert variant="destructive" className="mb-6 rounded-2xl bg-destructive/5 text-destructive border-destructive/20">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle className="font-headline font-bold">Authentication Pending</AlertTitle>

@@ -27,17 +27,20 @@ export default function LoginPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email || !formData.password) return;
+    
     setIsLoading(true);
     try {
       await initiateEmailSignIn(auth, formData.email, formData.password);
-      toast({ title: "Welcome back", description: "You are being signed in..." });
+      toast({ title: "Welcome back", description: "You have been successfully signed in." });
       router.push("/");
+      router.refresh();
     } catch (err: any) {
-      console.error(err);
+      console.error("Sign In Error:", err);
       toast({ 
         variant: "destructive", 
         title: "Sign In Failed", 
-        description: err.message || "Please check your credentials and try again." 
+        description: err.message || "Invalid email or password. Please try again." 
       });
     } finally {
       setIsLoading(false);
@@ -46,17 +49,20 @@ export default function LoginPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email || !formData.password) return;
+
     setIsLoading(true);
     try {
       await initiateEmailSignUp(auth, formData.email, formData.password);
       toast({ title: "Account created", description: "Welcome to Maroma Experiences!" });
       router.push("/");
+      router.refresh();
     } catch (err: any) {
-      console.error(err);
+      console.error("Sign Up Error:", err);
       toast({ 
         variant: "destructive", 
         title: "Sign Up Failed", 
-        description: err.message || "An error occurred during account creation." 
+        description: err.message || "Could not create account. Please try a different email." 
       });
     } finally {
       setIsLoading(false);
