@@ -3,12 +3,13 @@
 import { useState, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { Check, Loader2, Search, Upload, ImageIcon, Grid } from 'lucide-react';
+import { Check, Loader2, Search, Upload, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 interface MediaItem {
   id: string;
@@ -24,6 +25,9 @@ interface ImageLibraryProps {
   multiSelect?: boolean;
 }
 
+/**
+ * Helper to compress and resize images before storage to ensure high performance
+ */
 const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -56,7 +60,7 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
         ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
-      img.onerror = () => reject(new Error("Failed to load image for resizing"));
+      img.onerror = () => reject(new Error("Failed to load image"));
     };
     reader.onerror = () => reject(new Error("Failed to read file"));
   });
@@ -70,6 +74,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Sync with the 'media' collection using the provided hook
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'media');
@@ -77,6 +82,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
 
   const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
+  // Process and sort media for the grid view
   const displayMedia = useMemo(() => {
     if (!media) return null;
     
@@ -89,6 +95,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
       );
     });
 
+    // Sort by most recent first
     return [...filtered].sort((a, b) => {
       const tA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
       const tB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
@@ -111,7 +118,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
         toast({ title: "Image Uploaded", description: "Successfully added to your library." });
       } catch (err: any) {
-        toast({ variant: "destructive", title: "Process Error", description: "Could not optimize image." });
+        toast({ variant: "destructive", title: "Upload Error", description: "Could not process image." });
       } finally {
         setIsAdding(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -131,7 +138,8 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  const isSyncing = isMediaLoading || isUserLoading || (media === null && !!mediaQuery);
+  // Determine if we are still waiting for initial data
+  const isSyncing = isMediaLoading || isUserLoading || (!!mediaQuery && media === null);
 
   return (
     <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
@@ -140,7 +148,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
           <div className="relative w-full max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Search gallery..." 
+              placeholder="Search library..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-11 rounded-full bg-muted/30 border-none h-11 focus-visible:ring-accent"
@@ -155,12 +163,9 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
               disabled={isAdding}
             >
               {isAdding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-              {isAdding ? "Uploading..." : "Add Images"}
+              {isAdding ? "Working..." : "Add Images"}
             </Button>
             <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
-            <Button variant="ghost" size="icon" className="text-primary rounded-full bg-muted/50 h-10 w-10">
-              <Grid className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </CardHeader>
@@ -168,7 +173,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         {isSyncing ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-accent" />
-            <p className="text-muted-foreground font-body">Syncing images...</p>
+            <p className="text-muted-foreground font-body">Syncing with library...</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -194,22 +199,24 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
                     </div>
                   </div>
                 )}
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                   <p className="text-[10px] text-white font-medium truncate uppercase tracking-widest">
                     {item.altText || 'Tour Image'}
                   </p>
                 </div>
               </div>
             ))}
+            
             {(!displayMedia || displayMedia.length === 0) && (
               <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
                 <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-bold text-primary font-headline">Gallery Empty</p>
+                <p className="text-lg font-bold text-primary font-headline">Library Empty</p>
                 <p className="text-muted-foreground font-body">Upload your first images to start creating experiences.</p>
               </div>
             )}
           </div>
         )}
+        
         {selectedUrls.length > 0 && (
           <div className="mt-6 flex items-center justify-between p-4 bg-accent/5 rounded-2xl border border-accent/10">
             <div className="flex items-center gap-2">
