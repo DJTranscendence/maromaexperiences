@@ -10,6 +10,7 @@ export function initializeFirebase() {
   if (!getApps().length) {
     // In the Studio environment, we use the provided config object directly 
     // to avoid 403 errors from attempting to fetch App Hosting metadata.
+    // We pass the config directly and ensure it's not trying to auto-discover.
     const firebaseApp = initializeApp(firebaseConfig);
     return getSdks(firebaseApp);
   }

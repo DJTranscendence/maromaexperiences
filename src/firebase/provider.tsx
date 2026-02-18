@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -67,34 +66,45 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     // Keep track of the initial auth check
     let isInitialCheck = true;
+    
+    // Safety timeout to prevent infinite spinner if Firebase initialization hangs
+    const timeoutId = setTimeout(() => {
+      if (isInitialCheck) {
+        console.warn("Auth initialization timed out. Proceeding as guest.");
+        setUserAuthState(prev => ({ ...prev, isUserLoading: false }));
+      }
+    }, 5000);
 
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
         if (!firebaseUser && isInitialCheck) {
           // If no user is present on the very first check, attempt anonymous sign-in
-          // We mark initial check as false to prevent infinite loops if anonymous fails
           isInitialCheck = false;
           try {
-            // Attempt anonymous sign-in as a fallback
             await signInAnonymously(auth);
           } catch (err: any) {
             console.error("Anonymous sign-in failed:", err);
             setUserAuthState({ user: null, isUserLoading: false, userError: err });
           }
         } else {
-          // A user exists (either previously signed in, or just signed in anonymously/email)
+          // A user exists
           setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
           isInitialCheck = false;
         }
+        clearTimeout(timeoutId);
       },
       (error) => {
         console.error("Auth state change error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
+        clearTimeout(timeoutId);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, [auth]);
 
   const contextValue = useMemo((): FirebaseContextState => {
