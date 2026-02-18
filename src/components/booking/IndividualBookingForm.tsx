@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Users, CreditCard, ChevronRight, MessageSquare } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface IndividualBookingFormProps {
   tour: Tour;
@@ -163,6 +162,9 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             <DialogTitle className="flex items-center gap-2 text-primary font-headline text-2xl">
               <MessageSquare className="w-6 h-6 text-accent" /> Booking Confirmed!
             </DialogTitle>
+            <DialogDescription>
+              Your booking for {tour.name} has been processed. Here is your confirmation message.
+            </DialogDescription>
           </DialogHeader>
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mt-4 whitespace-pre-wrap font-body text-primary leading-relaxed">
             {aiResponse}

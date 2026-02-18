@@ -11,7 +11,7 @@ import { useState, useRef } from "react";
 import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -210,6 +210,9 @@ export default function MediaLibraryPage() {
                 <DialogTitle className="text-2xl font-headline flex items-center gap-2">
                   <Upload className="w-6 h-6 text-accent" /> Upload Images
                 </DialogTitle>
+                <DialogDescription>
+                  Select one or more images from your device to add to your library.
+                </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-4">
                 <div 
@@ -219,7 +222,7 @@ export default function MediaLibraryPage() {
                   <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
                   <p className="text-sm font-medium">Click to select images</p>
                   <p className="text-xs text-muted-foreground mt-1">Select multiple files from your computer.</p>
-                  <Input 
+                  <input 
                     type="file" 
                     multiple 
                     accept="image/*" 
