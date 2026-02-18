@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
@@ -87,6 +86,21 @@ export default function MediaLibraryPage() {
 
   const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
+  const filteredMedia = useMemo(() => {
+    if (!media) return null;
+    
+    const items = media.filter(item => 
+      item.url.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.altText?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return [...items].sort((a, b) => {
+      const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
+      const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
+      return timeB - timeA;
+    });
+  }, [media, searchQuery]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setSelectedFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
@@ -118,7 +132,6 @@ export default function MediaLibraryPage() {
     setUploadProgress(0);
     
     let successCount = 0;
-    let failCount = 0;
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
@@ -137,7 +150,6 @@ export default function MediaLibraryPage() {
           successCount++;
         } catch (fileErr) {
           console.error(`Error processing ${file.name}:`, fileErr);
-          failCount++;
         }
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
@@ -177,14 +189,7 @@ export default function MediaLibraryPage() {
     });
   };
 
-  const filteredMedia = media?.filter(item => 
-    item.url.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.altText?.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => {
-    const timeA = a.uploadedAt?.toMillis?.() || 0;
-    const timeB = b.uploadedAt?.toMillis?.() || 0;
-    return timeB - timeA;
-  });
+  const isSyncing = isMediaLoading || isUserLoading || (!!mediaQuery && media === null);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -314,7 +319,7 @@ export default function MediaLibraryPage() {
             </div>
           </CardHeader>
           <CardContent className="p-8">
-            {isMediaLoading ? (
+            {isSyncing ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-accent" />
                 <p className="text-muted-foreground font-body">Syncing images...</p>

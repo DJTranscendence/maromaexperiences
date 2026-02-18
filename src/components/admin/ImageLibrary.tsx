@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -84,6 +84,25 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
 
   const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
+  const filteredMedia = useMemo(() => {
+    if (!media) return null;
+    
+    const items = media.filter(item => {
+      if (!searchQuery) return true;
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        (item.altText?.toLowerCase().includes(searchLower)) ||
+        (item.url.toLowerCase().includes(searchLower))
+      );
+    });
+
+    return [...items].sort((a, b) => {
+      const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
+      const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
+      return timeB - timeA;
+    });
+  }, [media, searchQuery]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0 && firestore && user) {
       setIsAdding(true);
@@ -125,20 +144,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  const filteredMedia = media?.filter(item => {
-    if (!searchQuery) return true;
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      (item.altText?.toLowerCase().includes(searchLower)) ||
-      (item.url.toLowerCase().includes(searchLower))
-    );
-  }).sort((a, b) => {
-    const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
-    const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
-    return timeB - timeA;
-  });
-
-  const isSyncing = isMediaLoading || isAuthLoading;
+  const isSyncing = isMediaLoading || isAuthLoading || (!!mediaQuery && media === null);
 
   return (
     <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white mt-4">
