@@ -1,6 +1,8 @@
-
 import Link from "next/link";
 import { Mail, Phone, Instagram, Facebook, Twitter } from "lucide-react";
+import Image from "next/image";
+
+const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 export default function Footer() {
   return (
@@ -8,9 +10,19 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-1">
-            <Link href="/" className="flex flex-col">
-              <span className="text-2xl font-headline font-bold text-primary tracking-tight">MAROMA</span>
-              <span className="text-xs font-body font-medium text-accent uppercase tracking-widest">Experiences</span>
+            <Link href="/" className="flex items-center space-x-3 mb-4">
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <Image 
+                  src={LOGO_URL}
+                  alt="Maroma Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-headline font-bold text-primary tracking-tight">MAROMA</span>
+                <span className="text-xs font-body font-medium text-accent uppercase tracking-widest">Experiences</span>
+              </div>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
               Curating unforgettable moments through connection, history, and craft. Join us in our next group tour or artisan workshop.

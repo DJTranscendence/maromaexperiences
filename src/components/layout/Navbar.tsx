@@ -9,6 +9,7 @@ import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/fireb
 import { initiateSignOut } from "@/firebase/non-blocking-login";
 import { Separator } from "@/components/ui/separator";
 import { doc } from "firebase/firestore";
+import Image from "next/image";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -17,6 +18,8 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+
+const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,9 +45,20 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-headline font-bold text-primary tracking-tight">MAROMA</span>
-            <span className="text-sm font-body font-medium text-accent uppercase tracking-widest hidden sm:block">Experiences</span>
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="relative w-8 h-8 flex-shrink-0">
+              <Image 
+                src={LOGO_URL}
+                alt="Maroma Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
+              <span className="text-[10px] font-body font-medium text-accent uppercase tracking-[0.2em] hidden sm:block">Experiences</span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
