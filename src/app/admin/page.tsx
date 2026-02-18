@@ -132,11 +132,19 @@ export default function AdminPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Duration</Label>
-                    <Input 
-                      placeholder="3 hours" 
+                    <Select 
                       value={newTour.duration}
-                      onChange={e => setNewTour({...newTour, duration: e.target.value})}
-                    />
+                      onValueChange={value => setNewTour({...newTour, duration: value})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30 minutes">30 minutes</SelectItem>
+                        <SelectItem value="60 minutes">60 minutes</SelectItem>
+                        <SelectItem value="90 minutes">90 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
