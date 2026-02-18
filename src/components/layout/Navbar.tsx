@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle } from "lucide-react";
+import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
@@ -86,11 +86,18 @@ export default function Navbar() {
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer bg-accent/10 text-accent font-bold">
-                    <Link href="/login" className="flex items-center gap-2">
-                      <LogIn className="w-4 h-4" /> Sign In
-                    </Link>
-                  </DropdownMenuItem>
+                  <div className="flex flex-col gap-1">
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer bg-accent/10 text-accent font-bold">
+                      <Link href="/login" className="flex items-center gap-2">
+                        <LogIn className="w-4 h-4" /> Sign In
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                      <Link href="/login" className="flex items-center gap-2">
+                        <UserPlus className="w-4 h-4" /> Create Account
+                      </Link>
+                    </DropdownMenuItem>
+                  </div>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -123,9 +130,14 @@ export default function Navbar() {
           {user?.isAnonymous === false ? (
             <Button onClick={handleSignOut} variant="destructive" className="w-full rounded-full">Sign Out</Button>
           ) : (
-            <Button asChild className="w-full bg-primary text-white rounded-full">
-              <Link href="/login" onClick={() => setIsOpen(false)}>Sign In</Link>
-            </Button>
+            <div className="space-y-2">
+              <Button asChild className="w-full bg-primary text-white rounded-full">
+                <Link href="/login" onClick={() => setIsOpen(false)}>Sign In</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full rounded-full border-accent text-accent">
+                <Link href="/login" onClick={() => setIsOpen(false)}>Create Account</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>
