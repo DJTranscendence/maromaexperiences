@@ -36,8 +36,8 @@ export default function AdminPage() {
   const [newTour, setNewTour] = useState({
     name: "",
     highlights: "",
-    location: "",
-    duration: "",
+    location: "Maroma Campus",
+    duration: "60 minutes",
     audience: "",
     description: "",
     price: 500,
@@ -65,7 +65,7 @@ export default function AdminPage() {
       durationHours: parseInt(newTour.duration) || 1,
       minimumGroupSize: newTour.minGroupSize,
       locationId: "default_location",
-      location: newTour.location || "Maroma Campus",
+      location: newTour.location,
       duration: newTour.duration,
       capacity: newTour.capacity,
       type: newTour.type,
@@ -94,8 +94,8 @@ export default function AdminPage() {
     setNewTour({
       name: "",
       highlights: "",
-      location: "",
-      duration: "",
+      location: "Maroma Campus",
+      duration: "60 minutes",
       audience: "",
       description: "",
       price: 500,
@@ -245,27 +245,6 @@ export default function AdminPage() {
                     onChange={e => setNewTour({...newTour, description: e.target.value})}
                   />
                 </div>
-
-                <Button 
-                  className={cn(
-                    "w-full rounded-full mt-6 h-12 gap-2 shadow-lg transition-all duration-500",
-                    isPublished 
-                      ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
-                      : "bg-primary hover:bg-primary/90 shadow-primary/20"
-                  )}
-                  onClick={handleSaveTour}
-                  disabled={isPublished}
-                >
-                  {isPublished ? (
-                    <>
-                      <Check className="w-4 h-4" /> Published!
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" /> Publish Experience
-                    </>
-                  )}
-                </Button>
               </CardContent>
             </Card>
           </div>
@@ -280,6 +259,27 @@ export default function AdminPage() {
                 selectedUrls={newTour.imageUrls}
                 onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 
               />
+              
+              <Button 
+                className={cn(
+                  "w-full rounded-full mt-8 h-14 gap-2 shadow-lg transition-all duration-500 text-lg font-bold",
+                  isPublished 
+                    ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
+                    : "bg-primary hover:bg-primary/90 shadow-primary/20"
+                )}
+                onClick={handleSaveTour}
+                disabled={isPublished}
+              >
+                {isPublished ? (
+                  <>
+                    <Check className="w-5 h-5" /> Published Successfully!
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" /> Publish Experience
+                  </>
+                )}
+              </Button>
             </section>
 
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
