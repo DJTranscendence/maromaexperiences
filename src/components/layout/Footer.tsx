@@ -20,8 +20,8 @@ export default function Footer() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-headline font-bold text-primary tracking-tight">MAROMA</span>
-                <span className="text-xs font-body font-medium text-accent uppercase tracking-widest">Experiences</span>
+                <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
+                <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.55em] mr-[-0.55em]">Experiences</span>
               </div>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
