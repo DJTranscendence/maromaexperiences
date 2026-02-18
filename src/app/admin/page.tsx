@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
 import { Trash2, Edit, Save, Loader2, Sparkles, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
@@ -18,6 +19,15 @@ import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
+
+const HIGHLIGHT_OPTIONS = [
+  "Tour",
+  "Workshop",
+  "Q&A",
+  "Refreshments",
+  "Take-home gift",
+  "Certificate"
+];
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -38,7 +48,7 @@ export default function AdminPage() {
   
   const [newTour, setNewTour] = useState({
     name: "",
-    highlights: "",
+    highlights: [] as string[],
     location: "Maroma Campus",
     duration: "60 minutes",
     audience: "",
@@ -55,7 +65,7 @@ export default function AdminPage() {
     setPriceMode("preset");
     setNewTour({
       name: "",
-      highlights: "",
+      highlights: [],
       location: "Maroma Campus",
       duration: "60 minutes",
       audience: "",
@@ -71,7 +81,6 @@ export default function AdminPage() {
   const handleEdit = (tour: Tour) => {
     setEditingId(tour.id);
     
-    // Check if price matches a preset
     const presets = [500, 1000, 1500, 2000];
     if (presets.includes(tour.price)) {
       setPriceMode("preset");
@@ -81,7 +90,7 @@ export default function AdminPage() {
 
     setNewTour({
       name: tour.name,
-      highlights: tour.highlights?.join(", ") || "",
+      highlights: tour.highlights || [],
       location: tour.location || "Maroma Campus",
       duration: tour.duration || "60 minutes",
       audience: tour.audience || "",
@@ -93,8 +102,18 @@ export default function AdminPage() {
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : [])
     });
 
-    // Scroll to top of form
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const toggleHighlight = (highlight: string) => {
+    setNewTour(prev => {
+      const current = prev.highlights;
+      if (current.includes(highlight)) {
+        return { ...prev, highlights: current.filter(h => h !== highlight) };
+      } else {
+        return { ...prev, highlights: [...current, highlight] };
+      }
+    });
   };
 
   const handleSaveTour = () => {
@@ -114,7 +133,7 @@ export default function AdminPage() {
       description: newTour.description,
       shortDescription: newTour.description.substring(0, 100),
       pricePerPerson: newTour.price,
-      price: newTour.price, // Unified price field
+      price: newTour.price,
       durationHours: parseInt(newTour.duration) || 1,
       minimumGroupSize: newTour.minGroupSize,
       locationId: "default_location",
@@ -122,7 +141,7 @@ export default function AdminPage() {
       duration: newTour.duration,
       capacity: newTour.capacity,
       type: newTour.type,
-      highlights: newTour.highlights.split(",").map(h => h.trim()).filter(h => h.length > 0),
+      highlights: newTour.highlights,
       isActive: true,
       updatedAt: serverTimestamp(),
       imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`, 
@@ -301,14 +320,25 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Highlights (Comma separated)</Label>
-                  <Input 
-                    placeholder="Sunset viewing, Private guide, Local snacks" 
-                    value={newTour.highlights}
-                    onChange={e => setNewTour({...newTour, highlights: e.target.value})}
-                    className="rounded-xl h-11"
-                  />
+                <div className="space-y-3">
+                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Highlights</Label>
+                  <div className="grid grid-cols-2 gap-3 p-4 bg-muted/20 rounded-2xl border border-border/50">
+                    {HIGHLIGHT_OPTIONS.map((option) => (
+                      <div key={option} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`highlight-${option}`} 
+                          checked={newTour.highlights.includes(option)}
+                          onCheckedChange={() => toggleHighlight(option)}
+                        />
+                        <Label 
+                          htmlFor={`highlight-${option}`} 
+                          className="text-xs font-medium leading-none cursor-pointer select-none"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
