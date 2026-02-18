@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { Check, Plus, Loader2, Search, Upload, ImageIcon } from 'lucide-react';
+import { Check, Plus, Loader2, Search, Upload, ImageIcon, Grid, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 interface MediaItem {
   id: string;
@@ -60,7 +61,6 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
-        // Using JPEG with 0.7 quality to keep payload sizes reasonable
         resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
       img.onerror = () => reject(new Error("Failed to load image for resizing"));
@@ -110,8 +110,6 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         setIsAdding(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
-    } else if (!user && !isAuthLoading) {
-      toast({ variant: "destructive", title: "Authentication Required", description: "You must be signed in to upload images." });
     }
   };
 
@@ -135,124 +133,123 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
       (item.url.toLowerCase().includes(searchLower))
     );
   }).sort((a, b) => {
-    // Sort by uploadedAt timestamp, handling potential nulls from optimistic updates
     const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
     const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
     return timeB - timeA;
   });
 
-  // We are loading if the database query is loading, the auth is loading, 
-  // or we haven't received the initial data snapshot yet.
-  const isSyncing = isMediaLoading || isAuthLoading || (media === null);
+  const isSyncing = isMediaLoading || isAuthLoading;
 
   return (
-    <div className="space-y-4 border rounded-3xl p-6 bg-white shadow-inner">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-base font-bold text-primary">Media Library Browser</Label>
-            <p className="text-xs text-muted-foreground">Select images for this experience</p>
-          </div>
-          <div className="bg-primary/5 px-3 py-1 rounded-full">
-            <span className="text-[10px] text-primary uppercase font-bold tracking-widest">
-              {selectedUrls.length} Selected
-            </span>
-          </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+    <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white mt-4">
+      <CardHeader className="bg-white border-b px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Filter library..." 
+              placeholder="Search gallery..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="h-11 text-sm pl-10 rounded-full bg-muted/30 border-none"
+              className="pl-11 rounded-full bg-muted/30 border-none h-11 focus-visible:ring-accent"
             />
           </div>
-          
-          <Button 
-            onClick={() => fileInputRef.current?.click()} 
-            disabled={isAdding || isAuthLoading}
-            variant="outline"
-            className="rounded-full h-11 border-accent/20 text-accent hover:bg-accent/5 px-6"
-          >
-            {isAdding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-            {isAdding ? "Processing..." : "Quick Upload"}
-          </Button>
-          <input 
-            type="file" 
-            accept="image/*" 
-            className="hidden" 
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
-        </div>
-      </div>
-
-      <ScrollArea className="h-[300px] rounded-2xl border bg-muted/10 p-4">
-        {isSyncing ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2">
-            <Loader2 className="w-8 h-8 animate-spin text-accent" />
-            <p className="text-xs text-muted-foreground font-medium">Syncing images...</p>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full h-10 px-4 border-accent/20 text-accent hover:bg-accent/5"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isAdding}
+            >
+              {isAdding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+              {isAdding ? "Uploading..." : "Add Images"}
+            </Button>
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+            <Button variant="ghost" size="icon" className="text-primary rounded-full bg-muted/50 h-10 w-10">
+              <Grid className="w-4 h-4" />
+            </Button>
           </div>
-        ) : (
-          <>
-            {filteredMedia && filteredMedia.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {filteredMedia.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-4 transition-all duration-200 hover:shadow-lg ${
-                      selectedUrls.includes(item.url) ? "border-accent ring-4 ring-accent/20" : "border-transparent"
-                    }`}
-                    onClick={() => toggleSelection(item.url)}
-                  >
-                    <NextImage 
-                      src={item.url} 
-                      alt={item.altText || 'Media'} 
-                      fill 
-                      className="object-cover transition-transform group-hover:scale-105"
-                      unoptimized
-                    />
-                    
-                    {/* Selected Overlay */}
-                    {selectedUrls.includes(item.url) && (
-                      <div className="absolute inset-0 bg-accent/30 flex items-center justify-center backdrop-blur-[1px]">
-                        <div className="bg-accent text-white rounded-full p-1.5 shadow-xl scale-110">
-                          <Check className="w-4 h-4 stroke-[3px]" />
-                        </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <ScrollArea className="h-[400px] pr-4">
+          {isSyncing ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="w-10 h-10 animate-spin text-accent" />
+              <p className="text-muted-foreground font-body">Syncing your gallery...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {filteredMedia?.map((item) => (
+                <div 
+                  key={item.id} 
+                  className={`group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-4 transition-all duration-300 ${
+                    selectedUrls.includes(item.url) ? "border-accent shadow-lg scale-[0.98]" : "border-transparent hover:shadow-xl"
+                  }`}
+                  onClick={() => toggleSelection(item.url)}
+                >
+                  <NextImage 
+                    src={item.url} 
+                    alt={item.altText || 'Media'} 
+                    fill 
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    unoptimized
+                  />
+                  
+                  {/* Selection Overlay */}
+                  {selectedUrls.includes(item.url) && (
+                    <div className="absolute inset-0 bg-accent/20 flex items-center justify-center backdrop-blur-[1px]">
+                      <div className="bg-accent text-white rounded-full p-2 shadow-xl scale-110">
+                        <Check className="w-5 h-5 stroke-[3px]" />
                       </div>
-                    )}
-                    
-                    {/* Info Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-[10px] text-white font-medium truncate">{item.altText}</p>
                     </div>
+                  )}
+
+                  {/* Info Badge */}
+                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-[10px] text-white font-medium truncate uppercase tracking-widest">
+                      {item.altText || 'Tour Image'}
+                    </p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full py-10 text-center">
-                <div className="bg-white p-4 rounded-full shadow-sm mb-4">
-                  <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
                 </div>
-                <p className="text-sm font-bold text-primary font-headline">Gallery Empty</p>
-                <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1">
-                  {searchQuery ? "No images match your search." : "Use 'Quick Upload' to add images from your device or the Media Library."}
-                </p>
-              </div>
-            )}
-          </>
+              ))}
+              
+              {(!filteredMedia || filteredMedia.length === 0) && (
+                <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
+                  <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-bold text-primary font-headline">Gallery Empty</p>
+                  <p className="text-muted-foreground font-body">Upload your first images to start creating experiences.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </ScrollArea>
+        
+        {selectedUrls.length > 0 && (
+          <div className="mt-6 flex items-center justify-between p-4 bg-accent/5 rounded-2xl border border-accent/10">
+            <div className="flex items-center gap-2">
+              <span className="bg-accent text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                {selectedUrls.length}
+              </span>
+              <span className="text-sm font-medium text-primary">Images ready for this experience</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs text-muted-foreground hover:text-destructive"
+              onClick={() => onSelect([])}
+            >
+              Clear Selection
+            </Button>
+          </div>
         )}
-      </ScrollArea>
-      
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground bg-muted/20 p-2 rounded-lg">
-        <span className="flex items-center gap-1">
-          <ImageIcon className="w-3 h-3" /> Tip: Click images to select/deselect them.
-        </span>
-        <span className="italic font-medium text-accent">Images auto-optimized on upload</span>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

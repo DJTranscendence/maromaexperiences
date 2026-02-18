@@ -11,7 +11,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Trash2, Edit, Save, Loader2, X } from "lucide-react";
+import { Trash2, Edit, Save, Loader2, X, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
@@ -128,97 +128,49 @@ export default function AdminPage() {
     });
   };
 
-  const removeImage = (url: string) => {
-    setNewTour(prev => ({
-      ...prev,
-      imageUrls: prev.imageUrls.filter(u => u !== url)
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Admin Dashboard</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Design and manage your Maroma Experiences.</p>
+          </div>
+          <Button variant="outline" className="rounded-full gap-2 border-accent text-accent hover:bg-accent/5">
+            <Sparkles className="w-4 h-4" /> AI Description Generator
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Create Tour Form */}
           <div className="lg:col-span-1">
-            <Card className="rounded-2xl border-none shadow-xl">
+            <Card className="rounded-3xl border-none shadow-xl bg-white">
               <CardHeader>
-                <CardTitle className="font-headline text-2xl">Create Experience</CardTitle>
+                <CardTitle className="font-headline text-2xl text-primary">New Experience</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Experience Name</Label>
+                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Basic Details</Label>
                   <Input 
-                    placeholder="e.g. Maroma Perfum Experience" 
+                    placeholder="Experience Name" 
                     value={newTour.name}
                     onChange={e => setNewTour({...newTour, name: e.target.value})}
+                    className="rounded-xl h-11"
                   />
-                </div>
-                
-                <div className="space-y-3">
-                  <Label>Experience Media Selection</Label>
-                  
-                  {/* Selected Previews */}
-                  {newTour.imageUrls.length > 0 && (
-                    <div className="grid grid-cols-4 gap-2 mb-4 p-2 border rounded-xl bg-muted/20">
-                      {newTour.imageUrls.map((url, i) => (
-                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden border shadow-sm group">
-                          <NextImage src={url} alt="Tour preview" fill className="object-cover" unoptimized />
-                          <button 
-                            onClick={() => removeImage(url)}
-                            className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black transition-colors"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Inline Image Browser */}
-                  <ImageLibrary 
-                    selectedUrls={newTour.imageUrls}
-                    onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label>Highlights</Label>
-                  <div className="grid grid-cols-1 gap-3 p-4 border rounded-xl bg-muted/20">
-                    {HIGHLIGHT_OPTIONS.map((option) => (
-                      <div key={option} className="flex items-center space-x-3">
-                        <Checkbox 
-                          id={`highlight-${option}`}
-                          checked={newTour.highlights.split(", ").includes(option)}
-                          onCheckedChange={(checked) => handleHighlightChange(option, checked === true)}
-                        />
-                        <Label 
-                          htmlFor={`highlight-${option}`} 
-                          className="text-sm font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Location</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Location</Label>
                     <Select 
                       value={newTour.location}
                       onValueChange={value => setNewTour({...newTour, location: value})}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select location" />
+                      <SelectTrigger className="rounded-xl h-11">
+                        <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="The Maroma Campus">The Maroma Campus</SelectItem>
@@ -227,13 +179,13 @@ export default function AdminPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Duration</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Duration</Label>
                     <Select 
                       value={newTour.duration}
                       onValueChange={value => setNewTour({...newTour, duration: value})}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select duration" />
+                      <SelectTrigger className="rounded-xl h-11">
+                        <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="30 minutes">30 minutes</SelectItem>
@@ -246,82 +198,101 @@ export default function AdminPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Price ($)</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price ($)</Label>
                     <Input 
                       type="number"
                       value={newTour.price}
                       onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})}
+                      className="rounded-xl h-11"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Capacity</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Capacity</Label>
                     <Input 
                       type="number"
                       value={newTour.capacity}
                       onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})}
+                      className="rounded-xl h-11"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
                   <Textarea 
-                    className="min-h-[150px]" 
+                    className="min-h-[120px] rounded-2xl" 
                     placeholder="Describe the experience..." 
                     value={newTour.description}
                     onChange={e => setNewTour({...newTour, description: e.target.value})}
                   />
                 </div>
+
                 <Button 
-                  className="w-full bg-primary hover:bg-primary/90 rounded-full mt-6 flex items-center gap-2 h-12"
+                  className="w-full bg-primary hover:bg-primary/90 rounded-full mt-6 h-12 gap-2 shadow-lg shadow-primary/20"
                   onClick={handleSaveTour}
                 >
-                  <Save className="w-4 h-4" /> Save Experience
+                  <Save className="w-4 h-4" /> Publish Experience
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Manage Existing Tours */}
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="rounded-2xl border-none shadow-xl overflow-hidden">
-              <CardHeader className="bg-white">
-                <CardTitle className="font-headline text-2xl">Manage Tours</CardTitle>
+          {/* Media Browser & Existing Tours */}
+          <div className="lg:col-span-2 space-y-12">
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <Label className="text-xl font-headline font-bold text-primary">Experience Visuals</Label>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Browser Window</span>
+              </div>
+              <ImageLibrary 
+                selectedUrls={newTour.imageUrls}
+                onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 
+              />
+            </section>
+
+            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b">
+                <CardTitle className="font-headline text-2xl text-primary">Live Experiences</CardTitle>
               </CardHeader>
               {isLoading ? (
-                <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
+                <div className="p-20 flex flex-col items-center justify-center gap-4">
+                  <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                  <p className="text-sm text-muted-foreground">Syncing tour data...</p>
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Capacity</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                    <TableRow className="bg-muted/30">
+                      <TableHead className="font-bold">Experience</TableHead>
+                      <TableHead className="font-bold">Type</TableHead>
+                      <TableHead className="font-bold">Booking</TableHead>
+                      <TableHead className="font-bold">Price</TableHead>
+                      <TableHead className="text-right font-bold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {tours?.map((tour) => (
-                      <TableRow key={tour.id}>
+                      <TableRow key={tour.id} className="hover:bg-muted/20 transition-colors">
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-muted">
+                          <div className="flex items-center gap-4">
+                            <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-muted shadow-sm">
                               <NextImage src={tour.imageUrl} alt={tour.name} fill className="object-cover" unoptimized />
                             </div>
-                            <span>{tour.name}</span>
+                            <span className="font-bold text-primary">{tour.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="capitalize">{tour.type}</TableCell>
-                        <TableCell>{tour.bookedSpaces || 0} / {tour.capacity}</TableCell>
-                        <TableCell>${tour.price}</TableCell>
+                        <TableCell className="capitalize text-muted-foreground">{tour.type}</TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium">{tour.bookedSpaces || 0} / {tour.capacity}</span>
+                        </TableCell>
+                        <TableCell className="font-bold text-primary">${tour.price}</TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button size="icon" variant="ghost" className="hover:text-accent"><Edit className="w-4 h-4" /></Button>
+                          <div className="flex justify-end gap-1">
+                            <Button size="icon" variant="ghost" className="hover:text-accent rounded-full"><Edit className="w-4 h-4" /></Button>
                             <Button 
                               size="icon" 
                               variant="ghost" 
-                              className="hover:text-destructive"
+                              className="hover:text-destructive rounded-full"
                               onClick={() => handleDelete(tour.id)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -332,7 +303,12 @@ export default function AdminPage() {
                     ))}
                     {(!tours || tours.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No experiences found. Create your first one!</TableCell>
+                        <TableCell colSpan={5} className="text-center py-20">
+                          <div className="flex flex-col items-center gap-2">
+                            <p className="text-lg font-bold text-primary">No Live Experiences</p>
+                            <p className="text-sm text-muted-foreground">Your published tours will appear here.</p>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
