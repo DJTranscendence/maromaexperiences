@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "tour-coastal",
+      "description": "Scenic coastal tour at sunset",
+      "imageUrl": "https://images.unsplash.com/photo-1689733325483-7fbc938a8cfc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjb2FzdGFsJTIwc3Vuc2V0fGVufDB8fHx8MTc3MTM5MDk0NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coastal sunset"
+    },
+    {
+      "id": "workshop-pottery",
+      "description": "Artisan pottery workshop",
+      "imageUrl": "https://images.unsplash.com/photo-1659367057358-87cd8dede838?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwb3R0ZXJ5JTIwd29ya3Nob3B8ZW58MHx8fHwxNzcxMzE4Mzk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pottery workshop"
+    },
+    {
+      "id": "tour-historical",
+      "description": "Guided historical city walk",
+      "imageUrl": "https://images.unsplash.com/photo-1755194354784-d83bcd1c3709?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxoaXN0b3JpY2FsJTIwY2l0eXxlbnwwfHx8fDE3NzEzOTA5NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "historical city"
+    },
+    {
+      "id": "corporate-retreat",
+      "description": "Team building corporate retreat",
+      "imageUrl": "https://images.unsplash.com/photo-1764726354660-5e64ffbffe79?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb3Jwb3JhdGUlMjByZXRyZWF0fGVufDB8fHx8MTc3MTMxODM5NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corporate retreat"
+    }
+  ]
 }

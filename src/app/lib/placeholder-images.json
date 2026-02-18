@@ -1,0 +1,29 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "tour-coastal",
+      "description": "Scenic coastal tour at sunset",
+      "imageUrl": "https://picsum.photos/seed/maroma-coast/1200/800",
+      "imageHint": "coastal sunset"
+    },
+    {
+      "id": "workshop-pottery",
+      "description": "Artisan pottery workshop",
+      "imageUrl": "https://picsum.photos/seed/maroma-pottery/1200/800",
+      "imageHint": "pottery workshop"
+    },
+    {
+      "id": "tour-historical",
+      "description": "Guided historical city walk",
+      "imageUrl": "https://picsum.photos/seed/maroma-history/1200/800",
+      "imageHint": "historical city"
+    },
+    {
+      "id": "corporate-retreat",
+      "description": "Team building corporate retreat",
+      "imageUrl": "https://picsum.photos/seed/maroma-corporate/1200/800",
+      "imageHint": "corporate retreat"
+    }
+  ]
+}
