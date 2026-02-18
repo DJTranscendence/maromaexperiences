@@ -22,6 +22,47 @@ interface MediaItem {
   uploadedAt: any;
 }
 
+/**
+ * Resizes an image file to ensure it fits within Firestore document limits.
+ * Targeted for ~800px max dimension and 0.7 quality.
+ */
+const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        // Using JPEG for better compression for the prototype
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};
+
 export default function MediaLibraryPage() {
   const { toast } = useToast();
   const { firestore } = useFirestore();
@@ -44,15 +85,6 @@ export default function MediaLibraryPage() {
     }
   };
 
-  const readFileAsDataURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleBatchUpload = async () => {
     if (selectedFiles.length === 0 || !firestore) return;
     
@@ -60,27 +92,32 @@ export default function MediaLibraryPage() {
     
     try {
       for (const file of selectedFiles) {
-        const dataUrl = await readFileAsDataURL(file);
+        // Resize image to ensure it stays well under the 1MB Firestore document limit
+        const compressedDataUrl = await resizeImage(file);
+        
         const mediaData = {
-          url: dataUrl,
+          url: compressedDataUrl,
           type: 'image',
           altText: file.name,
           uploadedAt: serverTimestamp(),
         };
+        
+        // Optimistic addition
         addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
       }
       
       toast({
         title: "Success",
-        description: `Successfully added ${selectedFiles.length} images to the library.`,
+        description: `Started processing ${selectedFiles.length} images for your library.`,
       });
       setSelectedFiles([]);
       setIsUploadDialogOpen(false);
     } catch (error) {
+      console.error("Upload error:", error);
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: "There was an error processing the images.",
+        description: "There was an error processing the images. Please ensure they are valid image files.",
       });
     } finally {
       setIsUploading(false);
@@ -136,7 +173,7 @@ export default function MediaLibraryPage() {
                   >
                     <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
                     <p className="text-sm font-medium">Click to select files or drag and drop</p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or WEBP (Max 1MB per file recommended for prototypes)</p>
+                    <p className="text-xs text-muted-foreground mt-1">Images will be optimized for the library automatically.</p>
                     <Input 
                       type="file" 
                       multiple 
@@ -163,13 +200,18 @@ export default function MediaLibraryPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => { setIsUploadDialogOpen(false); setSelectedFiles([]); }} className="rounded-full">Cancel</Button>
+                <Button variant="outline" onClick={() => { setIsUploadDialogOpen(false); setSelectedFiles([]); }} className="rounded-full" disabled={isUploading}>Cancel</Button>
                 <Button 
                   onClick={handleBatchUpload} 
                   disabled={isUploading || selectedFiles.length === 0}
                   className="bg-accent hover:bg-accent/90 rounded-full min-w-[120px]"
                 >
-                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Start Upload"}
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : "Start Upload"}
                 </Button>
               </DialogFooter>
             </DialogContent>

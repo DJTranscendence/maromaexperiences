@@ -25,6 +25,45 @@ interface ImageLibraryProps {
   multiSelect?: boolean;
 }
 
+/**
+ * Resizes an image file to ensure it fits within Firestore document limits.
+ */
+const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};
+
 export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }: ImageLibraryProps) {
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -44,23 +83,23 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
       setIsAdding(true);
       const file = e.target.files[0];
       
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const dataUrl = reader.result as string;
+      try {
+        const compressedDataUrl = await resizeImage(file);
         const mediaData = {
-          url: dataUrl,
+          url: compressedDataUrl,
           type: 'image',
           altText: file.name,
           uploadedAt: serverTimestamp(),
         };
 
-        addDocumentNonBlocking(collection(firestore, 'media'), mediaData)
-          .then(() => {
-            toast({ title: "Media Added", description: "Image successfully added to the library." });
-          })
-          .finally(() => setIsAdding(false));
-      };
-      reader.readAsDataURL(file);
+        addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
+        toast({ title: "Media Added", description: "Image successfully added and optimized." });
+      } catch (err) {
+        console.error("Resizing error:", err);
+        toast({ variant: "destructive", title: "Process Error", description: "Could not optimize image." });
+      } finally {
+        setIsAdding(false);
+      }
     }
   };
 
@@ -101,7 +140,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
             className="w-full flex items-center gap-2 rounded-full h-9 bg-white border-accent/20 text-accent hover:bg-accent/5"
           >
             {isAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-            <span className="text-xs">Select Image from Device</span>
+            <span className="text-xs">{isAdding ? "Optimizing..." : "Select Image from Device"}</span>
           </Button>
           <input 
             type="file" 
@@ -167,7 +206,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
       </ScrollArea>
       
       <p className="text-[10px] text-muted-foreground italic">
-        * Click images to select/deselect them for this experience.
+        * Images are optimized for performance during upload.
       </p>
     </div>
   );
