@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { Check, Plus, Loader2, Search, Upload, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -72,6 +71,7 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
 
 export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }: ImageLibraryProps) {
   const { firestore } = useFirestore();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,10 +82,10 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     return collection(firestore, 'media');
   }, [firestore]);
 
-  const { data: media, isLoading } = useCollection<MediaItem>(mediaQuery);
+  const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0 && firestore) {
+    if (e.target.files && e.target.files.length > 0 && firestore && user) {
       setIsAdding(true);
       const file = e.target.files[0];
       
@@ -110,6 +110,8 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         setIsAdding(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
+    } else if (!user && !isAuthLoading) {
+      toast({ variant: "destructive", title: "Authentication Required", description: "You must be signed in to upload images." });
     }
   };
 
@@ -125,14 +127,21 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  const filteredMedia = media?.filter(item => 
-    item.url.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.altText?.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => {
-    const timeA = a.uploadedAt?.toMillis?.() || 0;
-    const timeB = b.uploadedAt?.toMillis?.() || 0;
+  const filteredMedia = media?.filter(item => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      (item.altText?.toLowerCase().includes(searchLower)) ||
+      (item.url.toLowerCase().includes(searchLower))
+    );
+  }).sort((a, b) => {
+    // Sort by uploadedAt timestamp, handling potential nulls from optimistic updates
+    const timeA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || 0;
+    const timeB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || 0;
     return timeB - timeA;
   });
+
+  const showLoading = isMediaLoading || isAuthLoading;
 
   return (
     <div className="space-y-4 border rounded-3xl p-6 bg-white shadow-inner">
@@ -162,7 +171,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
           
           <Button 
             onClick={() => fileInputRef.current?.click()} 
-            disabled={isAdding}
+            disabled={isAdding || isAuthLoading}
             variant="outline"
             className="rounded-full h-11 border-accent/20 text-accent hover:bg-accent/5 px-6"
           >
@@ -180,7 +189,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
       </div>
 
       <ScrollArea className="h-[300px] rounded-2xl border bg-muted/10 p-4">
-        {isLoading ? (
+        {showLoading && !media ? (
           <div className="flex flex-col items-center justify-center h-full gap-2">
             <Loader2 className="w-8 h-8 animate-spin text-accent" />
             <p className="text-xs text-muted-foreground font-medium">Syncing images...</p>
@@ -228,7 +237,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
                 </div>
                 <p className="text-sm font-bold text-primary font-headline">Gallery Empty</p>
                 <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1">
-                  {searchQuery ? "No images match your search." : "Use 'Quick Upload' to add images from your device."}
+                  {searchQuery ? "No images match your search." : "Use 'Quick Upload' to add images from your device or the Media Library."}
                 </p>
               </div>
             )}
