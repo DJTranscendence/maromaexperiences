@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -56,7 +57,7 @@ const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<strin
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
       };
       img.onerror = reject;
     };
@@ -95,7 +96,6 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
         addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
         toast({ title: "Media Added", description: "Image successfully added and optimized." });
       } catch (err) {
-        console.error("Resizing error:", err);
         toast({ variant: "destructive", title: "Process Error", description: "Could not optimize image." });
       } finally {
         setIsAdding(false);
@@ -183,6 +183,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
                   alt={item.altText || 'Media'} 
                   fill 
                   className="object-cover"
+                  unoptimized
                 />
                 {selectedUrls.includes(item.url) && (
                   <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">

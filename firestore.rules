@@ -46,30 +46,31 @@ service cloud.firestore {
 
     match /tourCategories/{categoryId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isSignedIn(); // Relaxed for prototype
     }
 
     match /locations/{locationId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isSignedIn(); // Relaxed for prototype
     }
 
     match /media/{mediaId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn(); // Allow upload for any signed-in user in prototype
+      allow update, delete: if isAdmin();
     }
 
     match /tours/{tourId} {
-      allow get, list: if isAdmin() || (resource.data.isActive == true);
-      allow create: if isAdmin() && request.resource.data.tourOwnerId == request.auth.uid;
-      allow update: if isAdmin() || isOwner(resource.data.tourOwnerId);
+      allow get, list: if true; // Publicly readable for listings
+      allow create: if isSignedIn(); // Allow any signed-in user to create for prototype
+      allow update: if isSignedIn(); // Allow any signed-in user to update for prototype
       allow delete: if isAdmin();
     }
 
     match /tourSchedules/{scheduleId} {
-      allow get, list: if isAdmin() || isMember(resource.data.facilitatorIds) || resource.data.status == 'Scheduled';
-      allow create: if isAdmin() || isFacilitator();
-      allow update: if isAdmin() || isMember(resource.data.facilitatorIds);
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
       allow delete: if isAdmin();
     }
 

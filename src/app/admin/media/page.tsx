@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -24,9 +25,9 @@ interface MediaItem {
 
 /**
  * Resizes an image file to ensure it fits within Firestore document limits.
- * Targeted for ~800px max dimension and 0.7 quality.
+ * Aggressively targets 800px and 0.6 quality for prototype stability.
  */
-const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<string> => {
+const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -54,8 +55,7 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Using JPEG for better compression for the prototype
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
       };
       img.onerror = reject;
     };
@@ -92,7 +92,6 @@ export default function MediaLibraryPage() {
     
     try {
       for (const file of selectedFiles) {
-        // Resize image to ensure it stays well under the 1MB Firestore document limit
         const compressedDataUrl = await resizeImage(file);
         
         const mediaData = {
@@ -102,22 +101,20 @@ export default function MediaLibraryPage() {
           uploadedAt: serverTimestamp(),
         };
         
-        // Optimistic addition
         addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
       }
       
       toast({
-        title: "Success",
-        description: `Started processing ${selectedFiles.length} images for your library.`,
+        title: "Upload Started",
+        description: `Processing ${selectedFiles.length} images. They will appear shortly.`,
       });
       setSelectedFiles([]);
       setIsUploadDialogOpen(false);
     } catch (error) {
-      console.error("Upload error:", error);
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: "There was an error processing the images. Please ensure they are valid image files.",
+        description: "Error processing images. Ensure they are valid image files.",
       });
     } finally {
       setIsUploading(false);
@@ -173,7 +170,7 @@ export default function MediaLibraryPage() {
                   >
                     <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
                     <p className="text-sm font-medium">Click to select files or drag and drop</p>
-                    <p className="text-xs text-muted-foreground mt-1">Images will be optimized for the library automatically.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Images optimized for Firestore storage.</p>
                     <Input 
                       type="file" 
                       multiple 
@@ -250,6 +247,7 @@ export default function MediaLibraryPage() {
                         alt={item.altText || 'Media'} 
                         fill 
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        unoptimized // Recommended for data URIs in prototype
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <Button 
