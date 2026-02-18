@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -120,6 +119,7 @@ export default function AccountPage() {
                               <Badge className={booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}>
                                 {booking.status}
                               </Badge>
+                              <div className="font-bold text-primary mr-2">₹{booking.price}</div>
                               <Button size="icon" variant="ghost" className="rounded-full hover:bg-white hover:text-accent">
                                 <ExternalLink className="w-4 h-4" />
                               </Button>

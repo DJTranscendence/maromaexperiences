@@ -122,7 +122,7 @@ export default function TourDetailsPage() {
                 <div className="mb-6 flex justify-between items-end">
                   <div>
                     <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Starting from</span>
-                    <div className="text-4xl font-headline font-bold text-primary">${tour.price}</div>
+                    <div className="text-4xl font-headline font-bold text-primary">₹{tour.price}</div>
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-muted-foreground">Min group: {tour.minGroupSize}</span>

@@ -104,7 +104,7 @@ export default function Home() {
                   <CardFooter className="px-6 py-4 border-t border-border flex items-center justify-between bg-gray-50/50">
                     <div className="flex flex-col">
                       <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">From</span>
-                      <span className="text-xl font-bold text-primary font-headline">${tour.price} <span className="text-xs font-normal">/ guest</span></span>
+                      <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
                     </div>
                     <Button variant="ghost" className="rounded-full group-hover:translate-x-1 transition-transform">
                       <ArrowRight className="w-5 h-5 text-accent" />

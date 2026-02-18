@@ -257,7 +257,7 @@ export default function AdminPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price ($)</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price (₹)</Label>
                     <Select 
                       value={priceMode === "custom" ? "other" : newTour.price.toString()}
                       onValueChange={(val) => {
@@ -427,7 +427,7 @@ export default function AdminPage() {
                         <TableCell>
                           <span className="text-sm font-medium">{tour.bookedSpaces || 0} / {tour.capacity}</span>
                         </TableCell>
-                        <TableCell className="font-bold text-primary">${tour.price}</TableCell>
+                        <TableCell className="font-bold text-primary">₹{tour.price}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button 

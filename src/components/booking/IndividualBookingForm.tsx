@@ -142,7 +142,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                 required 
               />
               <div className="text-sm text-muted-foreground whitespace-nowrap">
-                ${tour.price} / each
+                ₹{tour.price} / each
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             </div>
             <div>
               <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Total to pay</div>
-              <div className="text-2xl font-bold font-headline text-primary">${total}</div>
+              <div className="text-2xl font-bold font-headline text-primary">₹{total}</div>
             </div>
           </div>
           <Button 

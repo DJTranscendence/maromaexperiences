@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -88,7 +87,7 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
                 <addon.icon className="w-4 h-4 text-accent" />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">{addon.label}</span>
-                  <span className="text-xs text-muted-foreground">${addon.price}{addon.id !== "photo" ? "/pp" : ""}</span>
+                  <span className="text-xs text-muted-foreground">₹{addon.price}{addon.id !== "photo" ? "/pp" : ""}</span>
                 </div>
               </div>
             </div>
