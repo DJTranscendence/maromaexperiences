@@ -89,10 +89,9 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     const filtered = media.filter(item => {
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
-      return (
-        (item.altText?.toLowerCase().includes(q)) ||
-        (item.url.toLowerCase().includes(q))
-      );
+      // Only filter by alt text if it exists, otherwise use url
+      const searchTarget = (item.altText || item.url || '').toLowerCase();
+      return searchTarget.includes(q);
     });
 
     // Sort by most recent first
@@ -138,8 +137,8 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  // Determine if we are still waiting for initial data
-  const isSyncing = isMediaLoading || isUserLoading || (!!mediaQuery && media === null);
+  // Improved syncing check: wait for media to be a valid array (even if empty)
+  const isSyncing = isMediaLoading || isUserLoading || media === null;
 
   return (
     <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
