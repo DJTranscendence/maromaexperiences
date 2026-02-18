@@ -13,6 +13,7 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
   const remaining = Math.max(0, capacity - (booked || 0));
   const availablePercent = capacity > 0 ? (remaining / capacity) * 100 : 0;
 
+  // Initializing with "Perfect" availability (100% free)
   let colorClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
   let dotClass = "bg-emerald-500";
   let label = "Spaces Available";
@@ -21,19 +22,23 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
     colorClass = "bg-red-100 text-red-800 border-red-200";
     dotClass = "bg-red-600";
     label = "Fully Booked";
-  } else if (availablePercent <= 15) {
+  } else if (availablePercent <= 20) {
+    // 1-20% left: High urgency
     colorClass = "bg-rose-100 text-rose-800 border-rose-200";
     dotClass = "bg-rose-500";
     label = "Last Few Seats";
-  } else if (availablePercent <= 35) {
+  } else if (availablePercent <= 40) {
+    // 21-40% left: Significant bookings
     colorClass = "bg-orange-100 text-orange-800 border-orange-200";
     dotClass = "bg-orange-500";
     label = "Filling Fast";
-  } else if (availablePercent <= 55) {
+  } else if (availablePercent <= 65) {
+    // 41-65% left: Halfway there
     colorClass = "bg-amber-100 text-amber-800 border-amber-200";
     dotClass = "bg-amber-500";
     label = "Moderate Interest";
-  } else if (availablePercent <= 75) {
+  } else if (availablePercent <= 90) {
+    // 66-90% left: Noticing bookings
     colorClass = "bg-lime-100 text-lime-800 border-lime-200";
     dotClass = "bg-lime-500";
     label = "Good Availability";
