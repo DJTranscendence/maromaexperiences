@@ -1,4 +1,3 @@
-
 import { Tour } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
@@ -8,7 +7,7 @@ export const MOCK_TOURS: Tour[] = [
     name: 'Coastal Sunset Expedition',
     description: 'Explore the rugged coastline and hidden caves as the sun dips below the horizon.',
     highlights: ['Cave exploration', 'Sunset photography', 'Marine life observation'],
-    location: 'Maroma Coast',
+    location: 'The Maroma Campus',
     duration: '3 hours',
     price: 85,
     type: 'group',
@@ -23,7 +22,7 @@ export const MOCK_TOURS: Tour[] = [
     name: 'Artisanal Pottery Workshop',
     description: 'Learn the ancient art of wheel-thrown pottery from master artisans.',
     highlights: ['Clay techniques', 'Firing process', 'Custom glaze'],
-    location: 'Central Studio',
+    location: 'The Maroma Spa',
     duration: '4 hours',
     price: 120,
     type: 'workshop',
@@ -38,7 +37,7 @@ export const MOCK_TOURS: Tour[] = [
     name: 'Historical Quarter Walk',
     description: 'A deep dive into the architecture and legends of the old town.',
     highlights: ['Medieval architecture', 'Secret gardens', 'Legend storytelling'],
-    location: 'Old Town Square',
+    location: 'The Maroma Campus',
     duration: '2 hours',
     price: 45,
     type: 'school',
@@ -53,7 +52,7 @@ export const MOCK_TOURS: Tour[] = [
     name: 'Leadership & Connection Retreat',
     description: 'Tailored experiences for corporate teams to strengthen bonds and vision.',
     highlights: ['Collaborative challenges', 'Strategy sessions', 'Private catering'],
-    location: 'Maroma Highlands',
+    location: 'The Maroma Spa',
     duration: 'Full day',
     price: 500,
     type: 'corporate',

@@ -64,7 +64,7 @@ export default function AdminPage() {
       durationHours: parseInt(newTour.duration) || 1,
       minimumGroupSize: newTour.minGroupSize,
       locationId: "default_location",
-      location: newTour.location,
+      location: newTour.location || "The Maroma Campus",
       duration: newTour.duration,
       capacity: newTour.capacity,
       type: newTour.type,
