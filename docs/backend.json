@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -227,6 +228,33 @@
         "locationId",
         "createdAt"
       ]
+    },
+    "Media": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Media",
+      "type": "object",
+      "description": "Represents an image or video resource stored in the system's media library.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["image", "video"]
+        },
+        "altText": {
+          "type": "string"
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "url", "type", "uploadedAt"]
     },
     "TourSchedule": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -570,6 +598,22 @@
             {
               "name": "tourId",
               "description": "The unique identifier for the tour or workshop."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/media/{mediaId}",
+        "definition": {
+          "entityName": "Media",
+          "schema": {
+            "$ref": "#/backend/entities/Media"
+          },
+          "description": "Global collection for media resources (images/videos).",
+          "params": [
+            {
+              "name": "mediaId",
+              "description": "The unique identifier for the media item."
             }
           ]
         }

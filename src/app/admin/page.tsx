@@ -12,11 +12,13 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Plus, Trash2, Edit, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit, Save, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { Tour } from "@/lib/types";
+import { ImageLibrary } from "@/components/admin/ImageLibrary";
+import NextImage from "next/image";
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -40,7 +42,8 @@ export default function AdminPage() {
     price: 0,
     capacity: 20,
     minGroupSize: 8,
-    type: "group" as const
+    type: "group" as const,
+    imageUrls: [] as string[]
   });
 
   const HIGHLIGHT_OPTIONS = [
@@ -73,14 +76,25 @@ export default function AdminPage() {
     }
     
     const tourData = {
-      ...newTour,
+      name: newTour.name,
+      description: newTour.description,
+      shortDescription: newTour.description.substring(0, 100),
+      pricePerPerson: newTour.price,
+      durationHours: parseInt(newTour.duration) || 1,
+      minimumGroupSize: newTour.minGroupSize,
+      locationId: "default_location", // Reference to a real location if implemented
+      location: newTour.location, // Denormalized for simpler UI
+      duration: newTour.duration, // Denormalized for simpler UI
+      capacity: newTour.capacity,
+      type: newTour.type,
       highlights: newTour.highlights.split(", ").filter(h => h.length > 0),
-      isActive: true, // Default to true for this prototype
+      isActive: true,
       tourOwnerId: user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       bookedSpaces: 0,
-      imageUrl: `https://picsum.photos/seed/${Math.random()}/1200/800`, // Placeholder
+      imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`, 
+      imageUrls: newTour.imageUrls,
       scheduledDates: ["2024-08-15"]
     };
 
@@ -101,7 +115,8 @@ export default function AdminPage() {
       price: 0,
       capacity: 20,
       minGroupSize: 8,
-      type: "group"
+      type: "group",
+      imageUrls: []
     });
   };
 
@@ -114,6 +129,13 @@ export default function AdminPage() {
     });
   };
 
+  const removeImage = (url: string) => {
+    setNewTour(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter(u => u !== url)
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -121,9 +143,6 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Admin Dashboard</h1>
-          <Button className="bg-accent hover:bg-accent/90 rounded-full flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Add New Tour
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -144,6 +163,27 @@ export default function AdminPage() {
                   />
                 </div>
                 
+                <div className="space-y-3">
+                  <Label>Experience Media</Label>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    {newTour.imageUrls.map((url, i) => (
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
+                        <NextImage src={url} alt="Tour image" fill className="object-cover" />
+                        <button 
+                          onClick={() => removeImage(url)}
+                          className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <ImageLibrary 
+                    selectedUrls={newTour.imageUrls}
+                    onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 
+                  />
+                </div>
+
                 <div className="space-y-3">
                   <Label>Highlights</Label>
                   <div className="grid grid-cols-1 gap-3 p-4 border rounded-xl bg-muted/20">
@@ -259,9 +299,16 @@ export default function AdminPage() {
                   <TableBody>
                     {tours?.map((tour) => (
                       <TableRow key={tour.id}>
-                        <TableCell className="font-medium">{tour.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-muted">
+                              <NextImage src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
+                            </div>
+                            <span>{tour.name}</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="capitalize">{tour.type}</TableCell>
-                        <TableCell>{tour.bookedSpaces} / {tour.capacity}</TableCell>
+                        <TableCell>{tour.bookedSpaces || 0} / {tour.capacity}</TableCell>
                         <TableCell>${tour.price}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -287,16 +334,7 @@ export default function AdminPage() {
                 </Table>
               )}
             </Card>
-
-            <div className="bg-primary/5 p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-headline font-bold text-primary">Need specialized help?</h3>
-                <p className="text-muted-foreground mt-1">Our customer concierge is available 24/7 for admin support.</p>
-              </div>
-              <Button variant="default" className="bg-primary rounded-full px-8">Contact Support</Button>
-            </div>
           </div>
-
         </div>
       </main>
       
