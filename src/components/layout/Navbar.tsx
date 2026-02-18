@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
 import { Separator } from "@/components/ui/separator";
+import { doc } from "firebase/firestore";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -21,6 +22,16 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
+
+  // Check if user is an admin by looking for a document in the roles_admin collection
+  const adminRef = useMemoFirebase(() => {
+    if (!firestore || !user || user.isAnonymous) return null;
+    return doc(firestore, "roles_admin", user.uid);
+  }, [firestore, user]);
+
+  const { data: adminDoc } = useDoc(adminRef);
+  const isAdmin = !!adminDoc;
 
   const handleSignOut = () => {
     initiateSignOut(auth);
@@ -41,14 +52,16 @@ export default function Navbar() {
             <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Tours & Workshops</Link>
             <Link href="/account" className="text-sm font-medium hover:text-accent transition-colors">My Bookings</Link>
             
-            <div className="flex items-center gap-4 pl-4 border-l border-border">
-              <Link href="/admin/media" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                <ImageIcon className="w-4 h-4" /> Media
-              </Link>
-              <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                <Settings className="w-4 h-4" /> Admin
-              </Link>
-            </div>
+            {isAdmin && (
+              <div className="flex items-center gap-4 pl-4 border-l border-border animate-in fade-in duration-500">
+                <Link href="/admin/media" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <ImageIcon className="w-4 h-4" /> Media
+                </Link>
+                <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <Settings className="w-4 h-4" /> Admin
+                </Link>
+              </div>
+            )}
 
             <Button variant="default" size="sm" asChild className="bg-primary text-white hover:bg-primary/90 rounded-full px-6">
               <Link href="/">Book Now</Link>
@@ -81,6 +94,21 @@ export default function Navbar() {
                         <UserCircle className="w-4 h-4" /> Profile
                       </Link>
                     </DropdownMenuItem>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                          <Link href="/admin" className="flex items-center gap-2">
+                            <Settings className="w-4 h-4" /> Admin Panel
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                          <Link href="/admin/media" className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4" /> Media Library
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="rounded-xl cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="w-4 h-4 mr-2" /> Sign Out
                     </DropdownMenuItem>
@@ -120,13 +148,21 @@ export default function Navbar() {
         <div className="px-4 pt-2 pb-6 space-y-4">
           <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Tours & Workshops</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
+          
+          {isAdmin && (
+            <>
+              <Separator />
+              <Link href="/admin/media" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                <ImageIcon className="w-5 h-5" /> Media Library
+              </Link>
+              <Link href="/admin" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                <Settings className="w-5 h-5" /> Admin Panel
+              </Link>
+            </>
+          )}
+
           <Separator />
-          <Link href="/admin/media" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
-            <ImageIcon className="w-5 h-5" /> Media Library
-          </Link>
-          <Link href="/admin" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
-            <Settings className="w-5 h-5" /> Admin Panel
-          </Link>
+          
           {user?.isAnonymous === false ? (
             <Button onClick={handleSignOut} variant="destructive" className="w-full rounded-full">Sign Out</Button>
           ) : (
