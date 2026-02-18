@@ -23,7 +23,7 @@ interface MediaItem {
   uploadedAt: any;
 }
 
-const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<string> => {
+const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -53,7 +53,7 @@ const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<strin
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
       img.onerror = () => reject(new Error("Failed to load image for resizing"));
       img.src = e.target?.result as string;
@@ -97,8 +97,8 @@ export default function MediaLibraryPage() {
     if (!firestore || !user) {
       toast({
         variant: "destructive",
-        title: "System Not Ready",
-        description: "Please wait for authentication to complete or refresh the page.",
+        title: "Connection Pending",
+        description: "Please wait a moment while we secure your connection.",
       });
       return;
     }
@@ -133,23 +133,23 @@ export default function MediaLibraryPage() {
       
       if (successCount > 0) {
         toast({
-          title: "Processing Complete",
-          description: `Successfully prepared ${successCount} images. ${failCount > 0 ? `${failCount} failed.` : ''} They will appear in the library shortly.`,
+          title: "Assets Prepared",
+          description: `Successfully processed ${successCount} assets. They will appear in your library shortly.`,
         });
         setSelectedFiles([]);
         setIsUploadDialogOpen(false);
       } else {
         toast({
           variant: "destructive",
-          title: "Upload Failed",
-          description: "No images could be processed. Please try different files.",
+          title: "Processing Failed",
+          description: "No assets could be processed. Please try different files.",
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Upload Error",
-        description: error.message || "An unexpected error occurred during upload.",
+        description: error.message || "An unexpected error occurred.",
       });
     } finally {
       setIsUploading(false);
@@ -161,8 +161,8 @@ export default function MediaLibraryPage() {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, "media", id));
     toast({
-      title: "Media Deleted",
-      description: "The item has been removed from the library."
+      title: "Media Removed",
+      description: "The item has been successfully deleted."
     });
   };
 
@@ -180,38 +180,28 @@ export default function MediaLibraryPage() {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
-        {(!user && !isUserLoading) && (
-          <Alert variant="destructive" className="mb-6 rounded-2xl bg-destructive/5 text-destructive border-destructive/20">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="font-headline font-bold">Authentication Pending</AlertTitle>
-            <AlertDescription>
-              We are connecting you to our secure services. Please wait a moment before attempting to upload.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Media Library</h1>
-            <p className="text-muted-foreground mt-1">Manage images and videos for your tours and workshops.</p>
+            <p className="text-muted-foreground mt-1">Curate your visuals for tours and workshops.</p>
           </div>
           
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                disabled={!user}
+                disabled={isUserLoading}
                 className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 h-12 flex items-center gap-2 shadow-lg shadow-accent/20"
               >
-                <Plus className="w-5 h-5" /> {user ? "Upload Media" : "Initializing..."}
+                <Plus className="w-5 h-5" /> {isUserLoading ? "Initializing..." : "Upload Assets"}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline flex items-center gap-2">
-                  <Upload className="w-6 h-6 text-accent" /> Upload Images
+                  <Upload className="w-6 h-6 text-accent" /> New Assets
                 </DialogTitle>
                 <DialogDescription>
-                  Select one or more images from your device to add to your library.
+                  Choose high-quality photos from your device to add to your Maroma collection.
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-4">
@@ -220,8 +210,8 @@ export default function MediaLibraryPage() {
                   onClick={() => !isUploading && fileInputRef.current?.click()}
                 >
                   <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm font-medium">Click to select images</p>
-                  <p className="text-xs text-muted-foreground mt-1">Select multiple files from your computer.</p>
+                  <p className="text-sm font-medium">Click to select files</p>
+                  <p className="text-xs text-muted-foreground mt-1">Select one or more JPG/PNG files.</p>
                   <input 
                     type="file" 
                     multiple 
@@ -234,7 +224,7 @@ export default function MediaLibraryPage() {
                 
                 {selectedFiles.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-wider">Queue ({selectedFiles.length})</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider">Upload Queue ({selectedFiles.length})</Label>
                     <div className="max-h-40 overflow-y-auto space-y-1 pr-2">
                       {selectedFiles.map((file, i) => (
                         <div key={i} className="flex items-center justify-between p-2 bg-muted rounded-lg text-xs">
@@ -256,7 +246,7 @@ export default function MediaLibraryPage() {
                 {isUploading && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs font-medium">
-                      <span>Processing...</span>
+                      <span>Processing Assets...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
@@ -287,65 +277,62 @@ export default function MediaLibraryPage() {
           </Dialog>
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
-          <Card className="rounded-3xl border-none shadow-xl overflow-hidden">
-            <CardHeader className="bg-white border-b flex flex-row items-center justify-between">
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search your library..." 
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 rounded-full bg-muted/30 border-none h-10"
-                />
+        <Card className="rounded-3xl border-none shadow-xl overflow-hidden">
+          <CardHeader className="bg-white border-b flex flex-row items-center justify-between">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search gallery..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10 rounded-full bg-muted/30 border-none h-10"
+              />
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              <Button variant="ghost" size="icon" className="text-primary rounded-full bg-muted/50"><Grid className="w-4 h-4" /></Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8">
+            {isMediaLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="w-10 h-10 animate-spin text-accent" />
+                <p className="text-muted-foreground font-body">Syncing assets...</p>
               </div>
-              <div className="flex items-center gap-2 ml-4">
-                <Button variant="ghost" size="icon" className="text-primary rounded-full bg-muted/50"><Grid className="w-4 h-4" /></Button>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                {filteredMedia?.map((item) => (
+                  <div key={item.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-muted shadow-sm border border-border hover:shadow-xl transition-all duration-300">
+                    <NextImage 
+                      src={item.url} 
+                      alt={item.altText || 'Media'} 
+                      fill 
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button 
+                        size="icon" 
+                        variant="destructive" 
+                        className="rounded-full w-10 h-10 shadow-lg"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {(!filteredMedia || filteredMedia.length === 0) && (
+                  <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
+                    <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-lg font-bold text-primary font-headline">Gallery Empty</p>
+                    <p className="text-muted-foreground mb-6 font-body">Your curated images will appear here once uploaded.</p>
+                  </div>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="p-8">
-              {isMediaLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
-                  <Loader2 className="w-10 h-10 animate-spin text-accent" />
-                  <p className="text-muted-foreground animate-pulse font-body">Synchronizing assets...</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                  {filteredMedia?.map((item) => (
-                    <div key={item.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-muted shadow-sm border border-border hover:shadow-xl transition-all duration-300">
-                      <NextImage 
-                        src={item.url} 
-                        alt={item.altText || 'Media'} 
-                        fill 
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        unoptimized
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button 
-                          size="icon" 
-                          variant="destructive" 
-                          className="rounded-full w-10 h-10 shadow-lg"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {(!filteredMedia || filteredMedia.length === 0) && (
-                    <div className="col-span-full py-20 text-center bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
-                      <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-lg font-bold text-primary font-headline">Your library is empty</p>
-                      <p className="text-muted-foreground mb-6 font-body">Upload photos from your experiences to get started.</p>
-                      <Button onClick={() => setIsUploadDialogOpen(true)} className="rounded-full" disabled={!user}>Upload First Image</Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
       
       <Footer />

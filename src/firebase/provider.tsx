@@ -64,19 +64,23 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       return;
     }
 
+    let isInitialCheck = true;
+
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => {
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-        
-        // Ensure Firestore operations work for unauthenticated visitors
-        if (!firebaseUser) {
-          signInAnonymously(auth).catch(err => {
-            // Silently handle if anonymous auth is not enabled yet in console
-            if (process.env.NODE_ENV === 'development') {
-              console.warn("FirebaseProvider: Automatic anonymous sign-in failed. Ensure Anonymous Auth is enabled in Firebase Console.");
-            }
-          });
+      async (firebaseUser) => {
+        if (!firebaseUser && isInitialCheck) {
+          isInitialCheck = false;
+          try {
+            // Attempt to sign in anonymously if no user exists on initial load
+            await signInAnonymously(auth);
+            // onAuthStateChanged will fire again with the new user
+          } catch (err: any) {
+            setUserAuthState({ user: null, isUserLoading: false, userError: err });
+          }
+        } else {
+          setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+          isInitialCheck = false;
         }
       },
       (error) => {
