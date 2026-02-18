@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -5,15 +6,16 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Trash2, Plus, Loader2, Search, Grid, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 interface MediaItem {
   id: string;
@@ -23,6 +25,9 @@ interface MediaItem {
   uploadedAt: any;
 }
 
+/**
+ * Resizes an image file to ensure it fits within document limits and performance guidelines.
+ */
 const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -53,7 +58,8 @@ const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<str
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
+        // Using JPEG with 0.7 quality to keep payload sizes reasonable
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
       img.onerror = () => reject(new Error("Failed to load image for resizing"));
       img.src = e.target?.result as string;
@@ -65,7 +71,7 @@ const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<str
 
 export default function MediaLibraryPage() {
   const { toast } = useToast();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -85,6 +91,8 @@ export default function MediaLibraryPage() {
     if (e.target.files) {
       setSelectedFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
     }
+    // Reset input so the same file can be selected again if needed
+    if (e.target) e.target.value = '';
   };
 
   const removeSelectedFile = (index: number) => {
@@ -97,11 +105,13 @@ export default function MediaLibraryPage() {
       return;
     }
 
+    // We can assume firestore and user are present because of AuthProvider gating
+    // but we add a safety check just in case.
     if (!firestore || !user) {
       toast({ 
         variant: "destructive", 
-        title: "System Not Ready", 
-        description: "Authentication or database service is still initializing. Please wait a moment." 
+        title: "Session Error", 
+        description: "Your session is not ready. Please try refreshing the page." 
       });
       return;
     }
@@ -125,7 +135,7 @@ export default function MediaLibraryPage() {
             uploadedAt: serverTimestamp(),
           };
           
-          // No await here per mutation guidelines
+          // mutation call - not awaited per guidelines
           addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
           successCount++;
         } catch (fileErr) {
@@ -137,23 +147,23 @@ export default function MediaLibraryPage() {
       
       if (successCount > 0) {
         toast({
-          title: "Upload Initiated",
-          description: `Processing ${successCount} assets. They will appear in your library shortly.${failCount > 0 ? ` (${failCount} failed)` : ''}`,
+          title: "Upload Process Started",
+          description: `Processing ${successCount} assets. They will appear in your gallery shortly.`,
         });
         setSelectedFiles([]);
         setIsUploadDialogOpen(false);
-      } else if (failCount > 0) {
+      } else {
         toast({
           variant: "destructive",
-          title: "Upload Failed",
-          description: "Could not process any of the selected files. Please ensure they are valid images.",
+          title: "Processing Failed",
+          description: "Could not prepare your images for upload. Please try smaller files.",
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Upload Error",
-        description: error.message || "An unexpected error occurred during batch processing.",
+        description: error.message || "An unexpected error occurred.",
       });
     } finally {
       setIsUploading(false);
@@ -166,7 +176,7 @@ export default function MediaLibraryPage() {
     deleteDocumentNonBlocking(doc(firestore, "media", id));
     toast({
       title: "Media Removed",
-      description: "The item has been successfully deleted."
+      description: "The item has been deleted from your library."
     });
   };
 
@@ -204,16 +214,16 @@ export default function MediaLibraryPage() {
                   <Upload className="w-6 h-6 text-accent" /> New Assets
                 </DialogTitle>
                 <DialogDescription>
-                  Choose high-quality photos from your device to add to your Maroma collection.
+                  Upload high-quality photos for your tours. Images will be optimized automatically.
                 </DialogDescription>
               </DialogHeader>
 
-              {!user && !isUserLoading && (
-                <Alert variant="destructive" className="rounded-2xl">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Authentication Required</AlertTitle>
+              {(!user || isUserLoading) && (
+                <Alert className="rounded-2xl bg-muted/50 border-none">
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                  <AlertTitle>Verifying Session</AlertTitle>
                   <AlertDescription>
-                    You must be signed in to upload assets.
+                    Please wait a moment while we synchronize your account.
                   </AlertDescription>
                 </Alert>
               )}
@@ -225,7 +235,7 @@ export default function MediaLibraryPage() {
                 >
                   <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
                   <p className="text-sm font-medium">Click to select files</p>
-                  <p className="text-xs text-muted-foreground mt-1">Select one or more JPG/PNG files.</p>
+                  <p className="text-xs text-muted-foreground mt-1">JPG or PNG supported.</p>
                   <input 
                     type="file" 
                     multiple 

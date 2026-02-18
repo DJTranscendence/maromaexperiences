@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -72,10 +73,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       async (firebaseUser) => {
         if (!firebaseUser && isInitialCheck) {
           // If no user is present on the very first check, attempt anonymous sign-in
+          // We mark initial check as false to prevent infinite loops if anonymous fails
           isInitialCheck = false;
           try {
+            // Attempt anonymous sign-in as a fallback
             await signInAnonymously(auth);
           } catch (err: any) {
+            console.error("Anonymous sign-in failed:", err);
             setUserAuthState({ user: null, isUserLoading: false, userError: err });
           }
         } else {
@@ -85,6 +89,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         }
       },
       (error) => {
+        console.error("Auth state change error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
@@ -143,8 +148,11 @@ export const useAuth = (): Auth => {
 };
 
 export const useFirestore = (): Firestore => {
-  const { firestore } = useFirebase();
-  return firestore;
+  const context = useContext(FirebaseContext);
+  if (!context || !context.firestore) {
+    throw new Error('Firestore service not available.');
+  }
+  return context.firestore;
 };
 
 export const useFirebaseApp = (): FirebaseApp => {
