@@ -38,7 +38,7 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Tours</Link>
+            <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Tours & Workshops</Link>
             <Link href="/account" className="text-sm font-medium hover:text-accent transition-colors">My Bookings</Link>
             
             <div className="flex items-center gap-4 pl-4 border-l border-border">
@@ -111,7 +111,7 @@ export default function Navbar() {
       {/* Mobile Nav */}
       <div className={cn("md:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-screen" : "max-h-0")}>
         <div className="px-4 pt-2 pb-6 space-y-4">
-          <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Tours</Link>
+          <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Tours & Workshops</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
           <Separator />
           <Link href="/admin/media" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>

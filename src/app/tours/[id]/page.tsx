@@ -52,7 +52,7 @@ export default function TourDetailsPage() {
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Tours</span>
+            <span>Tours & Workshops</span>
             <span>/</span>
             <span className="text-primary font-medium">{tour.name}</span>
           </div>
