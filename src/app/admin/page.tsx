@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -171,7 +170,7 @@ export default function AdminPage() {
                     <div className="grid grid-cols-4 gap-2 mb-4 p-2 border rounded-xl bg-muted/20">
                       {newTour.imageUrls.map((url, i) => (
                         <div key={i} className="relative aspect-square rounded-lg overflow-hidden border shadow-sm group">
-                          <NextImage src={url} alt="Tour preview" fill className="object-cover" />
+                          <NextImage src={url} alt="Tour preview" fill className="object-cover" unoptimized />
                           <button 
                             onClick={() => removeImage(url)}
                             className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black transition-colors"
@@ -308,7 +307,7 @@ export default function AdminPage() {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-3">
                             <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-muted">
-                              <NextImage src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
+                              <NextImage src={tour.imageUrl} alt={tour.name} fill className="object-cover" unoptimized />
                             </div>
                             <span>{tour.name}</span>
                           </div>

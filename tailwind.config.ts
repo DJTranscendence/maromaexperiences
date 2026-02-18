@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -11,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ["'League Spartan'", 'sans-serif'],
-        headline: ['Alegreya', 'serif'],
+        body: ['"League Spartan"', 'sans-serif'],
+        headline: ['"League Spartan"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

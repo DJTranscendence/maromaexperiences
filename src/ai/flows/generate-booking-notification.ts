@@ -52,22 +52,70 @@ const GenerateBookingNotificationOutputSchema = z.object({
 });
 export type GenerateBookingNotificationOutput = z.infer<typeof GenerateBookingNotificationOutputSchema>;
 
-// Internal schema for prompt output, which will then be processed into the final output schema
+// Internal schema for prompt output
 const PromptOutputSchema = z.object({
   message: z.string().describe('The personalized and formatted notification message.'),
-  bookingDetailsLinkFragment: z.string().nullable().optional().describe('Relative path or ID for booking details, e.g., "{{bookingId}}". Null if not relevant. Flow will combine with base URL.'),
-  emailContactTarget: z.string().nullable().optional().describe('Email address to contact. Null if not relevant.'),
-  emailContactSubject: z.string().nullable().optional().describe('Subject for the email. Null if not relevant.'),
-  whatsappContactTargetPhone: z.string().nullable().optional().describe('Phone number for WhatsApp contact. Null if not relevant.'),
-  whatsappContactMessage: z.string().nullable().optional().describe('Message for WhatsApp chat. Null if not relevant.'),
-  telegramContactTargetHandleOrPhone: z.string().nullable().optional().describe('Telegram handle or phone number for contact. Null if not relevant. For phone numbers, ensure to prefix with "+".'),
+  bookingDetailsLinkFragment: z.string().nullable().optional().describe('Relative path or ID for booking details.'),
+  emailContactTarget: z.string().nullable().optional().describe('Email address to contact.'),
+  emailContactSubject: z.string().nullable().optional().describe('Subject for the email.'),
+  whatsappContactTargetPhone: z.string().nullable().optional().describe('Phone number for WhatsApp contact.'),
+  whatsappContactMessage: z.string().nullable().optional().describe('Message for WhatsApp chat.'),
+  telegramContactTargetHandleOrPhone: z.string().nullable().optional().describe('Telegram handle or phone number for contact.'),
+});
+
+// Prompt input schema including booleans to avoid complex logic in Handlebars
+const PromptInputSchema = GenerateBookingNotificationInputSchema.extend({
+  isMinGroupReachedEvent: z.boolean(),
+  isCustomMessageEvent: z.boolean(),
+  isBookerRecipient: z.boolean(),
+  isFacilitatorRecipient: z.boolean(),
+  isAdminRecipient: z.boolean(),
 });
 
 const generateNotificationPrompt = ai.definePrompt({
   name: 'generateBookingNotificationPrompt',
-  input: {schema: GenerateBookingNotificationInputSchema},
+  input: {schema: PromptInputSchema},
   output: {schema: PromptOutputSchema},
-  prompt: `You are an intelligent notification service for Maroma Experiences. Your task is to generate a personalized, professional, and friendly notification message for a booking event, tailored to the specific recipient. You must also intelligently decide which contact options are relevant and provide the necessary components for constructing their links.\n\nUse the provided information to craft the message and identify link components.\n\n---\nEvent Type: {{{eventType}}}\nRecipient: {{{recipientType}}}\nBooking ID: {{{bookingDetails.bookingId}}}\nTour Name: {{{bookingDetails.tourName}}}\nDate: {{{bookingDetails.tourDate}}}\nTime: {{{bookingDetails.tourTime}}}\nGuests: {{{bookingDetails.numberOfGuests}}}\nBooked By: {{{bookingDetails.bookedBy}}}\nBooker Email: {{{bookingDetails.bookerEmail}}}\nBooker Phone: {{{bookingDetails.bookerPhone}}}\n\n{{#if (eq eventType "minimum_group_size_reached")}}\nCurrent Booked Spaces: {{{currentBookedSpaces}}}\nMinimum Group Size: {{{minGroupSize}}}\n{{/if}}\n\n{{#if (eq eventType "custom_message")}}\nCustom Message: {{{customMessageText}}}\n{{/if}}\n\nBooking Details Base URL: {{{bookingDetailsBaseUrl}}}\nSupport Email: {{{supportEmailAddress}}}\nSupport WhatsApp Number: {{{supportWhatsappNumber}}}\nSupport Telegram Handle: {{{supportTelegramHandle}}}\n---\n\nInstructions for Notification Message:\n1.  Start with a suitable greeting based on the recipient type (e.g., "Dear {{{bookingDetails.bookedBy}}}", "Hello Admin").\n2.  Clearly state the purpose of the notification, referencing the event type and booking details.\n3.  Maintain a professional yet friendly tone appropriate for Maroma Experiences.\n4.  Ensure the message is concise and easy to understand.\n\nInstructions for Link Components (only provide components if highly relevant for the recipient and event type, otherwise leave the corresponding field null):\n-   **bookingDetailsLinkFragment**:\n    -   Include '{{{bookingDetails.bookingId}}}' if:\n        -   '{{eventType}}' is 'booking_confirmation', 'booking_update', 'booking_reminder', or 'minimum_group_size_reached'.\n        -   OR '{{recipientType}}' is 'admin' or 'facilitator'.\n    -   Otherwise, leave null.\n-   **emailContactTarget**:\n    -   If '{{recipientType}}' is 'booker': Provide '{{{supportEmailAddress}}}'.\n    -   If '{{recipientType}}' is 'facilitator' or 'admin': Provide '{{{bookingDetails.bookerEmail}}}'.\n    -   Otherwise, leave null.\n-   **emailContactSubject**:\n    -   If '{{recipientType}}' is 'booker': Provide "Regarding Your Maroma Booking for {{{bookingDetails.tourName}}} (ID: {{{bookingDetails.bookingId}}})"\n    -   If '{{recipientType}}' is 'facilitator' or 'admin': Provide "Regarding Booking {{{bookingDetails.bookingId}}} for {{{bookingDetails.tourName}}}"\n    -   Otherwise, leave null.\n-   **whatsappContactTargetPhone**:\n    -   If '{{recipientType}}' is 'booker' AND '{{{supportWhatsappNumber}}}' is provided: Provide '{{{supportWhatsappNumber}}}'.\n    -   If '{{recipientType}}' is 'facilitator' or 'admin' AND '{{{bookingDetails.bookerPhone}}}' is provided: Provide '{{{bookingDetails.bookerPhone}}}'.\n    -   Otherwise, leave null.\n-   **whatsappContactMessage**:\n    -   If '{{recipientType}}' is 'booker' AND '{{{supportWhatsappNumber}}}' is provided: Provide "Hello Maroma Support, I have a question about booking {{{bookingDetails.bookingId}}} ({{{bookingDetails.tourName}}})."\n    -   If '{{recipientType}}' is 'facilitator' or 'admin' AND '{{{bookingDetails.bookerPhone}}}' is provided: Provide "Hello {{{bookingDetails.bookedBy}}}, regarding your booking {{{bookingDetails.bookingId}}} for {{{bookingDetails.tourName}}}."\n    -   Otherwise, leave null.\n-   **telegramContactTargetHandleOrPhone**:\n    -   If '{{recipientType}}' is 'booker' AND '{{{supportTelegramHandle}}}' is provided: Provide '{{{supportTelegramHandle}}}'.\n    -   If '{{recipientType}}' is 'facilitator' or 'admin' AND '{{{bookingDetails.bookerPhone}}}' is provided: Provide '+{{{bookingDetails.bookerPhone}}}'.\n    -   Otherwise, leave null.\n`,
+  prompt: `You are an intelligent notification service for Maroma Experiences. Your task is to generate a personalized, professional, and friendly notification message for a booking event, tailored to the specific recipient.
+
+---
+Event Type: {{{eventType}}}
+Recipient: {{{recipientType}}}
+Booking ID: {{{bookingDetails.bookingId}}}
+Tour Name: {{{bookingDetails.tourName}}}
+Date: {{{bookingDetails.tourDate}}}
+Time: {{{bookingDetails.tourTime}}}
+Guests: {{{bookingDetails.numberOfGuests}}}
+Booked By: {{{bookingDetails.bookedBy}}}
+
+{{#if isMinGroupReachedEvent}}
+Current Booked Spaces: {{{currentBookedSpaces}}}
+Minimum Group Size: {{{minGroupSize}}}
+{{/if}}
+
+{{#if isCustomMessageEvent}}
+Custom Message: {{{customMessageText}}}
+{{/if}}
+
+Booking Details Base URL: {{{bookingDetailsBaseUrl}}}
+Support Email: {{{supportEmailAddress}}}
+Support WhatsApp Number: {{{supportWhatsappNumber}}}
+Support Telegram Handle: {{{supportTelegramHandle}}}
+---
+
+Instructions for Notification Message:
+1. Start with a suitable greeting based on the recipient type (e.g., "Dear {{{bookingDetails.bookedBy}}}", "Hello Admin").
+2. Clearly state the purpose of the notification.
+3. Maintain a professional yet friendly tone.
+4. Ensure the message is concise.
+
+Instructions for Link Components (only provide components if highly relevant for the recipient):
+- bookingDetailsLinkFragment: Provide '{{{bookingDetails.bookingId}}}' if relevant.
+- emailContactTarget: support email or booker email based on recipient.
+- emailContactSubject: Descriptive subject line.
+- whatsappContactTargetPhone: Appropriate support or booker phone.
+- whatsappContactMessage: Prepared message for WhatsApp.
+- telegramContactTargetHandleOrPhone: Handle or phone with + prefix.`,
 });
 
 const generateBookingNotificationFlow = ai.defineFlow(
@@ -77,7 +125,17 @@ const generateBookingNotificationFlow = ai.defineFlow(
     outputSchema: GenerateBookingNotificationOutputSchema,
   },
   async (input) => {
-    const { output } = await generateNotificationPrompt(input);
+    // Pre-calculate booleans for the prompt template to avoid logic-in-template errors
+    const promptInput = {
+      ...input,
+      isMinGroupReachedEvent: input.eventType === 'minimum_group_size_reached',
+      isCustomMessageEvent: input.eventType === 'custom_message',
+      isBookerRecipient: input.recipientType === 'booker',
+      isFacilitatorRecipient: input.recipientType === 'facilitator',
+      isAdminRecipient: input.recipientType === 'admin',
+    };
+
+    const { output } = await generateNotificationPrompt(promptInput);
 
     const result: GenerateBookingNotificationOutput = {
       message: output!.message,
@@ -87,24 +145,19 @@ const generateBookingNotificationFlow = ai.defineFlow(
       telegramContactLink: null,
     };
 
-    // Construct booking details link
     if (output!.bookingDetailsLinkFragment) {
       result.bookingDetailsLink = `${input.bookingDetailsBaseUrl}/${output!.bookingDetailsLinkFragment}`;
     }
 
-    // Construct email contact link
     if (output!.emailContactTarget && output!.emailContactSubject) {
       result.emailContactLink = `mailto:${output!.emailContactTarget}?subject=${encodeURIComponent(output!.emailContactSubject)}`;
     }
 
-    // Construct WhatsApp contact link
     if (output!.whatsappContactTargetPhone && output!.whatsappContactMessage) {
       result.whatsappContactLink = `https://wa.me/${output!.whatsappContactTargetPhone}?text=${encodeURIComponent(output!.whatsappContactMessage)}`;
     }
 
-    // Construct Telegram contact link
     if (output!.telegramContactTargetHandleOrPhone) {
-      // The prompt is expected to handle the '+' prefix for phone numbers.
       result.telegramContactLink = `https://t.me/${output!.telegramContactTargetHandleOrPhone}`;
     }
 
