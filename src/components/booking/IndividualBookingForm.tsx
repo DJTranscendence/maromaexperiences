@@ -10,6 +10,8 @@ import { Users, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useFirestore, updateDocumentNonBlocking } from "@/firebase";
+import { doc, increment } from "firebase/firestore";
 
 interface IndividualBookingFormProps {
   tour: Tour;
@@ -17,6 +19,7 @@ interface IndividualBookingFormProps {
 
 export default function IndividualBookingForm({ tour }: IndividualBookingFormProps) {
   const { toast } = useToast();
+  const firestore = useFirestore();
   const [guests, setGuests] = useState(1);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
@@ -32,14 +35,22 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     setLoading(true);
     setError(null);
 
+    if (!firestore) return;
+
     try {
-      // Simulate booking process
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 1. Update the booked spaces in Firestore (Non-blocking)
+      const tourRef = doc(firestore, "tours", tour.id);
+      updateDocumentNonBlocking(tourRef, {
+        bookedSpaces: increment(guests)
+      });
+
+      // 2. Simulate short processing delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
       
       try {
-        // Call GenAI notification flow
+        // 3. Call GenAI notification flow
         const notification = await generateBookingNotification({
           eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
           recipientType: 'booker',
@@ -53,7 +64,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             bookerEmail: formData.email,
             bookerPhone: formData.phone
           },
-          currentBookedSpaces: tour.bookedSpaces + guests,
+          currentBookedSpaces: (tour.bookedSpaces || 0) + guests,
           minGroupSize: tour.minGroupSize,
           bookingDetailsBaseUrl: "https://maroma.com/bookings",
           supportEmailAddress: "support@maroma.com"
@@ -136,7 +147,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                 id="guests" 
                 type="number" 
                 min="1" 
-                max={tour.capacity - tour.bookedSpaces} 
+                max={tour.capacity - (tour.bookedSpaces || 0)} 
                 value={guests}
                 onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
                 required 
