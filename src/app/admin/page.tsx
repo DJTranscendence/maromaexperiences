@@ -9,10 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { Trash2, Edit, Save, Loader2, Sparkles, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Trash2, Edit, Save, Loader2, Sparkles, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
@@ -31,8 +31,11 @@ export default function AdminPage() {
 
   const { data: tours, isLoading } = useCollection<Tour>(toursQuery);
 
-  const [isPublished, setIsPublished] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [priceMode, setPriceMode] = useState<"preset" | "custom">("preset");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
   const [newTour, setNewTour] = useState({
     name: "",
     highlights: "",
@@ -47,49 +50,8 @@ export default function AdminPage() {
     imageUrls: [] as string[]
   });
 
-  const handleSaveTour = () => {
-    if (!newTour.name || !firestore || !user) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: !user ? "You must be signed in to save tours." : "Please provide at least a tour name."
-      });
-      return;
-    }
-    
-    const tourData = {
-      name: newTour.name,
-      description: newTour.description,
-      shortDescription: newTour.description.substring(0, 100),
-      pricePerPerson: newTour.price,
-      durationHours: parseInt(newTour.duration) || 1,
-      minimumGroupSize: newTour.minGroupSize,
-      locationId: "default_location",
-      location: newTour.location,
-      duration: newTour.duration,
-      capacity: newTour.capacity,
-      type: newTour.type,
-      highlights: newTour.highlights.split(", ").filter(h => h.length > 0),
-      isActive: true,
-      tourOwnerId: user.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      bookedSpaces: 0,
-      imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`, 
-      imageUrls: newTour.imageUrls,
-      scheduledDates: ["2024-08-15"]
-    };
-
-    addDocumentNonBlocking(collection(firestore, "tours"), tourData);
-    
-    setIsPublished(true);
-    setTimeout(() => setIsPublished(false), 3000);
-
-    toast({
-      title: "Experience Saved",
-      description: "The new experience has been added to the system.",
-    });
-
+  const resetForm = () => {
+    setEditingId(null);
     setPriceMode("preset");
     setNewTour({
       name: "",
@@ -106,6 +68,90 @@ export default function AdminPage() {
     });
   };
 
+  const handleEdit = (tour: Tour) => {
+    setEditingId(tour.id);
+    
+    // Check if price matches a preset
+    const presets = [500, 1000, 1500, 2000];
+    if (presets.includes(tour.price)) {
+      setPriceMode("preset");
+    } else {
+      setPriceMode("custom");
+    }
+
+    setNewTour({
+      name: tour.name,
+      highlights: tour.highlights?.join(", ") || "",
+      location: tour.location || "Maroma Campus",
+      duration: tour.duration || "60 minutes",
+      audience: tour.audience || "",
+      description: tour.description || "",
+      price: tour.price,
+      capacity: tour.capacity || 20,
+      minGroupSize: tour.minGroupSize || 8,
+      type: tour.type || "group",
+      imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : [])
+    });
+
+    // Scroll to top of form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveTour = () => {
+    if (!newTour.name || !firestore || !user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: !user ? "You must be signed in to save tours." : "Please provide at least a tour name."
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+
+    const tourData: Partial<Tour> = {
+      name: newTour.name,
+      description: newTour.description,
+      shortDescription: newTour.description.substring(0, 100),
+      pricePerPerson: newTour.price,
+      price: newTour.price, // Unified price field
+      durationHours: parseInt(newTour.duration) || 1,
+      minimumGroupSize: newTour.minGroupSize,
+      locationId: "default_location",
+      location: newTour.location,
+      duration: newTour.duration,
+      capacity: newTour.capacity,
+      type: newTour.type,
+      highlights: newTour.highlights.split(",").map(h => h.trim()).filter(h => h.length > 0),
+      isActive: true,
+      updatedAt: serverTimestamp(),
+      imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`, 
+      imageUrls: newTour.imageUrls,
+      scheduledDates: ["2024-08-15"]
+    };
+
+    if (editingId) {
+      updateDocumentNonBlocking(doc(firestore, "tours", editingId), tourData);
+      toast({ title: "Changes Saved", description: "The experience has been updated." });
+    } else {
+      const createData = {
+        ...tourData,
+        tourOwnerId: user.uid,
+        createdAt: serverTimestamp(),
+        bookedSpaces: 0,
+      };
+      addDocumentNonBlocking(collection(firestore, "tours"), createData);
+      toast({ title: "Experience Published", description: "The new experience is now live." });
+    }
+    
+    setIsSuccess(true);
+    setTimeout(() => {
+      setIsSuccess(false);
+      setIsProcessing(false);
+      resetForm();
+    }, 2000);
+  };
+
   const handleDelete = (id: string) => {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, "tours", id));
@@ -113,6 +159,7 @@ export default function AdminPage() {
       title: "Tour Deleted",
       description: "The experience has been removed."
     });
+    if (editingId === id) resetForm();
   };
 
   return (
@@ -133,9 +180,16 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           <div className="lg:col-span-1">
-            <Card className="rounded-3xl border-none shadow-xl bg-white">
-              <CardHeader>
-                <CardTitle className="font-headline text-2xl text-primary">New Experience</CardTitle>
+            <Card className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="font-headline text-2xl text-primary">
+                  {editingId ? "Edit Experience" : "New Experience"}
+                </CardTitle>
+                {editingId && (
+                  <Button variant="ghost" size="icon" onClick={resetForm} className="rounded-full">
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -212,12 +266,13 @@ export default function AdminPage() {
                         type="text"
                         inputMode="numeric"
                         placeholder="Enter Price"
-                        value={newTour.price}
+                        value={newTour.price === 0 ? "" : newTour.price}
                         onChange={e => {
                           const val = e.target.value.replace(/[^0-9]/g, '');
                           setNewTour({...newTour, price: val === "" ? 0 : parseInt(val)});
                         }}
                         className="rounded-xl h-11 mt-2 animate-in slide-in-from-top-1 duration-200"
+                        autoFocus
                       />
                     )}
                   </div>
@@ -226,7 +281,7 @@ export default function AdminPage() {
                     <Input 
                       type="text"
                       inputMode="numeric"
-                      value={newTour.capacity}
+                      value={newTour.capacity === 0 ? "" : newTour.capacity}
                       onChange={e => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         setNewTour({...newTour, capacity: val === "" ? 0 : parseInt(val)});
@@ -245,6 +300,16 @@ export default function AdminPage() {
                     onChange={e => setNewTour({...newTour, description: e.target.value})}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Highlights (Comma separated)</Label>
+                  <Input 
+                    placeholder="Sunset viewing, Private guide, Local snacks" 
+                    value={newTour.highlights}
+                    onChange={e => setNewTour({...newTour, highlights: e.target.value})}
+                    className="rounded-xl h-11"
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -259,26 +324,42 @@ export default function AdminPage() {
                 onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 
               />
               
-              <Button 
-                className={cn(
-                  "w-full rounded-full mt-8 h-14 gap-2 shadow-lg transition-all duration-500 text-lg font-bold",
-                  isPublished 
-                    ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
-                    : "bg-primary hover:bg-primary/90 shadow-primary/20"
+              <div className="flex gap-4 mt-8">
+                {editingId && (
+                  <Button 
+                    variant="outline"
+                    className="rounded-full h-14 px-8 border-muted-foreground text-muted-foreground font-bold"
+                    onClick={resetForm}
+                    disabled={isProcessing}
+                  >
+                    Cancel Edit
+                  </Button>
                 )}
-                onClick={handleSaveTour}
-                disabled={isPublished}
-              >
-                {isPublished ? (
-                  <>
-                    <Check className="w-5 h-5" /> Published Successfully!
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" /> Publish Experience
-                  </>
-                )}
-              </Button>
+                <Button 
+                  className={cn(
+                    "flex-1 rounded-full h-14 gap-2 shadow-lg transition-all duration-500 text-lg font-bold",
+                    isSuccess 
+                      ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
+                      : "bg-primary hover:bg-primary/90 shadow-primary/20"
+                  )}
+                  onClick={handleSaveTour}
+                  disabled={isProcessing || isSuccess}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" /> {editingId ? "Saving..." : "Publishing..."}
+                    </>
+                  ) : isSuccess ? (
+                    <>
+                      <Check className="w-5 h-5" /> {editingId ? "Changes Saved!" : "Published Successfully!"}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" /> {editingId ? "Save Changes" : "Publish Experience"}
+                    </>
+                  )}
+                </Button>
+              </div>
             </section>
 
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
@@ -303,11 +384,11 @@ export default function AdminPage() {
                   </TableHeader>
                   <TableBody>
                     {tours?.map((tour) => (
-                      <TableRow key={tour.id} className="hover:bg-muted/20 transition-colors">
+                      <TableRow key={tour.id} className={cn("hover:bg-muted/20 transition-colors", editingId === tour.id && "bg-accent/5")}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-4">
                             <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-muted shadow-sm">
-                              <NextImage src={tour.imageUrl} alt={tour.name} fill className="object-cover" unoptimized />
+                              <NextImage src={tour.imageUrl || tour.imageUrls?.[0] || ""} alt={tour.name} fill className="object-cover" unoptimized />
                             </div>
                             <span className="font-bold text-primary">{tour.name}</span>
                           </div>
@@ -319,7 +400,14 @@ export default function AdminPage() {
                         <TableCell className="font-bold text-primary">${tour.price}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" className="hover:text-accent rounded-full"><Edit className="w-4 h-4" /></Button>
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className={cn("hover:text-accent rounded-full", editingId === tour.id && "text-accent bg-accent/10")}
+                              onClick={() => handleEdit(tour)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                             <Button 
                               size="icon" 
                               variant="ghost" 
