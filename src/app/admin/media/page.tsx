@@ -6,14 +6,15 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
-import { useState, useRef } from "react";
-import { Trash2, Plus, Loader2, Search, Grid, List, Image as ImageIcon, Upload, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Trash2, Plus, Loader2, Search, Grid, List, Image as ImageIcon, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NextImage from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MediaItem {
   id: string;
@@ -62,10 +63,12 @@ const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<strin
 export default function MediaLibraryPage() {
   const { toast } = useToast();
   const { firestore } = useFirestore();
+  const { user, isUserLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mediaQuery = useMemoFirebase(() => {
@@ -86,29 +89,44 @@ export default function MediaLibraryPage() {
   };
 
   const handleBatchUpload = async () => {
-    if (selectedFiles.length === 0 || !firestore) return;
+    if (selectedFiles.length === 0 || !firestore || !user) {
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Required",
+          description: "Please wait for anonymous sign-in to complete before uploading.",
+        });
+      }
+      return;
+    };
     
     setIsUploading(true);
+    setUploadProgress(0);
     
     try {
       let count = 0;
       for (const file of selectedFiles) {
-        const compressedDataUrl = await resizeImage(file);
-        
-        const mediaData = {
-          url: compressedDataUrl,
-          type: 'image',
-          altText: file.name,
-          uploadedAt: serverTimestamp(),
-        };
-        
-        addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
-        count++;
+        try {
+          const compressedDataUrl = await resizeImage(file);
+          
+          const mediaData = {
+            url: compressedDataUrl,
+            type: 'image',
+            altText: file.name,
+            uploadedAt: serverTimestamp(),
+          };
+          
+          addDocumentNonBlocking(collection(firestore, 'media'), mediaData);
+          count++;
+          setUploadProgress(Math.round((count / selectedFiles.length) * 100));
+        } catch (fileErr) {
+          console.error(`Error processing ${file.name}:`, fileErr);
+        }
       }
       
       toast({
-        title: "Upload Started",
-        description: `Processing ${count} images. They will appear in the library shortly.`,
+        title: "Upload Successful",
+        description: `Successfully processed ${count} images. They will appear in the library momentarily.`,
       });
       setSelectedFiles([]);
       setIsUploadDialogOpen(false);
@@ -120,6 +138,7 @@ export default function MediaLibraryPage() {
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -146,6 +165,16 @@ export default function MediaLibraryPage() {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
+        {!user && !isUserLoading && (
+          <Alert variant="destructive" className="mb-6 rounded-2xl">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Not Authenticated</AlertTitle>
+            <AlertDescription>
+              You must be signed in to upload media. The app should sign you in automatically; please check your connection.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Media Library</h1>
@@ -167,7 +196,7 @@ export default function MediaLibraryPage() {
               <div className="py-4 space-y-4">
                 <div 
                   className="border-2 border-dashed border-muted-foreground/25 rounded-2xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => !isUploading && fileInputRef.current?.click()}
                 >
                   <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
                   <p className="text-sm font-medium">Click to select images</p>
@@ -189,16 +218,31 @@ export default function MediaLibraryPage() {
                       {selectedFiles.map((file, i) => (
                         <div key={i} className="flex items-center justify-between p-2 bg-muted rounded-lg text-xs">
                           <span className="truncate flex-1">{file.name}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 rounded-full" 
-                            onClick={() => removeSelectedFile(i)}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
+                          {!isUploading && (
+                            <button 
+                              className="text-muted-foreground hover:text-destructive"
+                              onClick={() => removeSelectedFile(i)}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {isUploading && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-medium">
+                      <span>Processing images...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-accent h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
                     </div>
                   </div>
                 )}
@@ -207,7 +251,7 @@ export default function MediaLibraryPage() {
                 <Button variant="outline" onClick={() => { setIsUploadDialogOpen(false); setSelectedFiles([]); }} className="rounded-full" disabled={isUploading}>Cancel</Button>
                 <Button 
                   onClick={handleBatchUpload} 
-                  disabled={isUploading || selectedFiles.length === 0}
+                  disabled={isUploading || selectedFiles.length === 0 || !user}
                   className="bg-accent hover:bg-accent/90 rounded-full min-w-[120px]"
                 >
                   {isUploading ? (
