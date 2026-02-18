@@ -32,6 +32,7 @@ export default function AdminPage() {
   const { data: tours, isLoading } = useCollection<Tour>(toursQuery);
 
   const [isPublished, setIsPublished] = useState(false);
+  const [priceMode, setPriceMode] = useState<"preset" | "custom">("preset");
   const [newTour, setNewTour] = useState({
     name: "",
     highlights: "",
@@ -39,7 +40,7 @@ export default function AdminPage() {
     duration: "",
     audience: "",
     description: "",
-    price: 0,
+    price: 500,
     capacity: 20,
     minGroupSize: 8,
     type: "group" as const,
@@ -89,6 +90,7 @@ export default function AdminPage() {
       description: "The new experience has been added to the system.",
     });
 
+    setPriceMode("preset");
     setNewTour({
       name: "",
       highlights: "",
@@ -96,7 +98,7 @@ export default function AdminPage() {
       duration: "",
       audience: "",
       description: "",
-      price: 0,
+      price: 500,
       capacity: 20,
       minGroupSize: 8,
       type: "group",
@@ -183,21 +185,41 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price ($)</Label>
-                    <Input 
-                      type="text"
-                      inputMode="numeric"
-                      value={newTour.price}
-                      onFocus={(e) => {
-                        if (e.target.value === "0") {
-                          e.target.setSelectionRange(0, 0);
+                    <Select 
+                      value={priceMode === "custom" ? "other" : newTour.price.toString()}
+                      onValueChange={(val) => {
+                        if (val === "other") {
+                          setPriceMode("custom");
+                        } else {
+                          setPriceMode("preset");
+                          setNewTour({...newTour, price: parseInt(val)});
                         }
                       }}
-                      onChange={e => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        setNewTour({...newTour, price: val === "" ? 0 : parseInt(val)});
-                      }}
-                      className="rounded-xl h-11"
-                    />
+                    >
+                      <SelectTrigger className="rounded-xl h-11">
+                        <SelectValue placeholder="Select Price" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="500">500</SelectItem>
+                        <SelectItem value="1000">1000</SelectItem>
+                        <SelectItem value="1500">1500</SelectItem>
+                        <SelectItem value="2000">2000</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {priceMode === "custom" && (
+                      <Input 
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Enter Price"
+                        value={newTour.price}
+                        onChange={e => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          setNewTour({...newTour, price: val === "" ? 0 : parseInt(val)});
+                        }}
+                        className="rounded-xl h-11 mt-2 animate-in slide-in-from-top-1 duration-200"
+                      />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Capacity</Label>
@@ -205,11 +227,6 @@ export default function AdminPage() {
                       type="text"
                       inputMode="numeric"
                       value={newTour.capacity}
-                      onFocus={(e) => {
-                        if (e.target.value === "0") {
-                          e.target.setSelectionRange(0, 0);
-                        }
-                      }}
                       onChange={e => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         setNewTour({...newTour, capacity: val === "" ? 0 : parseInt(val)});
