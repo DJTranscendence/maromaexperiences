@@ -9,7 +9,7 @@ import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import IndividualBookingForm from "@/components/booking/IndividualBookingForm";
 import SchoolBookingForm from "@/components/booking/SchoolBookingForm";
 import CorporateBookingForm from "@/components/booking/CorporateBookingForm";
-import { MapPin, Clock, Users, ShieldCheck, Share2, Heart, Calendar, Loader2 } from "lucide-react";
+import { MapPin, Clock, Users, Share2, Heart, Calendar, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -113,14 +113,6 @@ export default function TourDetailsPage() {
                       </li>
                     ))}
                   </ul>
-                </div>
-                <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10">
-                  <h3 className="text-xl font-headline font-bold text-primary mb-2 flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-accent" /> Maroma Guarantee
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    All our tours are led by certified facilitators. We maintain high standards of safety and sustainability. Cancel up to 48 hours before the start for a full refund.
-                  </p>
                 </div>
               </div>
             </div>
