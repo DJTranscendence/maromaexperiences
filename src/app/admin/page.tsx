@@ -21,7 +21,7 @@ import NextImage from "next/image";
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { user } = useUser();
   
   const toursQuery = useMemoFirebase(() => {
@@ -44,25 +44,6 @@ export default function AdminPage() {
     type: "group" as const,
     imageUrls: [] as string[]
   });
-
-  const HIGHLIGHT_OPTIONS = [
-    "Tour",
-    "Q&A",
-    "Presentation",
-    "Refreshments",
-    "Take-home Gift"
-  ];
-
-  const handleHighlightChange = (option: string, checked: boolean) => {
-    const currentHighlights = newTour.highlights ? newTour.highlights.split(", ").filter(h => h.length > 0) : [];
-    let updated;
-    if (checked) {
-      updated = [...currentHighlights, option];
-    } else {
-      updated = currentHighlights.filter(h => h !== option);
-    }
-    setNewTour({ ...newTour, highlights: updated.join(", ") });
-  };
 
   const handleSaveTour = () => {
     if (!newTour.name || !firestore || !user) {
@@ -145,7 +126,6 @@ export default function AdminPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          {/* Create Tour Form */}
           <div className="lg:col-span-1">
             <Card className="rounded-3xl border-none shadow-xl bg-white">
               <CardHeader>
@@ -237,7 +217,6 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          {/* Media Browser & Existing Tours */}
           <div className="lg:col-span-2 space-y-12">
             <section>
               <div className="flex items-center gap-2 mb-4">

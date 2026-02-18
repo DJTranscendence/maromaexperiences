@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -14,7 +13,7 @@ import { collection, query, where } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 
 export default function Home() {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   
   const toursQuery = useMemoFirebase(() => {
     if (!firestore) return null;

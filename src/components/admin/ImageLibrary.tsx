@@ -67,7 +67,7 @@ const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<str
 };
 
 export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }: ImageLibraryProps) {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
@@ -89,12 +89,10 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     const filtered = media.filter(item => {
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
-      // Only filter by alt text if it exists, otherwise use url
       const searchTarget = (item.altText || item.url || '').toLowerCase();
       return searchTarget.includes(q);
     });
 
-    // Sort by most recent first
     return [...filtered].sort((a, b) => {
       const tA = a.uploadedAt?.toMillis?.() || a.uploadedAt?.seconds * 1000 || Date.now();
       const tB = b.uploadedAt?.toMillis?.() || b.uploadedAt?.seconds * 1000 || Date.now();
@@ -137,8 +135,7 @@ export function ImageLibrary({ onSelect, selectedUrls = [], multiSelect = true }
     onSelect(nextSelection);
   };
 
-  // Improved syncing check: wait for media to be a valid array (even if empty)
-  const isSyncing = isMediaLoading || isUserLoading || media === null;
+  const isSyncing = isMediaLoading || isUserLoading || (!!mediaQuery && media === null);
 
   return (
     <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">

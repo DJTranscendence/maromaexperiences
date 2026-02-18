@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -20,7 +19,7 @@ import { useParams } from "next/navigation";
 export default function TourDetailsPage() {
   const params = useParams();
   const id = params.id as string;
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
 
   const tourRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
