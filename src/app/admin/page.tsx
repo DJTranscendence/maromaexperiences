@@ -8,16 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Trash2, Edit, Save, Loader2, X, Sparkles } from "lucide-react";
+import { Trash2, Edit, Save, Loader2, Sparkles, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
 import NextImage from "next/image";
+import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -31,6 +31,7 @@ export default function AdminPage() {
 
   const { data: tours, isLoading } = useCollection<Tour>(toursQuery);
 
+  const [isPublished, setIsPublished] = useState(false);
   const [newTour, setNewTour] = useState({
     name: "",
     highlights: "",
@@ -80,6 +81,9 @@ export default function AdminPage() {
 
     addDocumentNonBlocking(collection(firestore, "tours"), tourData);
     
+    setIsPublished(true);
+    setTimeout(() => setIsPublished(false), 3000);
+
     toast({
       title: "Experience Saved",
       description: "The new experience has been added to the system.",
@@ -208,10 +212,24 @@ export default function AdminPage() {
                 </div>
 
                 <Button 
-                  className="w-full bg-primary hover:bg-primary/90 rounded-full mt-6 h-12 gap-2 shadow-lg shadow-primary/20"
+                  className={cn(
+                    "w-full rounded-full mt-6 h-12 gap-2 shadow-lg transition-all duration-500",
+                    isPublished 
+                      ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
+                      : "bg-primary hover:bg-primary/90 shadow-primary/20"
+                  )}
                   onClick={handleSaveTour}
+                  disabled={isPublished}
                 >
-                  <Save className="w-4 h-4" /> Publish Experience
+                  {isPublished ? (
+                    <>
+                      <Check className="w-4 h-4" /> Published!
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" /> Publish Experience
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
