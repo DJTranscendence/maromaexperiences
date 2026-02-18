@@ -251,9 +251,8 @@ export default function AdminPage() {
 
           <div className="lg:col-span-2 space-y-12">
             <section>
-              <div className="flex items-center gap-2 mb-4">
-                <Label className="text-xl font-headline font-bold text-primary">Experience Visuals</Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Browser Window</span>
+              <div className="mb-4">
+                <Label className="text-xl font-headline font-bold text-primary">Choose an image or images for the event</Label>
               </div>
               <ImageLibrary 
                 selectedUrls={newTour.imageUrls}
