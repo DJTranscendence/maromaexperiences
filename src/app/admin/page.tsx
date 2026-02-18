@@ -12,14 +12,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_TOURS } from "@/lib/mock-data";
 import { useState } from "react";
-import { Plus, Wand2, Trash2, Edit, Save } from "lucide-react";
-import { generateTourDescription } from "@/ai/flows/generate-tour-description";
+import { Plus, Trash2, Edit, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { toast } = useToast();
   const [tours, setTours] = useState(MOCK_TOURS);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [newTour, setNewTour] = useState({
     name: "",
     highlights: "",
@@ -48,39 +46,21 @@ export default function AdminPage() {
     setNewTour({ ...newTour, highlights: updated.join(", ") });
   };
 
-  const handleGenerateAI = async () => {
-    if (!newTour.name || !newTour.highlights) {
+  const handleSaveTour = () => {
+    if (!newTour.name) {
       toast({
         variant: "destructive",
         title: "Missing Info",
-        description: "Please provide a tour name and select at least one highlight for the AI to work with."
+        description: "Please provide at least a tour name."
       });
       return;
     }
-
-    setIsGenerating(true);
-    try {
-      const result = await generateTourDescription({
-        tourName: newTour.name,
-        highlights: newTour.highlights,
-        location: newTour.location || "Maroma District",
-        duration: newTour.duration || "2 hours",
-        targetAudience: newTour.audience || "General Public"
-      });
-      setNewTour({ ...newTour, description: result.description });
-      toast({
-        title: "Description Generated",
-        description: "AI has successfully drafted your tour description."
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "AI Error",
-        description: "Failed to generate description. Please try again."
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    
+    // In a real app, this would save to Firestore
+    toast({
+      title: "Experience Saved",
+      description: "The new experience has been added to the system."
+    });
   };
 
   return (
@@ -160,23 +140,18 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description (Drafted by AI)</Label>
+                  <Label>Description</Label>
                   <Textarea 
                     className="min-h-[150px]" 
                     placeholder="Describe the experience..." 
                     value={newTour.description}
                     onChange={e => setNewTour({...newTour, description: e.target.value})}
                   />
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-2 border-accent text-accent hover:bg-accent hover:text-white rounded-full flex items-center gap-2"
-                    onClick={handleGenerateAI}
-                    disabled={isGenerating}
-                  >
-                    <Wand2 className="w-4 h-4" /> {isGenerating ? "GenAI Thinking..." : "Generate with GenAI"}
-                  </Button>
                 </div>
-                <Button className="w-full bg-primary hover:bg-primary/90 rounded-full mt-6 flex items-center gap-2 h-12">
+                <Button 
+                  className="w-full bg-primary hover:bg-primary/90 rounded-full mt-6 flex items-center gap-2 h-12"
+                  onClick={handleSaveTour}
+                >
                   <Save className="w-4 h-4" /> Save Experience
                 </Button>
               </CardContent>
