@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { User, Mail, Phone, Calendar, History, Settings, ExternalLink } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function AccountPage() {
   const [user, setUser] = useState({
@@ -88,7 +89,9 @@ export default function AccountPage() {
                       </div>
                       <Separator />
                       <div className="flex justify-end gap-4">
-                        <Button variant="outline" className="rounded-full px-8">Cancel</Button>
+                        <Button variant="outline" className="rounded-full px-8" asChild>
+                          <Link href="/">Cancel</Link>
+                        </Button>
                         <Button className="bg-primary rounded-full px-8">Save Changes</Button>
                       </div>
                     </CardContent>
