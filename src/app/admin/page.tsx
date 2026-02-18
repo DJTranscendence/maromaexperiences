@@ -184,18 +184,36 @@ export default function AdminPage() {
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price ($)</Label>
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={newTour.price}
-                      onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") {
+                          e.target.setSelectionRange(0, 0);
+                        }
+                      }}
+                      onChange={e => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setNewTour({...newTour, price: val === "" ? 0 : parseInt(val)});
+                      }}
                       className="rounded-xl h-11"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Capacity</Label>
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={newTour.capacity}
-                      onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") {
+                          e.target.setSelectionRange(0, 0);
+                        }
+                      }}
+                      onChange={e => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setNewTour({...newTour, capacity: val === "" ? 0 : parseInt(val)});
+                      }}
                       className="rounded-xl h-11"
                     />
                   </div>
