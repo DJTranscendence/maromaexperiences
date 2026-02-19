@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
-import { Loader2, Shield, User, UserCheck, ShieldAlert, Search } from "lucide-react";
+import { Loader2, Shield, User, UserCheck, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,29 +21,36 @@ interface UserProfile {
   accountType?: string;
 }
 
+/**
+ * ManageUsersPage provides an administrative interface for managing system roles.
+ * It fetches the list of users and their corresponding roles from Firestore.
+ */
 export default function ManageUsersPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Create memoized queries that wait for both firestore and an active user session
+  // This prevents 'Missing or insufficient permissions' errors during initial load
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, "users");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const adminsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, "roles_admin");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const facilitatorsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, "roles_facilitator");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: users, isLoading: isUsersLoading } = useCollection<UserProfile>(usersQuery);
-  const { data: admins } = useCollection(adminsQuery);
-  const { data: facilitators } = useCollection(facilitatorsQuery);
+  const { data: admins, isLoading: isAdminsLoading } = useCollection(adminsQuery);
+  const { data: facilitators, isLoading: isFacilitatorsLoading } = useCollection(facilitatorsQuery);
 
   const adminIds = new Set(admins?.map(a => a.id) || []);
   const facilitatorIds = new Set(facilitators?.map(f => f.id) || []);
@@ -88,6 +95,8 @@ export default function ManageUsersPage() {
     }
   };
 
+  const isSyncing = isAuthLoading || isUsersLoading || isAdminsLoading || isFacilitatorsLoading;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -112,7 +121,7 @@ export default function ManageUsersPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {isUsersLoading ? (
+            {isSyncing ? (
               <div className="p-20 flex flex-col items-center justify-center gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-accent" />
                 <p className="text-sm text-muted-foreground">Syncing user directory...</p>
@@ -181,9 +190,8 @@ export default function ManageUsersPage() {
                           <p className="text-lg font-bold text-primary">No Users Found</p>
                           <p className="text-sm text-muted-foreground">No accounts match your search criteria.</p>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                      </TableRow>
+                    )}
                 </TableBody>
               </Table>
             )}
