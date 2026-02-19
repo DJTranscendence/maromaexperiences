@@ -10,7 +10,30 @@ import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import IndividualBookingForm from "@/components/booking/IndividualBookingForm";
 import SchoolBookingForm from "@/components/booking/SchoolBookingForm";
 import CorporateBookingForm from "@/components/booking/CorporateBookingForm";
-import { MapPin, Clock, Users, Share2, Heart, Calendar, Loader2, Sparkles, Bell, Send, Check } from "lucide-react";
+import { 
+  MapPin, 
+  Clock, 
+  Users, 
+  Share2, 
+  Heart, 
+  Calendar, 
+  Loader2, 
+  Sparkles, 
+  Bell, 
+  Send, 
+  Check,
+  MessageCircleQuestion,
+  Gift,
+  Palette,
+  Utensils,
+  Compass,
+  Award,
+  Camera,
+  History,
+  Trees,
+  Users2,
+  CheckCircle2
+} from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -20,6 +43,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+
+const getHighlightIcon = (text: string) => {
+  const t = text.toLowerCase();
+  if (t.includes('q&a') || t.includes('question')) return <MessageCircleQuestion className="w-5 h-5 text-accent" />;
+  if (t.includes('gift') || t.includes('take-home')) return <Gift className="w-5 h-5 text-accent" />;
+  if (t.includes('workshop') || t.includes('craft') || t.includes('clay')) return <Palette className="w-5 h-5 text-accent" />;
+  if (t.includes('refreshments') || t.includes('coffee') || t.includes('catering') || t.includes('food')) return <Utensils className="w-5 h-5 text-accent" />;
+  if (t.includes('tour') || t.includes('walk') || t.includes('expedition')) return <Compass className="w-5 h-5 text-accent" />;
+  if (t.includes('certificate') || t.includes('award')) return <Award className="w-5 h-5 text-accent" />;
+  if (t.includes('photo') || t.includes('camera')) return <Camera className="w-5 h-5 text-accent" />;
+  if (t.includes('history') || t.includes('medieval')) return <History className="w-5 h-5 text-accent" />;
+  if (t.includes('garden') || t.includes('nature') || t.includes('forest')) return <Trees className="w-5 h-5 text-accent" />;
+  if (t.includes('team') || t.includes('challenge') || t.includes('group')) return <Users2 className="w-5 h-5 text-accent" />;
+  
+  return <CheckCircle2 className="w-5 h-5 text-accent" />;
+};
 
 export default function TourDetailsPage() {
   const params = useParams();
@@ -142,9 +181,11 @@ export default function TourDetailsPage() {
                   <h3 className="text-xl font-headline font-bold text-primary mb-6">Experience Highlights</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
                     {tour.highlights.map((h, i) => (
-                      <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 group hover:bg-white hover:shadow-md transition-all">
-                        <div className="mt-1 w-2 h-2 rounded-full bg-accent group-hover:scale-125 transition-transform flex-shrink-0" />
-                        <span className="text-muted-foreground font-medium">{h}</span>
+                      <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-muted/20 border border-border/50 group hover:bg-white hover:shadow-md transition-all">
+                        <div className="p-2.5 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                          {getHighlightIcon(h)}
+                        </div>
+                        <span className="text-primary font-bold">{h}</span>
                       </div>
                     ))}
                   </div>
