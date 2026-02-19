@@ -15,7 +15,8 @@ export default function Footer() {
                 <Image 
                   src={LOGO_URL}
                   alt="Maroma Logo"
-                  fill
+                  width={40}
+                  height={40}
                   className="object-contain"
                 />
               </div>

@@ -32,7 +32,6 @@ export default function ManageUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Create memoized queries that wait for both firestore and an active user session
-  // This prevents 'Missing or insufficient permissions' errors during initial load
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, "users");

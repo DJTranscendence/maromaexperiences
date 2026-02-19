@@ -79,7 +79,8 @@ export default function Navbar() {
               <Image 
                 src={LOGO_URL}
                 alt="Maroma Logo"
-                fill
+                width={32}
+                height={32}
                 className="object-contain"
                 priority
               />
@@ -119,7 +120,7 @@ export default function Navbar() {
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted ml-2">
                   {user?.isAnonymous === false ? (
                     <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-bold text-xs">
-                      {user.email?.[0].toUpperCase()}
+                      {user.email?.[0].toUpperCase() || "M"}
                     </div>
                   ) : (
                     <User className="w-5 h-5 text-primary" />

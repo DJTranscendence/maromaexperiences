@@ -1,7 +1,9 @@
 "use client";
 
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { doc, serverTimestamp } from "firebase/firestore";
 
 /**
  * AuthProvider component that manages the initial loading state of the application.
@@ -14,13 +16,30 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { isUserLoading, userError } = useUser();
+  const { user, isUserLoading, userError } = useUser();
+  const firestore = useFirestore();
+
+  // Automatically ensure a user profile exists in Firestore when they are authenticated.
+  // This ensures the current user always appears in management lists.
+  useEffect(() => {
+    if (user && firestore) {
+      const userRef = doc(firestore, "users", user.uid);
+      setDocumentNonBlocking(userRef, {
+        id: user.uid,
+        email: user.email || `guest-${user.uid.substring(0, 5)}@maroma.local`,
+        firstName: user.displayName?.split(' ')[0] || (user.isAnonymous ? "Guest" : "Member"),
+        lastName: user.displayName?.split(' ')[1] || "User",
+        accountType: user.isAnonymous ? "Anonymous" : "Individual",
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+  }, [user, firestore]);
 
   // Show a branded loading screen while the system initializes
   if (isUserLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background text-primary">
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center mb-10 text-center">
           <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
           <span className="text-[10px] font-body font-medium text-accent uppercase tracking-[0.68em] mt-1 mr-[-0.68em]">Experiences</span>
         </div>
