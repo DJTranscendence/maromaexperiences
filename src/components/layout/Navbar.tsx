@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck } from "lucide-react";
+import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
@@ -90,6 +89,9 @@ export default function Navbar() {
                 <Link href="/admin/media" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
                   <ImageIcon className="w-4 h-4" /> Media
                 </Link>
+                <Link href="/admin/users" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <Users className="w-4 h-4" /> Users
+                </Link>
                 <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
                   <Settings className="w-4 h-4" /> Admin
                 </Link>
@@ -132,6 +134,11 @@ export default function Navbar() {
                         <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
                           <Link href="/admin" className="flex items-center gap-2">
                             <Settings className="w-4 h-4" /> Admin Panel
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                          <Link href="/admin/users" className="flex items-center gap-2">
+                            <Users className="w-4 h-4" /> Manage Users
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
@@ -192,6 +199,9 @@ export default function Navbar() {
               <Separator />
               <Link href="/admin/media" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
                 <ImageIcon className="w-5 h-5" /> Media Library
+              </Link>
+              <Link href="/admin/users" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                <Users className="w-5 h-5" /> Manage Users
               </Link>
               <Link href="/admin" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
                 <Settings className="w-5 h-5" /> Admin Panel

@@ -11,7 +11,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Trash2, Edit, Save, Loader2, Sparkles, Check, X } from "lucide-react";
+import { Trash2, Edit, Save, Loader2, Sparkles, Check, X, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
@@ -19,6 +19,7 @@ import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const HIGHLIGHT_OPTIONS = [
   "Tour",
@@ -191,9 +192,14 @@ export default function AdminPage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Admin Dashboard</h1>
             <p className="text-muted-foreground mt-1">Design and manage your Maroma Experiences.</p>
           </div>
-          <Button variant="outline" className="rounded-full gap-2 border-accent text-accent hover:bg-accent/5">
-            <Sparkles className="w-4 h-4" /> AI Description Generator
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="rounded-full gap-2 border-accent text-accent hover:bg-accent/5" asChild>
+              <Link href="/admin/users"><Users className="w-4 h-4" /> Manage Users</Link>
+            </Button>
+            <Button variant="outline" className="rounded-full gap-2 border-accent text-accent hover:bg-accent/5">
+              <Sparkles className="w-4 h-4" /> AI Description Generator
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
