@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -366,6 +365,43 @@ export default function AdminPage() {
                     ))}
                   </div>
                 </div>
+
+                <div className="flex gap-4 pt-4">
+                  {editingId && (
+                    <Button 
+                      variant="outline"
+                      className="rounded-full h-12 px-6 border-muted-foreground text-muted-foreground font-bold hover:bg-muted/10 transition-colors"
+                      onClick={resetForm}
+                      disabled={isProcessing}
+                    >
+                      Cancel Edit
+                    </Button>
+                  )}
+                  <Button 
+                    className={cn(
+                      "flex-1 rounded-full h-12 gap-2 shadow-lg transition-all duration-500 font-bold",
+                      isSuccess 
+                        ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
+                        : "bg-primary hover:bg-primary/90 shadow-primary/20"
+                    )}
+                    onClick={handleSaveTour}
+                    disabled={isProcessing || isSuccess}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> {editingId ? "Saving..." : "Publishing..."}
+                      </>
+                    ) : isSuccess ? (
+                      <>
+                        <Check className="w-4 h-4" /> {editingId ? "Changes Saved!" : "Published Successfully!"}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" /> {editingId ? "Save Changes" : "Publish Experience"}
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -379,43 +415,6 @@ export default function AdminPage() {
                 selectedUrls={newTour.imageUrls}
                 onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} 
               />
-              
-              <div className="flex gap-4 mt-8">
-                {editingId && (
-                  <Button 
-                    variant="outline"
-                    className="rounded-full h-14 px-8 border-muted-foreground text-muted-foreground font-bold"
-                    onClick={resetForm}
-                    disabled={isProcessing}
-                  >
-                    Cancel Edit
-                  </Button>
-                )}
-                <Button 
-                  className={cn(
-                    "flex-1 rounded-full h-14 gap-2 shadow-lg transition-all duration-500 text-lg font-bold",
-                    isSuccess 
-                      ? "bg-green-600 hover:bg-green-600 shadow-green-600/20" 
-                      : "bg-primary hover:bg-primary/90 shadow-primary/20"
-                  )}
-                  onClick={handleSaveTour}
-                  disabled={isProcessing || isSuccess}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" /> {editingId ? "Saving..." : "Publishing..."}
-                    </>
-                  ) : isSuccess ? (
-                    <>
-                      <Check className="w-5 h-5" /> {editingId ? "Changes Saved!" : "Published Successfully!"}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5" /> {editingId ? "Save Changes" : "Publish Experience"}
-                    </>
-                  )}
-                </Button>
-              </div>
             </section>
 
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
