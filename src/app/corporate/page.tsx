@@ -59,6 +59,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const CORPORATE_HERO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Newsletter%20Splash%20image.png?alt=media&token=1b459fe6-4123-40c5-a4bd-1b58c0f4915f";
+
 const HOTEL_PACKAGES = [
   { id: 'h1', name: "Maroma Resort & Spa", price: "₹250/night", desc: "Ultra-luxury beachfront suites." },
   { id: 'h2', name: "Secrets Maroma Beach", price: "₹180/night", desc: "All-inclusive adults-only excellence." },
@@ -125,7 +127,7 @@ export default function CorporatePage() {
   const [selectedCatering, setSelectedCatering] = useState<string>('cat1');
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
 
-  const corporateHero = PlaceHolderImages.find(p => p.id === 'corporate-retreat')?.imageUrl || "";
+  const corporateHero = CORPORATE_HERO_URL;
   const cateringImg = PlaceHolderImages.find(p => p.id === 'corp-catering')?.imageUrl || "";
   const meetingImg = PlaceHolderImages.find(p => p.id === 'corp-meeting')?.imageUrl || "";
   const stayImg = PlaceHolderImages.find(p => p.id === 'corp-stay')?.imageUrl || "";
