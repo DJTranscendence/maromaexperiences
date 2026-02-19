@@ -47,6 +47,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 const HOTEL_PACKAGES = [
   { id: 'h1', name: "Maroma Resort & Spa", price: "₹250/night", desc: "Ultra-luxury beachfront suites." },
@@ -159,9 +160,11 @@ export default function CorporatePage() {
             <p className="text-xl text-white/90 mb-12 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
               Maroma provides the perfect canvas for corporate groups to reconnect, strategize, and grow through curated artisan workshops and high-end logistics.
             </p>
-            <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-14 font-bold shadow-2xl transition-all hover:scale-105">
-              Build Your Custom Itinerary
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-14 font-bold shadow-2xl transition-all hover:scale-105">
+                Build Your Custom Itinerary
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -415,7 +418,6 @@ export default function CorporatePage() {
                         <div className="pt-4 space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Services & Add-ons</Label>
                           {selectedAddons.map(id => {
-                            const name = [...selectedAddons].find(a => a === id); // Mock retrieval
                             return (
                               <div key={id} className="flex items-center gap-2 text-xs font-medium text-primary/80">
                                 <CheckCircle2 className="w-3 h-3 text-accent" /> Custom Selection
@@ -469,7 +471,7 @@ export default function CorporatePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[meetingImg, cateringImg, stayImg, corporateHero, meetingImg, cateringImg].map((img, i) => (
-                <div key={i} className={`relative overflow-hidden rounded-[2rem] shadow-lg group ${i === 0 || i === 4 ? 'md:col-span-2' : ''} h-72`}>
+                <div key={i} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
                   <Image
                     src={img}
                     alt={`Gallery ${i}`}
@@ -561,4 +563,3 @@ export default function CorporatePage() {
     </div>
   );
 }
-
