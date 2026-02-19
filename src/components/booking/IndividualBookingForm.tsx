@@ -175,25 +175,24 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           </div>
         </div>
 
-        <div className="p-4 bg-muted/50 rounded-xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <Users className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Total to pay</div>
-              <div className="text-2xl font-bold font-headline text-primary">₹{total}</div>
-            </div>
+        <div className="p-4 bg-muted/50 rounded-2xl flex items-center gap-3">
+          <div className="p-2 bg-white rounded-lg shadow-sm">
+            <Users className="w-5 h-5 text-accent" />
           </div>
-          <Button 
-            type="submit" 
-            disabled={loading}
-            className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 h-12 flex items-center gap-2"
-          >
-            {loading ? "Processing..." : "Complete Booking"}
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Total to pay</div>
+            <div className="text-2xl font-bold font-headline text-primary">₹{total}</div>
+          </div>
         </div>
+
+        <Button 
+          type="submit" 
+          disabled={loading}
+          className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95"
+        >
+          {loading ? "Processing..." : "Complete Booking"}
+          <ChevronRight className="w-4 h-4" />
+        </Button>
       </form>
 
       <Dialog open={!!aiResponse} onOpenChange={() => setAiResponse(null)}>
