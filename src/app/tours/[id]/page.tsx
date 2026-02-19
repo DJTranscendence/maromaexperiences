@@ -204,7 +204,7 @@ export default function TourDetailsPage() {
                     <div className="p-2 bg-white rounded-xl shadow-sm w-fit mb-3">
                       <Users className="w-5 h-5 text-accent" />
                     </div>
-                    <span className="text-sm font-bold text-primary">Up to {tour.capacity} guests</span>
+                    <span className="text-sm font-bold text-primary">Up to {tour.capacity} Guest/s</span>
                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Capacity</span>
                   </div>
                 </div>

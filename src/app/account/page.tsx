@@ -255,7 +255,7 @@ export default function AccountPage() {
                                     <Navigation className="w-3 h-3 ml-1 opacity-0 group-hover/loc:opacity-100 transition-opacity" />
                                   </a>
                                   <div className="flex items-center gap-4 w-full md:w-auto">
-                                    <span>{booking.numberOfAttendees} Guests</span>
+                                    <span>{booking.numberOfAttendees} Guest/s</span>
                                   </div>
                                 </div>
                               </div>
