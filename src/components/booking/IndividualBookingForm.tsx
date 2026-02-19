@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tour } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Users, ChevronRight, MessageSquare, AlertCircle, Phone } from "lucide-r
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser } from "@/firebase";
+import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, increment, collection, serverTimestamp } from "firebase/firestore";
 
 interface IndividualBookingFormProps {
@@ -22,16 +22,45 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
+  
   const [guests, setGuests] = useState(1);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     countryCode: "+91"
   });
+
+  // Fetch user profile data for auto-fill
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user]);
+
+  const { data: userData } = useDoc(userDocRef);
+
+  // Populate form when user profile is loaded
+  useEffect(() => {
+    if (userData) {
+      setFormData({
+        name: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
+        email: userData.email || "",
+        phone: userData.phoneNumber || "",
+        countryCode: userData.countryCode || "+91"
+      });
+    } else if (user && !userData) {
+      // Fallback to auth provider info if Firestore profile isn't fully loaded yet
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || prev.email,
+        name: user.displayName || prev.name
+      }));
+    }
+  }, [userData, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
