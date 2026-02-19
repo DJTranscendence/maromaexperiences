@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, ChevronRight, MessageSquare, AlertCircle, Phone } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -28,7 +29,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: ""
+    phone: "",
+    countryCode: "+91"
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +67,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       
       const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
       
+      const fullPhone = `${formData.countryCode} ${formData.phone}`;
+
       try {
         // 4. Call GenAI notification flow
         const notification = await generateBookingNotification({
@@ -78,7 +82,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             numberOfGuests: guests,
             bookedBy: formData.name,
             bookerEmail: formData.email,
-            bookerPhone: formData.phone
+            bookerPhone: fullPhone
           },
           currentBookedSpaces: (tour.bookedSpaces || 0) + guests,
           minGroupSize: tour.minGroupSize,
@@ -133,6 +137,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
               required 
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="rounded-xl h-12"
             />
           </div>
           <div className="space-y-2">
@@ -144,19 +149,40 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
               required 
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="rounded-xl h-12"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <Label htmlFor="phone">Phone Number</Label>
-            <Input 
-              id="phone" 
-              placeholder="+1 (555) 000-0000" 
-              required 
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-            />
+            <div className="flex gap-2">
+              <Select 
+                value={formData.countryCode} 
+                onValueChange={(v) => setFormData({...formData, countryCode: v})}
+              >
+                <SelectTrigger className="w-24 h-12 rounded-xl">
+                  <SelectValue placeholder="+91" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="+91">IN (+91)</SelectItem>
+                  <SelectItem value="+1">US (+1)</SelectItem>
+                  <SelectItem value="+44">UK (+44)</SelectItem>
+                  <SelectItem value="+971">UAE (+971)</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative flex-1">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  id="phone" 
+                  placeholder="09486623749" 
+                  required 
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  className="pl-10 rounded-xl h-12"
+                />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <Label htmlFor="guests">Number of Guests</Label>
             <div className="flex items-center gap-4">
               <Input 
@@ -166,9 +192,10 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                 max={tour.capacity - (tour.bookedSpaces || 0)} 
                 value={guests}
                 onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
+                className="rounded-xl h-12"
                 required 
               />
-              <div className="text-sm text-muted-foreground whitespace-nowrap">
+              <div className="text-sm text-muted-foreground whitespace-nowrap font-medium">
                 ₹{tour.price} / guest
               </div>
             </div>
@@ -188,7 +215,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         <Button 
           type="submit" 
           disabled={loading}
-          className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95"
+          className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95 font-bold"
         >
           {loading ? "Processing..." : "Complete Booking"}
           <ChevronRight className="w-4 h-4" />
@@ -208,7 +235,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mt-4 whitespace-pre-wrap font-body text-primary leading-relaxed">
             {aiResponse}
           </div>
-          <Button onClick={() => setAiResponse(null)} className="w-full mt-6 bg-primary rounded-full">
+          <Button onClick={() => setAiResponse(null)} className="w-full mt-6 bg-primary rounded-full font-bold">
             Done
           </Button>
         </DialogContent>

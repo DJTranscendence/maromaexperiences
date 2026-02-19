@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -25,7 +26,8 @@ export default function AccountPage() {
     firstName: "",
     lastName: "",
     email: "",
-    phoneNumber: ""
+    phoneNumber: "",
+    countryCode: "+91"
   });
 
   const userDocRef = useMemoFirebase(() => {
@@ -48,7 +50,8 @@ export default function AccountPage() {
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
         email: userData.email || "",
-        phoneNumber: userData.phoneNumber || ""
+        phoneNumber: userData.phoneNumber || "",
+        countryCode: userData.countryCode || "+91"
       });
     }
   }, [userData]);
@@ -166,13 +169,29 @@ export default function AccountPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input 
-                              className="pl-10 rounded-xl h-12" 
-                              value={profileForm.phoneNumber} 
-                              onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} 
-                            />
+                          <div className="flex gap-2">
+                            <Select 
+                              value={profileForm.countryCode} 
+                              onValueChange={(v) => setProfileForm({...profileForm, countryCode: v})}
+                            >
+                              <SelectTrigger className="w-24 h-12 rounded-xl">
+                                <SelectValue placeholder="+91" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="+91">IN (+91)</SelectItem>
+                                <SelectItem value="+1">US (+1)</SelectItem>
+                                <SelectItem value="+44">UK (+44)</SelectItem>
+                                <SelectItem value="+971">UAE (+971)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <div className="relative flex-1">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input 
+                                className="pl-10 rounded-xl h-12" 
+                                value={profileForm.phoneNumber} 
+                                onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} 
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>

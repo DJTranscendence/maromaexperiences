@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { initiateEmailSignIn, initiateEmailSignUp } from "@/firebase/non-blocking-login";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { LogIn, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
+import { LogIn, UserPlus, Loader2, Eye, EyeOff, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp } from "firebase/firestore";
 
@@ -26,6 +27,7 @@ export default function LoginPage() {
     email: "",
     password: "",
     phone: "",
+    countryCode: "+91"
   });
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -59,12 +61,15 @@ export default function LoginPage() {
       const userCredential = await initiateEmailSignUp(auth, formData.email, formData.password);
       const user = userCredential.user;
 
+      const fullPhone = `${formData.countryCode} ${formData.phone}`;
+
       // Create user profile in Firestore so they appear in management lists
       if (firestore) {
         setDocumentNonBlocking(doc(firestore, "users", user.uid), {
           id: user.uid,
           email: formData.email,
           phoneNumber: formData.phone || "",
+          countryCode: formData.countryCode,
           firstName: "New",
           lastName: "User",
           accountType: "Individual",
@@ -115,6 +120,7 @@ export default function LoginPage() {
                       required 
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
+                      className="rounded-xl h-12"
                     />
                   </div>
                   <div className="space-y-2">
@@ -126,7 +132,7 @@ export default function LoginPage() {
                         required 
                         value={formData.password}
                         onChange={e => setFormData({...formData, password: e.target.value})}
-                        className="pr-10"
+                        className="pr-10 rounded-xl h-12"
                       />
                       <button
                         type="button"
@@ -139,7 +145,7 @@ export default function LoginPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full bg-primary rounded-full h-12" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-primary rounded-full h-12 font-bold" disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
                     Sign In
                   </Button>
@@ -163,17 +169,38 @@ export default function LoginPage() {
                       required 
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
+                      className="rounded-xl h-12"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-phone">Phone Number</Label>
-                    <Input 
-                      id="signup-phone" 
-                      type="tel" 
-                      placeholder="+91 98765 43210" 
-                      value={formData.phone}
-                      onChange={e => setFormData({...formData, phone: e.target.value})}
-                    />
+                    <div className="flex gap-2">
+                      <Select 
+                        value={formData.countryCode} 
+                        onValueChange={(v) => setFormData({...formData, countryCode: v})}
+                      >
+                        <SelectTrigger className="w-24 h-12 rounded-xl">
+                          <SelectValue placeholder="+91" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="+91">IN (+91)</SelectItem>
+                          <SelectItem value="+1">US (+1)</SelectItem>
+                          <SelectItem value="+44">UK (+44)</SelectItem>
+                          <SelectItem value="+971">UAE (+971)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="relative flex-1">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          id="signup-phone" 
+                          type="tel" 
+                          placeholder="09486623749" 
+                          value={formData.phone}
+                          onChange={e => setFormData({...formData, phone: e.target.value})}
+                          className="pl-10 rounded-xl h-12"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
@@ -184,7 +211,7 @@ export default function LoginPage() {
                         required 
                         value={formData.password}
                         onChange={e => setFormData({...formData, password: e.target.value})}
-                        className="pr-10"
+                        className="pr-10 rounded-xl h-12"
                       />
                       <button
                         type="button"
@@ -197,7 +224,7 @@ export default function LoginPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90 rounded-full h-12" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90 rounded-full h-12 font-bold" disabled={isLoading}>
                     {isLoading ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
                     Create Account
                   </Button>
