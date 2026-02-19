@@ -45,6 +45,18 @@ export default function Navbar() {
   const handleBecomeAdmin = () => {
     if (!firestore || !user || user.isAnonymous) return;
     
+    // Ensure user profile exists in 'users' collection so they show up in management list
+    setDocumentNonBlocking(doc(firestore, "users", user.uid), {
+      email: user.email,
+      firstName: user.displayName?.split(' ')[0] || "Admin",
+      lastName: user.displayName?.split(' ')[1] || "User",
+      id: user.uid,
+      accountType: "Admin",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    // Grant admin role
     setDocumentNonBlocking(doc(firestore, "roles_admin", user.uid), {
       email: user.email,
       activatedAt: serverTimestamp(),
@@ -74,7 +86,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.68em] hidden sm:block mr-[-0.68em]">Experiences</span>
+              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[1.05em] hidden sm:block mr-[-1.05em]">Experiences</span>
             </div>
           </Link>
 

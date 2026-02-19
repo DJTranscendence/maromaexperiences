@@ -7,15 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { initiateEmailSignIn, initiateEmailSignUp } from "@/firebase/non-blocking-login";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { LogIn, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { doc, serverTimestamp } from "firebase/firestore";
 
 export default function LoginPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -54,9 +56,23 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Note: Phone number is captured in state but not used by Firebase Auth create user directly.
-      // In a full implementation, you'd save this to a Firestore user profile document.
-      await initiateEmailSignUp(auth, formData.email, formData.password);
+      const userCredential = await initiateEmailSignUp(auth, formData.email, formData.password);
+      const user = userCredential.user;
+
+      // Create user profile in Firestore so they appear in management lists
+      if (firestore) {
+        setDocumentNonBlocking(doc(firestore, "users", user.uid), {
+          id: user.uid,
+          email: formData.email,
+          phoneNumber: formData.phone || "",
+          firstName: "New",
+          lastName: "User",
+          accountType: "Individual",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+
       toast({ title: "Account created", description: "Welcome to Maroma Experiences!" });
       router.push("/");
       router.refresh();
