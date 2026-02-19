@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save, MapPin, Navigation } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc, collection, query, where, serverTimestamp } from "firebase/firestore";
@@ -22,6 +22,7 @@ export default function AccountPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const isInitialized = useRef(false);
   
   const [profileForm, setProfileForm] = useState({
     firstName: "",
@@ -46,7 +47,7 @@ export default function AccountPage() {
   const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
 
   useEffect(() => {
-    if (userData) {
+    if (userData && !isInitialized.current) {
       setProfileForm({
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
@@ -54,6 +55,7 @@ export default function AccountPage() {
         phoneNumber: userData.phoneNumber || "",
         countryCode: userData.countryCode || "+91"
       });
+      isInitialized.current = true;
     }
   }, [userData]);
 

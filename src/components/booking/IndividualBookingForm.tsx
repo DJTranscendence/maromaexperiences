@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tour } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     countryCode: "+91"
   });
 
+  const isInitialized = useRef(false);
+
   // Fetch user profile data for auto-fill
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -44,16 +46,17 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
   const { data: userData } = useDoc(userDocRef);
 
-  // Populate form when user profile is loaded
+  // Populate form when user profile is loaded, but only once to avoid infinite loops
   useEffect(() => {
-    if (userData) {
+    if (userData && !isInitialized.current) {
       setFormData({
         name: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
         email: userData.email || "",
         phone: userData.phoneNumber || "",
         countryCode: userData.countryCode || "+91"
       });
-    } else if (user && !userData) {
+      isInitialized.current = true;
+    } else if (user && !userData && !isInitialized.current) {
       // Fallback to auth provider info if Firestore profile isn't fully loaded yet
       setFormData(prev => ({
         ...prev,
