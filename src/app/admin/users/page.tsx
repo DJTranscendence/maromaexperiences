@@ -190,8 +190,9 @@ export default function ManageUsersPage() {
                           <p className="text-lg font-bold text-primary">No Users Found</p>
                           <p className="text-sm text-muted-foreground">No accounts match your search criteria.</p>
                         </div>
-                      </TableRow>
-                    )}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             )}
