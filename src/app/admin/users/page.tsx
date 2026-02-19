@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, useUser, updateDocumentNonBlocking } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
-import { Loader2, Shield, User, UserCheck, Search } from "lucide-react";
+import { Loader2, Shield, User, UserCheck, Search, Edit2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface UserProfile {
   id: string;
@@ -30,6 +32,11 @@ export default function ManageUsersPage() {
   const firestore = useFirestore();
   const { user, isUserLoading: isAuthLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editForm, setEditForm] = useState({
+    firstName: "",
+    lastName: ""
+  });
 
   // Create memoized queries that wait for both firestore and an active user session
   const usersQuery = useMemoFirebase(() => {
@@ -94,6 +101,28 @@ export default function ManageUsersPage() {
     }
   };
 
+  const handleEditUser = (userItem: UserProfile) => {
+    setEditingUser(userItem);
+    setEditForm({
+      firstName: userItem.firstName || "",
+      lastName: userItem.lastName || ""
+    });
+  };
+
+  const saveUserChanges = () => {
+    if (!firestore || !editingUser) return;
+    
+    const userRef = doc(firestore, "users", editingUser.id);
+    updateDocumentNonBlocking(userRef, {
+      firstName: editForm.firstName,
+      lastName: editForm.lastName,
+      updatedAt: serverTimestamp()
+    });
+
+    toast({ title: "Profile Updated", description: "User details have been successfully changed." });
+    setEditingUser(null);
+  };
+
   const isSyncing = isAuthLoading || isUsersLoading || isAdminsLoading || isFacilitatorsLoading;
 
   return (
@@ -101,24 +130,22 @@ export default function ManageUsersPage() {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
-        <div className="mb-10">
-          <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">User Management</h1>
-          <p className="text-muted-foreground mt-1">Manage system roles and access levels.</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">System Users</h1>
+          </div>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search by name or email..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-10 rounded-full bg-muted/40 border-none h-11"
+            />
+          </div>
         </div>
 
-        <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-          <CardHeader className="bg-white border-b flex flex-col sm:flex-row items-center justify-between gap-4">
-            <CardTitle className="font-headline text-2xl text-primary">System Users</CardTitle>
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search by name or email..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10 rounded-full bg-muted/30 border-none"
-              />
-            </div>
-          </CardHeader>
+        <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
           <CardContent className="p-0">
             {isSyncing ? (
               <div className="p-20 flex flex-col items-center justify-center gap-4">
@@ -128,10 +155,10 @@ export default function ManageUsersPage() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="font-bold">User</TableHead>
-                    <TableHead className="font-bold">Current Roles</TableHead>
-                    <TableHead className="text-right font-bold">Role Management</TableHead>
+                  <TableRow className="bg-muted/5 border-b border-muted">
+                    <TableHead className="font-bold text-primary h-14">User</TableHead>
+                    <TableHead className="font-bold text-primary h-14">Current Roles</TableHead>
+                    <TableHead className="text-right font-bold text-primary h-14 pr-8">Role Management</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -140,40 +167,45 @@ export default function ManageUsersPage() {
                     const isFacilitator = facilitatorIds.has(userItem.id);
 
                     return (
-                      <TableRow key={userItem.id} className="hover:bg-muted/10">
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-primary">
-                              {userItem.firstName} {userItem.lastName}
-                            </span>
-                            <span className="text-xs text-muted-foreground">{userItem.email}</span>
+                      <TableRow key={userItem.id} className="hover:bg-muted/5 transition-colors border-b border-muted/50 last:border-0 h-20">
+                        <TableCell className="pl-6">
+                          <div className="flex items-center gap-4">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-primary text-base">
+                                {userItem.firstName} {userItem.lastName}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{userItem.email}</span>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditUser(userItem)} className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            {isAdmin && <Badge className="bg-primary text-white">Admin</Badge>}
-                            {isFacilitator && <Badge className="bg-accent text-white">Facilitator</Badge>}
-                            {!isAdmin && !isFacilitator && <Badge variant="outline">Guest / User</Badge>}
+                            {isAdmin && <Badge className="bg-primary text-white rounded-full px-4">Admin</Badge>}
+                            {isFacilitator && <Badge className="bg-accent text-white rounded-full px-4">Facilitator</Badge>}
+                            {!isAdmin && !isFacilitator && <Badge variant="outline" className="rounded-full px-4 border-muted text-primary font-medium">Guest / User</Badge>}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                        <TableCell className="text-right pr-6">
+                          <div className="flex justify-end gap-3">
                             <Button 
                               size="sm" 
                               variant={isAdmin ? "destructive" : "outline"}
-                              className="rounded-full gap-2"
+                              className="rounded-full gap-2 h-10 px-6 font-medium"
                               onClick={() => toggleAdmin(userItem.id, userItem.email, isAdmin)}
                             >
-                              <Shield className="w-3.5 h-3.5" />
+                              <Shield className="w-4 h-4" />
                               {isAdmin ? "Revoke Admin" : "Make Admin"}
                             </Button>
                             <Button 
                               size="sm" 
-                              variant={isFacilitator ? "destructive" : "outline"}
-                              className="rounded-full gap-2"
+                              variant="outline"
+                              className="rounded-full gap-2 h-10 px-6 font-medium text-primary hover:bg-muted/30"
                               onClick={() => toggleFacilitator(userItem.id, userItem.email, isFacilitator)}
                             >
-                              <UserCheck className="w-3.5 h-3.5" />
+                              <UserCheck className="w-4 h-4" />
                               {isFacilitator ? "Revoke Facilitator" : "Make Facilitator"}
                             </Button>
                           </div>
@@ -197,6 +229,40 @@ export default function ManageUsersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit User Dialog */}
+        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+          <DialogContent className="sm:max-w-[425px] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-headline text-primary">Edit Account</DialogTitle>
+              <DialogDescription>Update the profile details for {editingUser?.email}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="firstName" className="text-right">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  className="col-span-3 rounded-xl"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  className="col-span-3 rounded-xl"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setEditingUser(null)} className="rounded-full">Cancel</Button>
+              <Button onClick={saveUserChanges} className="bg-primary rounded-full px-8">Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
       
       <Footer />
