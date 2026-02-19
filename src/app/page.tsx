@@ -13,6 +13,7 @@ import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const firestore = useFirestore();
@@ -84,7 +85,7 @@ export default function Home() {
                     />
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       {tour.status === 'coming-soon' ? (
-                        <Badge className="bg-amber-500/90 text-white hover:bg-amber-500 border-none shadow-lg rounded-full px-4 py-1.5 gap-2 backdrop-blur-sm">
+                        <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none shadow-lg rounded-full px-4 py-1.5 gap-2 backdrop-blur-sm">
                           <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                         </Badge>
                       ) : (
@@ -126,7 +127,14 @@ export default function Home() {
                     <div className="flex flex-col">
                       <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
                     </div>
-                    <Button className="bg-accent hover:bg-accent/90 text-white rounded-full px-6 font-bold h-10 shadow-md">
+                    <Button 
+                      className={cn(
+                        "text-white rounded-full px-6 font-bold h-10 shadow-md transition-colors",
+                        tour.status === 'coming-soon' 
+                          ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" 
+                          : "bg-accent hover:bg-accent/90"
+                      )}
+                    >
                       {tour.status === 'coming-soon' ? 'Notify Me' : 'Book Now'}
                     </Button>
                   </CardFooter>

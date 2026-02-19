@@ -180,7 +180,7 @@ export default function TourDetailsPage() {
                             required
                           />
                         </div>
-                        <Button className="w-full bg-primary hover:bg-primary/90 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-primary/20">
+                        <Button className="w-full bg-amber-500 hover:bg-amber-600 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-amber-500/20">
                           <Send className="w-4 h-4" /> Notify Me
                         </Button>
                       </form>
