@@ -127,7 +127,7 @@ export default function Home() {
                       <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
                     </div>
                     <Button className="bg-accent hover:bg-accent/90 text-white rounded-full px-6 font-bold h-10 shadow-md">
-                      Book Now
+                      {tour.status === 'coming-soon' ? 'Notify Me' : 'Book Now'}
                     </Button>
                   </CardFooter>
                 </Card>
