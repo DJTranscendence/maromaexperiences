@@ -70,6 +70,13 @@ export default function AccountPage() {
     });
   };
 
+  const scrollToBookings = () => {
+    const element = document.getElementById('upcoming-bookings');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const isLoading = isUserLoading || isBookingsLoading;
 
   if (!user) {
@@ -104,12 +111,16 @@ export default function AccountPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Nav */}
           <div className="lg:col-span-1 space-y-4">
-            <Card className="rounded-2xl border-none shadow-xl">
+            <Card className="rounded-2xl border-none shadow-xl sticky top-24">
               <CardContent className="p-4 flex flex-col gap-1">
                 <Button variant="ghost" className="justify-start gap-3 bg-primary/5 text-primary font-bold">
                   <User className="w-4 h-4" /> Profile Details
                 </Button>
-                <Button variant="ghost" className="justify-start gap-3 text-muted-foreground hover:text-primary">
+                <Button 
+                  variant="ghost" 
+                  className="justify-start gap-3 text-muted-foreground hover:text-primary"
+                  onClick={scrollToBookings}
+                >
                   <Calendar className="w-4 h-4" /> My Bookings
                 </Button>
                 <Button variant="ghost" className="justify-start gap-3 text-muted-foreground hover:text-primary">
@@ -209,7 +220,7 @@ export default function AccountPage() {
                 </Card>
 
                 {/* Recent Activity */}
-                <Card className="rounded-3xl border-none shadow-xl md:col-span-2 overflow-hidden">
+                <Card id="upcoming-bookings" className="rounded-3xl border-none shadow-xl md:col-span-2 overflow-hidden scroll-mt-24">
                   <CardHeader className="flex flex-row items-center justify-between bg-white border-b px-8 h-20">
                     <CardTitle className="text-2xl font-headline text-primary">Upcoming Bookings</CardTitle>
                     <Button variant="ghost" size="sm" className="text-accent gap-1 hover:bg-accent/5">
