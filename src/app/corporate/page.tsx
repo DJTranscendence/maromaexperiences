@@ -6,7 +6,6 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, 
   Users2, 
@@ -121,42 +120,49 @@ export default function CorporatePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Signature Packages</h2>
-              <p className="text-muted-foreground font-body">Choose a foundation and customize it to your specific goals.</p>
+              <p className="text-muted-foreground font-body">Choose a foundation and customize it to your specific goals. Click any package to view options.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {PACKAGES.map((pkg, i) => (
-                <Card key={i} className={`rounded-[2.5rem] border-none shadow-xl relative overflow-hidden flex flex-col ${pkg.popular ? 'ring-2 ring-accent scale-105 z-10' : 'scale-95'}`}>
-                  {pkg.popular && (
-                    <div className="absolute top-0 right-0">
-                      <div className="bg-accent text-white text-[10px] font-bold px-8 py-1.5 rotate-45 translate-x-10 translate-y-4 uppercase tracking-widest shadow-md">
-                        Most Popular
-                      </div>
-                    </div>
-                  )}
-                  <CardHeader className="p-8 pb-4">
-                    <div className="w-12 h-12 bg-muted/50 rounded-2xl flex items-center justify-center mb-6">
-                      <pkg.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="text-xs font-bold text-accent uppercase tracking-[0.2em] mb-2">{pkg.tier}</div>
-                    <CardTitle className="text-2xl font-headline font-bold text-primary">{pkg.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 pt-0 flex-grow">
-                    <p className="text-sm text-muted-foreground mb-8 font-body leading-relaxed">{pkg.description}</p>
-                    <div className="space-y-4 mb-8">
-                      {pkg.features.map((feat, fi) => (
-                        <div key={fi} className="flex items-center gap-3">
-                          <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
-                          <span className="text-sm font-medium text-primary/80">{feat}</span>
+                <Link key={i} href="/#workshops" className="flex">
+                  <Card className={`rounded-[2.5rem] border-none shadow-xl relative overflow-hidden flex flex-col w-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group/card ${pkg.popular ? 'ring-2 ring-accent z-10' : ''}`}>
+                    {pkg.popular && (
+                      <div className="absolute top-0 right-0">
+                        <div className="bg-accent text-white text-[10px] font-bold px-8 py-1.5 rotate-45 translate-x-10 translate-y-4 uppercase tracking-widest shadow-md">
+                          Most Popular
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-auto pt-6 border-t border-border flex items-baseline justify-between">
-                      <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Base Rate</span>
-                      <span className="text-2xl font-headline font-bold text-primary">{pkg.price}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </div>
+                    )}
+                    <CardHeader className="p-8 pb-4">
+                      <div className="w-12 h-12 bg-muted/50 rounded-2xl flex items-center justify-center mb-6 group-hover/card:bg-accent/10 transition-colors">
+                        <pkg.icon className="w-6 h-6 text-primary group-hover/card:text-accent transition-colors" />
+                      </div>
+                      <div className="text-xs font-bold text-accent uppercase tracking-[0.2em] mb-2">{pkg.tier}</div>
+                      <CardTitle className="text-2xl font-headline font-bold text-primary">{pkg.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8 pt-0 flex-grow">
+                      <p className="text-sm text-muted-foreground mb-8 font-body leading-relaxed">{pkg.description}</p>
+                      <div className="space-y-4 mb-8">
+                        {pkg.features.map((feat, fi) => (
+                          <div key={fi} className="flex items-center gap-3">
+                            <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                            <span className="text-sm font-medium text-primary/80">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-auto pt-6 border-t border-border flex items-baseline justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Base Rate</span>
+                          <span className="text-2xl font-headline font-bold text-primary">{pkg.price}</span>
+                        </div>
+                        <div className="bg-primary text-white p-2 rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
@@ -172,8 +178,8 @@ export default function CorporatePage() {
                   Our venues are designed to inspire quiet focus and loud collaboration in equal measure.
                 </p>
               </div>
-              <Button variant="outline" className="rounded-full px-8 h-12 border-accent text-accent hover:bg-accent/5">
-                View All Venues
+              <Button variant="outline" className="rounded-full px-8 h-12 border-accent text-accent hover:bg-accent/5" asChild>
+                <Link href="/#workshops">View All Venues</Link>
               </Button>
             </div>
 
