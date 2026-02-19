@@ -126,8 +126,8 @@ export default function Home() {
                     <div className="flex flex-col">
                       <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
                     </div>
-                    <Button variant="ghost" className="rounded-full group-hover:translate-x-1 transition-transform">
-                      <ArrowRight className="w-5 h-5 text-accent" />
+                    <Button className="bg-accent hover:bg-accent/90 text-white rounded-full px-6 font-bold h-10 shadow-md">
+                      Book Now
                     </Button>
                   </CardFooter>
                 </Card>
