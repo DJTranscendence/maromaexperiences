@@ -49,11 +49,6 @@ export default function Home() {
             <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
               Explore Tours
             </Button>
-            <Button size="lg" variant="outline" className="bg-sky-200 text-primary border-none hover:bg-sky-300 rounded-full px-10 text-lg h-14 font-bold shadow-lg" asChild>
-              <Link href="https://www.maroma.com/our-story/">
-                Our Story
-              </Link>
-            </Button>
           </div>
         </div>
       </section>
