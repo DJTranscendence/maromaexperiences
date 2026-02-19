@@ -72,13 +72,6 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">Upcoming Experiences</h2>
             <p className="text-muted-foreground mt-2 font-body">Choose your next adventure from our seasonally curated list.</p>
           </div>
-          <Link 
-            href="#workshops" 
-            onClick={(e) => { e.preventDefault(); scrollToWorkshops(); }}
-            className="hidden sm:flex items-center gap-2 text-accent font-semibold hover:underline group"
-          >
-            View All Tours & Workshops <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
         {isLoading ? (
@@ -97,7 +90,24 @@ export default function Home() {
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
-                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+                      <span className="text-white text-xs font-bold uppercase tracking-widest">{tour.type}</span>
+                    </div>
+                  </div>
+                  <CardContent className="p-6 flex-grow flex flex-col">
+                    <h3 className="text-2xl font-headline font-bold text-primary group-hover:text-accent transition-colors mb-2">
+                      {tour.name}
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-accent" /> {tour.location}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-accent" /> {tour.duration}</span>
+                    </div>
+                    <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed mb-6">
+                      {tour.description}
+                    </p>
+                    
+                    {/* Vertically aligned badges at the bottom of the content area */}
+                    <div className="mt-auto pt-4 flex flex-col items-start gap-2">
                       {tour.status === 'coming-soon' ? (
                         <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none shadow-lg rounded-full px-4 py-1.5 gap-2 backdrop-blur-sm">
                           <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
@@ -110,32 +120,16 @@ export default function Home() {
                       {tour.status !== 'coming-soon' && (
                         <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} />
                       )}
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-                      <span className="text-white text-xs font-bold uppercase tracking-widest">{tour.type}</span>
-                    </div>
-                  </div>
-                  <CardContent className="p-6 flex-grow">
-                    <h3 className="text-2xl font-headline font-bold text-primary group-hover:text-accent transition-colors mb-2">
-                      {tour.name}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-accent" /> {tour.location}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-accent" /> {tour.duration}</span>
-                    </div>
-                    <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
-                      {tour.description}
-                    </p>
-                    
-                    {tour.status === 'coming-soon' && (
-                      <div className="mt-4 p-4 bg-amber-50/50 rounded-2xl border border-amber-100 flex items-center gap-4">
-                        <Bell className="w-5 h-5 text-amber-600 shrink-0" />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-amber-900 font-headline">Coming Soon!</span>
-                          <span className="text-[11px] text-amber-800 leading-tight">click the button below to be notified when this event goes live.</span>
+                      
+                      {tour.status === 'coming-soon' && (
+                        <div className="w-full mt-2 p-3 bg-amber-50/50 rounded-xl border border-amber-100 flex items-center gap-3">
+                          <Bell className="w-4 h-4 text-amber-600 shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="text-[11px] text-amber-800 leading-tight">Be notified when this event goes live.</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardContent>
                   <CardFooter className="px-6 py-4 border-t border-border flex items-center justify-between bg-gray-50/50">
                     <div className="flex flex-col">
