@@ -12,7 +12,7 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
-} from "@/dialog";
+} from "@/components/ui/dialog";
 import { 
   Building2, 
   Users2, 
