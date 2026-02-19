@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Users, Home } from "lucide-react";
+import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Users, Home, Building2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
@@ -118,7 +119,7 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Home</Link>
+            <Link href="/" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/" && "text-accent")}>Home</Link>
             <Link 
               href="/#workshops" 
               onClick={handleScrollToWorkshops}
@@ -126,8 +127,8 @@ export default function Navbar() {
             >
               Tours & Workshops
             </Link>
-            <Link href="/account" className="text-sm font-medium hover:text-accent transition-colors">My Bookings</Link>
-            <Link href="https://www.maroma.com/our-story/" className="text-sm font-medium hover:text-accent transition-colors">Our Story</Link>
+            <Link href="/corporate" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/corporate" && "text-accent")}>Corporate</Link>
+            <Link href="/account" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/account" && "text-accent")}>My Bookings</Link>
             
             {isAdmin && (
               <div className="flex items-center gap-4 pl-4 border-l border-border animate-in fade-in duration-500">
@@ -230,6 +231,7 @@ export default function Navbar() {
           >
             Tours & Workshops
           </Link>
+          <Link href="/corporate" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Corporate Events</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
           <Link href="https://www.maroma.com/our-story/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Our Story</Link>
           
