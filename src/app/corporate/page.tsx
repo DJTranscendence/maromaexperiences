@@ -77,7 +77,8 @@ const PACKAGES = [
     description: "A focused single-day experience designed to break the routine and spark new ideas.",
     features: ["Private Meeting Space", "Signature Workshop Choice", "Artisan Lunch & Coffee", "Facilitated Q&A"],
     price: "₹8,000 / Person",
-    icon: Users2
+    icon: Users2,
+    image: "https://picsum.photos/seed/corp-day/600/300"
   },
   {
     id: 'multi',
@@ -87,7 +88,8 @@ const PACKAGES = [
     features: ["2 Days / 1 Night", "Premium Catering Package", "Two Signature Workshops", "Outdoor Team Challenges", "Evening Social Event"],
     price: "₹12,000 / Person",
     icon: Target,
-    popular: true
+    popular: true,
+    image: "https://picsum.photos/seed/corp-multi/600/300"
   },
   {
     id: 'bespoke',
@@ -96,7 +98,8 @@ const PACKAGES = [
     description: "A high-level retreat focused on deep strategy, leadership, and absolute privacy.",
     features: ["3 Days / 2 Nights", "Private Chef Experience", "Exclusive Venue Access", "Leadership Coaching Integration", "Full Concierge Support"],
     price: "On Request",
-    icon: ShieldCheck
+    icon: ShieldCheck,
+    image: "https://picsum.photos/seed/corp-exec/600/300"
   }
 ];
 
@@ -223,14 +226,24 @@ export default function CorporatePage() {
                 <button key={i} onClick={() => handleOpenBuilder(pkg)} className="flex text-left w-full outline-none focus:ring-0">
                   <Card className={`rounded-[2.5rem] border-none shadow-xl relative overflow-hidden flex flex-col w-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group/card ${pkg.popular ? 'ring-2 ring-accent z-10' : ''}`}>
                     {pkg.popular && (
-                      <div className="absolute top-0 right-0">
+                      <div className="absolute top-0 right-0 z-20">
                         <div className="bg-accent text-white text-[10px] font-bold px-8 py-1.5 rotate-45 translate-x-10 translate-y-4 uppercase tracking-widest shadow-md">
                           Most Popular
                         </div>
                       </div>
                     )}
-                    <CardHeader className="p-8 pb-4">
-                      <div className="w-12 h-12 bg-muted/50 rounded-2xl flex items-center justify-center mb-6 group-hover/card:bg-accent/10 transition-colors">
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={pkg.image}
+                        alt={pkg.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover/card:scale-110"
+                        data-ai-hint="corporate events"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent" />
+                    </div>
+                    <CardHeader className="p-8 pb-4 relative z-10 -mt-12">
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-md group-hover/card:bg-accent/10 transition-colors">
                         <pkg.icon className="w-6 h-6 text-primary group-hover/card:text-accent transition-colors" />
                       </div>
                       <div className="text-xs font-bold text-accent uppercase tracking-[0.2em] mb-2">{pkg.tier}</div>
