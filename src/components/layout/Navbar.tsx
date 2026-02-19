@@ -46,7 +46,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="relative w-8 h-8 flex-shrink-0">
+            <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[1px]">
               <Image 
                 src={LOGO_URL}
                 alt="Maroma Logo"

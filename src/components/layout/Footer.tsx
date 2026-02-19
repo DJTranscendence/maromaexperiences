@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-1">
             <Link href="/" className="flex items-center space-x-3 mb-4">
-              <div className="relative w-10 h-10 flex-shrink-0">
+              <div className="relative w-10 h-10 flex-shrink-0 -translate-y-1">
                 <Image 
                   src={LOGO_URL}
                   alt="Maroma Logo"
