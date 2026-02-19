@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -11,8 +10,8 @@ import { Users, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useFirestore, updateDocumentNonBlocking } from "@/firebase";
-import { doc, increment } from "firebase/firestore";
+import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser } from "@/firebase";
+import { doc, increment, collection, serverTimestamp } from "firebase/firestore";
 
 interface IndividualBookingFormProps {
   tour: Tour;
@@ -21,6 +20,7 @@ interface IndividualBookingFormProps {
 export default function IndividualBookingForm({ tour }: IndividualBookingFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user } = useUser();
   const [guests, setGuests] = useState(1);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
@@ -45,13 +45,28 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         bookedSpaces: increment(guests)
       });
 
-      // 2. Simulate short processing delay
+      // 2. Create a real booking record in the bookings collection
+      const bookingsRef = collection(firestore, "bookings");
+      addDocumentNonBlocking(bookingsRef, {
+        userId: user?.uid || "guest",
+        tourId: tour.id,
+        tourName: tour.name,
+        bookingType: 'Individual',
+        numberOfAttendees: guests,
+        totalPrice: guests * tour.price,
+        bookingStatus: 'confirmed',
+        bookedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        specialInstructions: ""
+      });
+
+      // 3. Simulate short processing delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
       
       try {
-        // 3. Call GenAI notification flow
+        // 4. Call GenAI notification flow
         const notification = await generateBookingNotification({
           eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
           recipientType: 'booker',

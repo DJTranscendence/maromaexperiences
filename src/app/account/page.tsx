@@ -9,21 +9,84 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Phone, Calendar, History, Settings, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save } from "lucide-react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { doc, collection, query, where, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AccountPage() {
-  const [user, setUser] = useState({
-    name: "Alex Maroma",
-    email: "alex@example.com",
-    phone: "+1 (555) 123-4567"
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const [profileForm, setProfileForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: ""
   });
 
-  const mockBookings = [
-    { id: "BK-8821", tour: "Coastal Sunset Expedition", date: "June 25, 2024", status: "confirmed", price: 85 },
-    { id: "BK-9012", tour: "Artisanal Pottery Workshop", date: "July 12, 2024", status: "pending", price: 120 },
-  ];
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user]);
+
+  const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
+
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, "bookings"), where("userId", "==", user.uid));
+  }, [firestore, user]);
+
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
+
+  useEffect(() => {
+    if (userData) {
+      setProfileForm({
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        email: userData.email || "",
+        phoneNumber: userData.phoneNumber || ""
+      });
+    }
+  }, [userData]);
+
+  const handleSaveProfile = () => {
+    if (!userDocRef || !firestore) return;
+    
+    updateDocumentNonBlocking(userDocRef, {
+      ...profileForm,
+      updatedAt: serverTimestamp()
+    });
+
+    toast({
+      title: "Profile Updated",
+      description: "Your personal information has been saved successfully.",
+    });
+  };
+
+  const isLoading = isUserLoading || isBookingsLoading;
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <Card className="max-w-md w-full p-8 text-center rounded-3xl border-none shadow-xl">
+            <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-headline font-bold">Please Sign In</h2>
+            <p className="text-muted-foreground mt-2">You need to be logged in to view your account details.</p>
+            <Button asChild className="mt-6 rounded-full px-8">
+              <Link href="/login">Sign In</Link>
+            </Button>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -56,83 +119,127 @@ export default function AccountPage() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-8">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsContent value="profile" className="m-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Profile Form */}
-                  <Card className="rounded-2xl border-none shadow-xl md:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="text-2xl font-headline">Personal Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <TabsContent value="profile" className="m-0 space-y-8">
+                {/* Profile Form */}
+                <Card className="rounded-3xl border-none shadow-xl md:col-span-2 overflow-hidden">
+                  <CardHeader className="bg-white border-b">
+                    <CardTitle className="text-2xl font-headline text-primary">Personal Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-8 p-8">
+                    {isLoading ? (
+                      <div className="flex justify-center py-10"><Loader2 className="animate-spin text-accent" /></div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
-                          <Label>Full Name</Label>
+                          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">First Name</Label>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input className="pl-10" value={user.name} onChange={e => setUser({...user, name: e.target.value})} />
+                            <Input 
+                              className="pl-10 rounded-xl h-12" 
+                              value={profileForm.firstName} 
+                              onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} 
+                            />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label>Email Address</Label>
+                          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Last Name</Label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input 
+                              className="pl-10 rounded-xl h-12" 
+                              value={profileForm.lastName} 
+                              onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} 
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input className="pl-10" type="email" value={user.email} onChange={e => setUser({...user, email: e.target.value})} />
+                            <Input 
+                              className="pl-10 rounded-xl h-12 bg-muted/30" 
+                              type="email" 
+                              value={profileForm.email} 
+                              disabled 
+                            />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label>Phone Number</Label>
+                          <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
                           <div className="relative">
                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input className="pl-10" value={user.phone} onChange={e => setUser({...user, phone: e.target.value})} />
+                            <Input 
+                              className="pl-10 rounded-xl h-12" 
+                              value={profileForm.phoneNumber} 
+                              onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} 
+                            />
                           </div>
                         </div>
                       </div>
-                      <Separator />
-                      <div className="flex justify-end gap-4">
-                        <Button variant="outline" className="rounded-full px-8" asChild>
-                          <Link href="/">Cancel</Link>
-                        </Button>
-                        <Button className="bg-primary rounded-full px-8">Save Changes</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Recent Activity */}
-                  <Card className="rounded-2xl border-none shadow-xl md:col-span-2">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle className="text-2xl font-headline">Upcoming Bookings</CardTitle>
-                      <Button variant="ghost" size="sm" className="text-accent gap-1">
-                        View History <History className="w-4 h-4" />
+                    )}
+                    <Separator />
+                    <div className="flex justify-end gap-4">
+                      <Button variant="outline" className="rounded-full px-8 h-12" asChild>
+                        <Link href="/">Cancel</Link>
                       </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {mockBookings.map((booking) => (
-                          <div key={booking.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
-                            <div className="flex items-center gap-4">
-                              <div className="p-3 bg-white rounded-lg shadow-sm">
-                                <Calendar className="w-6 h-6 text-primary" />
+                      <Button className="bg-primary rounded-full px-8 h-12 gap-2" onClick={handleSaveProfile}>
+                        <Save className="w-4 h-4" /> Save Changes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Activity */}
+                <Card className="rounded-3xl border-none shadow-xl md:col-span-2 overflow-hidden">
+                  <CardHeader className="flex flex-row items-center justify-between bg-white border-b px-8 h-20">
+                    <CardTitle className="text-2xl font-headline text-primary">Upcoming Bookings</CardTitle>
+                    <Button variant="ghost" size="sm" className="text-accent gap-1 hover:bg-accent/5">
+                      View History <History className="w-4 h-4" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="space-y-4">
+                      {isBookingsLoading ? (
+                        <div className="flex justify-center py-10"><Loader2 className="animate-spin text-accent" /></div>
+                      ) : bookings && bookings.length > 0 ? (
+                        bookings.map((booking: any) => (
+                          <div key={booking.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 bg-muted/10 rounded-2xl border border-border group hover:bg-white hover:shadow-lg transition-all">
+                            <div className="flex items-center gap-5">
+                              <div className="p-4 bg-white rounded-2xl shadow-sm group-hover:scale-110 transition-transform">
+                                <Calendar className="w-7 h-7 text-primary" />
                               </div>
                               <div>
-                                <h4 className="font-bold text-primary">{booking.tour}</h4>
-                                <div className="text-sm text-muted-foreground">{booking.date} • ID: {booking.id}</div>
+                                <h4 className="font-bold text-lg text-primary">{booking.tourName}</h4>
+                                <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                  <span>ID: {booking.id.substring(0, 8).toUpperCase()}</span>
+                                  <span>•</span>
+                                  <span>{booking.numberOfAttendees} Guests</span>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-6">
-                              <Badge className={booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}>
-                                {booking.status}
+                            <div className="flex items-center gap-6 mt-4 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
+                              <Badge className={booking.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-700 hover:bg-green-100 border-none px-4 py-1' : 'bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-4 py-1'}>
+                                {booking.bookingStatus}
                               </Badge>
-                              <div className="font-bold text-primary mr-2">₹{booking.price}</div>
-                              <Button size="icon" variant="ghost" className="rounded-full hover:bg-white hover:text-accent">
+                              <div className="font-bold text-xl text-primary">₹{booking.totalPrice}</div>
+                              <Button size="icon" variant="ghost" className="rounded-full hover:bg-white shadow-sm border border-transparent hover:border-border hidden sm:flex">
                                 <ExternalLink className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-20 bg-muted/10 rounded-3xl border border-dashed flex flex-col items-center">
+                          <Calendar className="w-12 h-12 text-muted-foreground mb-4 opacity-20" />
+                          <p className="text-muted-foreground font-medium">No bookings found yet.</p>
+                          <Button asChild variant="link" className="text-accent mt-2">
+                            <Link href="/#workshops">Explore Experiences</Link>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
