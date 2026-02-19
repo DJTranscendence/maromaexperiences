@@ -27,6 +27,13 @@ export default function Home() {
 
   const HERO_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Clay%20Perfume%20Hero.png?alt=media&token=29a10f37-f9c6-4ec5-98b0-6cf2ce53d8e2";
 
+  const scrollToWorkshops = () => {
+    const element = document.getElementById('workshops');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -48,15 +55,19 @@ export default function Home() {
             From Campus-wide tours to artisan-led workshops, Maroma Experiences promises you an eye-opening and enriching enounter.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
-              Explore Tours
+            <Button 
+              size="lg" 
+              onClick={scrollToWorkshops}
+              className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 text-lg h-14 font-bold shadow-xl transition-all hover:scale-105 active:scale-95"
+            >
+              Book Now
             </Button>
           </div>
         </div>
       </section>
 
       {/* Tours Grid */}
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <main id="workshops" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">Upcoming Experiences</h2>
@@ -118,7 +129,7 @@ export default function Home() {
                         <Bell className="w-5 h-5 text-amber-600 shrink-0" />
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-amber-900 font-headline">Coming Soon!</span>
-                          <span className="text-[11px] text-amber-800 leading-tight">Click the button below to be notified when this event goes live</span>
+                          <span className="text-[11px] text-amber-800 leading-tight">click the button below to be notified when this event goes live.</span>
                         </div>
                       </div>
                     )}
