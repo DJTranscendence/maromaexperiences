@@ -10,6 +10,7 @@ import { initiateSignOut } from "@/firebase/non-blocking-login";
 import { Separator } from "@/components/ui/separator";
 import { doc, serverTimestamp } from "firebase/firestore";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -28,8 +29,36 @@ export default function Navbar() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
+  const pathname = usePathname();
+  const router = useRouter();
 
-  // Check if user is an admin by looking for a document in the roles_admin collection
+  const isHomePage = pathname === "/";
+
+  const handleScrollToWorkshops = (e: React.MouseEvent) => {
+    if (isHomePage) {
+      e.preventDefault();
+      const element = document.getElementById('workshops');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        setIsOpen(false);
+      }
+    }
+  };
+
+  const handleBookNowClick = (e: React.MouseEvent) => {
+    if (isHomePage) {
+      e.preventDefault();
+      const element = document.getElementById('workshops');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        setIsOpen(false);
+      }
+    } else {
+      router.push("/#workshops");
+      setIsOpen(false);
+    }
+  };
+
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user || user.isAnonymous) return null;
     return doc(firestore, "roles_admin", user.uid);
@@ -45,7 +74,6 @@ export default function Navbar() {
   const handleBecomeAdmin = () => {
     if (!firestore || !user || user.isAnonymous) return;
     
-    // Ensure user profile exists in 'users' collection so they show up in management list
     setDocumentNonBlocking(doc(firestore, "users", user.uid), {
       email: user.email,
       firstName: user.displayName?.split(' ')[0] || "Admin",
@@ -56,7 +84,6 @@ export default function Navbar() {
       updatedAt: serverTimestamp()
     }, { merge: true });
 
-    // Grant admin role
     setDocumentNonBlocking(doc(firestore, "roles_admin", user.uid), {
       email: user.email,
       activatedAt: serverTimestamp(),
@@ -73,7 +100,6 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[4px]">
               <Image 
@@ -91,9 +117,14 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Tours & Workshops</Link>
+            <Link 
+              href="/#workshops" 
+              onClick={handleScrollToWorkshops}
+              className="text-sm font-medium hover:text-accent transition-colors"
+            >
+              Tours & Workshops
+            </Link>
             <Link href="/account" className="text-sm font-medium hover:text-accent transition-colors">My Bookings</Link>
             <Link href="https://www.maroma.com/our-story/" className="text-sm font-medium hover:text-accent transition-colors">Our Story</Link>
             
@@ -111,8 +142,13 @@ export default function Navbar() {
               </div>
             )}
 
-            <Button variant="default" size="sm" asChild className="bg-primary text-white hover:bg-primary/90 rounded-full px-6 ml-4">
-              <Link href="/">Book Now</Link>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleBookNowClick}
+              className="bg-primary text-white hover:bg-primary/90 rounded-full px-6 ml-4"
+            >
+              Book Now
             </Button>
 
             <DropdownMenu>
@@ -188,7 +224,6 @@ export default function Navbar() {
             </DropdownMenu>
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -200,10 +235,15 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Nav */}
       <div className={cn("md:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-screen" : "max-h-0")}>
         <div className="px-4 pt-2 pb-6 space-y-4">
-          <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Tours & Workshops</Link>
+          <Link 
+            href="/#workshops" 
+            className="block text-lg font-medium" 
+            onClick={handleScrollToWorkshops}
+          >
+            Tours & Workshops
+          </Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
           <Link href="https://www.maroma.com/our-story/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Our Story</Link>
           
@@ -224,8 +264,15 @@ export default function Navbar() {
 
           <Separator />
           
+          <Button 
+            onClick={handleBookNowClick}
+            className="w-full bg-primary text-white rounded-full"
+          >
+            Book Now
+          </Button>
+          
           {user?.isAnonymous === false ? (
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2">
               {!isAdmin && (
                 <Button onClick={handleBecomeAdmin} variant="outline" className="w-full rounded-full border-accent text-accent">
                   Enable Admin Mode
@@ -234,12 +281,9 @@ export default function Navbar() {
               <Button onClick={handleSignOut} variant="destructive" className="w-full rounded-full">Sign Out</Button>
             </div>
           ) : (
-            <div className="space-y-2">
-              <Button asChild className="w-full bg-primary text-white rounded-full">
-                <Link href="/login" onClick={() => setIsOpen(false)}>Sign In</Link>
-              </Button>
+            <div className="space-y-2 pt-2">
               <Button asChild variant="outline" className="w-full rounded-full border-accent text-accent">
-                <Link href="/login" onClick={() => setIsOpen(false)}>Create Account</Link>
+                <Link href="/login" onClick={() => setIsOpen(false)}>Sign In / Create Account</Link>
               </Button>
             </div>
           )}

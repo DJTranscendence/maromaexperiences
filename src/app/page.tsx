@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -73,7 +72,11 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">Upcoming Experiences</h2>
             <p className="text-muted-foreground mt-2 font-body">Choose your next adventure from our seasonally curated list.</p>
           </div>
-          <Link href="#" className="hidden sm:flex items-center gap-2 text-accent font-semibold hover:underline group">
+          <Link 
+            href="#workshops" 
+            onClick={(e) => { e.preventDefault(); scrollToWorkshops(); }}
+            className="hidden sm:flex items-center gap-2 text-accent font-semibold hover:underline group"
+          >
             View All Tours & Workshops <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
