@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Utensils, Coffee, Camera, Shield } from "lucide-react";
+import { Building2, Utensils, Coffee, Camera } from "lucide-react";
 
 interface CorporateBookingFormProps {
   tour: Tour;
@@ -18,7 +18,6 @@ const ADD_ONS = [
   { id: "catering", label: "Gourmet Catering", icon: Utensils, price: 45 },
   { id: "coffee", label: "Premium Coffee Service", icon: Coffee, price: 15 },
   { id: "photo", label: "Event Photographer", icon: Camera, price: 200 },
-  { id: "insurance", label: "Extended Group Insurance", icon: Shield, price: 10 },
 ];
 
 export default function CorporateBookingForm({ tour }: CorporateBookingFormProps) {
