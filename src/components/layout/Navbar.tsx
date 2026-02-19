@@ -131,12 +131,6 @@ export default function Navbar() {
             
             {isAdmin && (
               <div className="flex items-center gap-4 pl-4 border-l border-border animate-in fade-in duration-500">
-                <Link href="/admin/media" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                  <ImageIcon className="w-4 h-4" /> Media
-                </Link>
-                <Link href="/admin/users" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                  <Users className="w-4 h-4" /> Users
-                </Link>
                 <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
                   <Settings className="w-4 h-4" /> Admin
                 </Link>
@@ -183,17 +177,7 @@ export default function Navbar() {
                       <>
                         <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
                           <Link href="/admin" className="flex items-center gap-2">
-                            <Settings className="w-4 h-4" /> Admin Panel
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                          <Link href="/admin/users" className="flex items-center gap-2">
-                            <Users className="w-4 h-4" /> Manage Users
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                          <Link href="/admin/media" className="flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4" /> Media Library
+                            <Settings className="w-4 h-4" /> Admin Dashboard
                           </Link>
                         </DropdownMenuItem>
                       </>
@@ -252,14 +236,8 @@ export default function Navbar() {
           {isAdmin && (
             <>
               <Separator />
-              <Link href="/admin/media" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                <ImageIcon className="w-5 h-5" /> Media Library
-              </Link>
-              <Link href="/admin/users" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                <Users className="w-5 h-5" /> Manage Users
-              </Link>
               <Link href="/admin" className="block text-lg font-medium text-muted-foreground flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                <Settings className="w-5 h-5" /> Admin Panel
+                <Settings className="w-5 h-5" /> Admin Dashboard
               </Link>
             </>
           )}
