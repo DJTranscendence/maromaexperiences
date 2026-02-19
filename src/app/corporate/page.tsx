@@ -322,8 +322,15 @@ export default function CorporatePage() {
                               { id: 'cat2', name: 'Fusion Harvest Lunch', price: '+₹25/pp', desc: 'Three-course organic meal served in the gardens.' },
                               { id: 'cat3', name: 'Starlit Tasting Menu', price: '+₹65/pp', desc: 'Curated dinner experience with master storytelling.' },
                             ].map(opt => (
-                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer" onClick={() => toggleAddon(opt.id)}>
-                                <Checkbox checked={selectedAddons.includes(opt.id)} onCheckedChange={() => toggleAddon(opt.id)} className="rounded-full" />
+                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
+                                <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
+                                  <Checkbox 
+                                    checked={selectedAddons.includes(opt.id)} 
+                                    onCheckedChange={() => toggleAddon(opt.id)} 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="rounded-full w-6 h-6" 
+                                  />
+                                </div>
                                 <div className="flex-grow">
                                   <div className="flex items-center justify-between">
                                     <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
@@ -346,8 +353,15 @@ export default function CorporatePage() {
                               { id: 'srv2', name: 'Team Strategy Facilitator', price: '₹400', icon: Users2 },
                               { id: 'srv3', name: 'Premium Coffee Bar', price: '₹15/pp', icon: Coffee },
                             ].map(opt => (
-                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer" onClick={() => toggleAddon(opt.id)}>
-                                <Checkbox checked={selectedAddons.includes(opt.id)} onCheckedChange={() => toggleAddon(opt.id)} className="rounded-full" />
+                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
+                                <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
+                                  <Checkbox 
+                                    checked={selectedAddons.includes(opt.id)} 
+                                    onCheckedChange={() => toggleAddon(opt.id)} 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="rounded-full w-6 h-6" 
+                                  />
+                                </div>
                                 <opt.icon className="w-4 h-4 text-accent shrink-0" />
                                 <div className="flex-grow">
                                   <div className="flex items-center justify-between">
