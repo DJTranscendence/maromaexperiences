@@ -82,6 +82,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         userId: user?.uid || "guest",
         tourId: tour.id,
         tourName: tour.name,
+        tourDate: tour.scheduledDates?.[0] || "TBA",
+        location: tour.location || "Maroma Campus",
         bookingType: 'Individual',
         numberOfAttendees: guests,
         totalPrice: guests * tour.price,

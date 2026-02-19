@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save } from "lucide-react";
+import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
@@ -229,10 +229,14 @@ export default function AccountPage() {
                               </div>
                               <div>
                                 <h4 className="font-bold text-lg text-primary">{booking.tourName}</h4>
-                                <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                                  <span>ID: {booking.id.substring(0, 8).toUpperCase()}</span>
-                                  <span>•</span>
-                                  <span>{booking.numberOfAttendees} Guests</span>
+                                <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-2 mt-1">
+                                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-accent" /> {booking.tourDate || 'Date TBD'}</span>
+                                  <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-accent" /> {booking.location || 'Maroma Campus'}</span>
+                                  <div className="flex items-center gap-4 w-full md:w-auto">
+                                    <span>ID: {booking.id.substring(0, 8).toUpperCase()}</span>
+                                    <span>•</span>
+                                    <span>{booking.numberOfAttendees} Guests</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -241,8 +245,18 @@ export default function AccountPage() {
                                 {booking.bookingStatus}
                               </Badge>
                               <div className="font-bold text-xl text-primary">₹{booking.totalPrice}</div>
-                              <Button size="icon" variant="ghost" className="rounded-full hover:bg-white shadow-sm border border-transparent hover:border-border hidden sm:flex">
-                                <ExternalLink className="w-4 h-4" />
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="rounded-full hover:bg-white shadow-sm border border-transparent hover:border-border hidden sm:flex"
+                                asChild
+                              >
+                                <Link 
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location || "Maroma Campus")}`} 
+                                  target="_blank"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                </Link>
                               </Button>
                             </div>
                           </div>
