@@ -57,9 +57,10 @@ const HOTEL_PACKAGES = [
 ];
 
 const CATERING_OPTIONS = [
-  { id: 'cat1', name: 'Artisan Continental', price: 'Included', desc: 'Fresh local breads, pastries, and house blends.' },
-  { id: 'cat2', name: 'Fusion Harvest Lunch', price: '+₹25/pp', desc: 'Three-course organic meal served in the gardens.' },
-  { id: 'cat3', name: 'Starlit Tasting Menu', price: '+₹65/pp', desc: 'Curated dinner experience with master storytelling.' },
+  { id: 'cat1', name: 'Naturellement Garden Cafe', price: 'Included', desc: 'Classy European dining in a lush garden setting.' },
+  { id: 'cat2', name: 'Solitude Farm-to-Table', price: '+₹25/pp', desc: 'Rustic, home-grown and very healthy ingredients.' },
+  { id: 'cat3', name: 'Cafe 73', price: '+₹15/pp', desc: 'Hearty burgers, wraps, and chips in a biker-styled cafe.' },
+  { id: 'cat4', name: 'Maroma Spa Cafe', price: '+₹40/pp', desc: 'Vegan, healthy, rooftop dining with panoramic views.' },
 ];
 
 const PACKAGES = [
