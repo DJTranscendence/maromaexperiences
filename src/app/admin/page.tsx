@@ -11,7 +11,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Trash2, Edit, Save, Loader2, Sparkles, Check, X, Users } from "lucide-react";
+import { Trash2, Edit, Save, Loader2, Check, X, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
@@ -195,9 +195,6 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <Button variant="outline" className="rounded-full gap-2 border-accent text-accent hover:bg-accent/5" asChild>
               <Link href="/admin/users"><Users className="w-4 h-4" /> Manage Users</Link>
-            </Button>
-            <Button variant="outline" className="rounded-full gap-2 border-accent text-accent hover:bg-accent/5">
-              <Sparkles className="w-4 h-4" /> AI Description Generator
             </Button>
           </div>
         </div>
