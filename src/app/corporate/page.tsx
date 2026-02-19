@@ -286,7 +286,7 @@ export default function CorporatePage() {
               <div className="p-8 border-b bg-muted/10 flex items-center justify-between shrink-0">
                 <div>
                   <DialogTitle className="text-3xl font-headline font-bold text-primary">
-                    Build Your Corporate Itinerary
+                    Customise Your Experience
                   </DialogTitle>
                   <DialogDescription className="text-muted-foreground mt-1">
                     Select your preferred workshops, wellness treatments, and dining.
@@ -511,7 +511,7 @@ export default function CorporatePage() {
 
                       {selectedAddons.length > 0 && (
                         <div className="pt-4 space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Additional Services</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Services & Add-ons</Label>
                           {selectedAddons.map(id => {
                             return (
                               <div key={id} className="flex items-center gap-2 text-xs font-medium text-primary/80">
