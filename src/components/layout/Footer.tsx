@@ -8,8 +8,8 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-border mt-20">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="col-span-1 md:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="col-span-1">
             <Link href="/" className="flex items-center space-x-3 mb-4">
               <div className="relative w-10 h-10 flex-shrink-0 -translate-y-[4px]">
                 <Image 
@@ -28,16 +28,6 @@ export default function Footer() {
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
               Curating unforgettable moments through connection, history, and craft. Join us in our next group tour or artisan workshop.
             </p>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Explore</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="#" className="hover:text-accent">Group Tours</Link></li>
-              <li><Link href="#" className="hover:text-accent">Artisan Workshops</Link></li>
-              <li><Link href="#" className="hover:text-accent">School Bookings</Link></li>
-              <li><Link href="#" className="hover:text-accent">Corporate Packages</Link></li>
-            </ul>
           </div>
 
           <div>
