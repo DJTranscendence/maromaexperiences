@@ -75,7 +75,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[2px]">
+            <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[4px]">
               <Image 
                 src={LOGO_URL}
                 alt="Maroma Logo"
@@ -87,7 +87,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[1.05em] hidden sm:block mr-[-1.05em]">Experiences</span>
+              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.85em] hidden sm:block mr-[-0.85em] mt-0.5">Experiences</span>
             </div>
           </Link>
 
