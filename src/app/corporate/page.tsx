@@ -12,7 +12,7 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/dialog";
 import { 
   Building2, 
   Users2, 
@@ -33,7 +33,11 @@ import {
   Loader2,
   MapPin,
   Sprout,
-  Heart
+  Heart,
+  ChevronRight,
+  ChevronDown,
+  Info,
+  ExternalLink
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -46,6 +50,14 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const HOTEL_PACKAGES = [
   { id: 'h1', name: "Maroma Resort & Spa", price: "₹250/night", desc: "Ultra-luxury beachfront suites." },
@@ -223,8 +235,11 @@ export default function CorporatePage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {PACKAGES.map((pkg, i) => (
-                <button key={i} onClick={() => handleOpenBuilder(pkg)} className="flex text-left w-full outline-none focus:ring-0">
-                  <Card className={`rounded-[2.5rem] border-none shadow-xl relative overflow-hidden flex flex-col w-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group/card ${pkg.popular ? 'ring-2 ring-accent z-10' : ''}`}>
+                <button key={i} onClick={() => handleOpenBuilder(pkg)} className="flex text-left w-full outline-none focus:ring-0 group">
+                  <Card className={cn(
+                    "rounded-[2.5rem] border-none shadow-xl relative overflow-hidden flex flex-col w-full h-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group/card",
+                    pkg.popular ? "ring-2 ring-accent z-10" : ""
+                  )}>
                     {pkg.popular && (
                       <div className="absolute top-0 right-0 z-20">
                         <div className="bg-accent text-white text-[10px] font-bold px-8 py-1.5 rotate-45 translate-x-10 translate-y-4 uppercase tracking-widest shadow-md">
@@ -249,7 +264,7 @@ export default function CorporatePage() {
                       <div className="text-xs font-bold text-accent uppercase tracking-[0.2em] mb-2">{pkg.tier}</div>
                       <CardTitle className="text-2xl font-headline font-bold text-primary">{pkg.name}</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-8 pt-0 flex-grow">
+                    <CardContent className="p-8 pt-0 flex-grow flex flex-col">
                       <p className="text-sm text-muted-foreground mb-8 font-body leading-relaxed">{pkg.description}</p>
                       <div className="space-y-4 mb-8">
                         {pkg.features.map((feat, fi) => (
@@ -262,9 +277,9 @@ export default function CorporatePage() {
                       <div className="mt-auto pt-6 border-t border-border flex items-baseline justify-between">
                         <div className="flex flex-col">
                           <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Base Rate</span>
-                          <span className="text-2xl font-headline font-bold text-primary">{pkg.price}</span>
+                          <span className="text-2xl font-headline font-bold text-primary whitespace-nowrap">{pkg.price}</span>
                         </div>
-                        <div className="bg-primary text-white p-2 rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity">
+                        <div className="bg-primary text-white p-2 rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity translate-y-1">
                           <Plus className="w-4 h-4" />
                         </div>
                       </div>
