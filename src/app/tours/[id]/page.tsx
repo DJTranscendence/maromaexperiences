@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -204,7 +203,7 @@ export default function TourDetailsPage() {
                     <div className="p-2 bg-white rounded-xl shadow-sm w-fit mb-3">
                       <Users className="w-5 h-5 text-accent" />
                     </div>
-                    <span className="text-sm font-bold text-primary">Up to {tour.capacity} Guest/s</span>
+                    <span className="text-sm font-bold text-primary">Up to {tour.capacity} Person/s</span>
                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Capacity</span>
                   </div>
                 </div>
@@ -279,7 +278,7 @@ export default function TourDetailsPage() {
                       <div>
                         <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
                           ₹{tour.price}
-                          <span className="text-sm font-normal text-muted-foreground">/ guest</span>
+                          <span className="text-sm font-normal text-muted-foreground">/ Person</span>
                         </div>
                       </div>
                       <div className="text-right">

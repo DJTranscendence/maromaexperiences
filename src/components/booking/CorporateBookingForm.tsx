@@ -77,7 +77,7 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
         </div>
         <div className="space-y-2">
           <Label htmlFor="groupSize" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Participants</Label>
-          <Input id="groupSize" type="number" min="5" placeholder="Min 5 guests" required className="rounded-xl h-12" />
+          <Input id="groupSize" type="number" min="5" placeholder="Min 5 Person(s)" required className="rounded-xl h-12" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="packageType" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Package Tier</Label>

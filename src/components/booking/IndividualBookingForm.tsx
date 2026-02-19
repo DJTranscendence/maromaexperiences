@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -129,14 +128,14 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       } catch (aiErr: any) {
         console.warn("AI Notification failed:", aiErr);
         // Fallback message if AI fails
-        setAiResponse(`Hello ${formData.name}, your booking for ${tour.name} is confirmed for ${guests} Guest/s. Thank you!`);
+        setAiResponse(`Hello ${formData.name}, your booking for ${tour.name} is confirmed for ${guests} Person. Thank you!`);
       }
 
       toast({
         title: "Booking Successful!",
         description: isMinGroupReached 
           ? `Min group of ${tour.minGroupSize} reached! This experience is guaranteed to run.` 
-          : `Your reservation for ${guests} Guest/s has been confirmed.`,
+          : `Your reservation for ${guests} Person has been confirmed.`,
       });
 
     } catch (err: any) {
@@ -218,7 +217,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             </div>
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="guests">Number of Guest/s</Label>
+            <Label htmlFor="guests">Number of Person(s)</Label>
             <div className="flex items-center gap-4">
               <Input 
                 id="guests" 
@@ -231,7 +230,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                 required 
               />
               <div className="text-sm text-muted-foreground whitespace-nowrap font-medium">
-                ₹{tour.price} / Guest/s
+                ₹{tour.price} / Person
               </div>
             </div>
           </div>

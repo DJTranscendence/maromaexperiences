@@ -12,7 +12,6 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
-  DialogTrigger
 } from "@/components/ui/dialog";
 import { 
   Building2, 
@@ -22,7 +21,6 @@ import {
   Hotel, 
   Camera, 
   Sparkles, 
-  ChevronRight,
   Coffee,
   CheckCircle2,
   Presentation,
@@ -32,13 +30,8 @@ import {
   Trash2,
   Calendar,
   Clock,
-  ArrowRight,
   Loader2,
   MapPin,
-  Circle,
-  ChevronDown,
-  Info,
-  ExternalLink,
   Sprout,
   Heart
 } from "lucide-react";
@@ -50,18 +43,9 @@ import { collection, query, where } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const HOTEL_PACKAGES = [
   { id: 'h1', name: "Maroma Resort & Spa", price: "₹250/night", desc: "Ultra-luxury beachfront suites." },
@@ -92,7 +76,7 @@ const PACKAGES = [
     tier: "Day Retreat",
     description: "A focused single-day experience designed to break the routine and spark new ideas.",
     features: ["Private Meeting Space", "Signature Workshop Choice", "Artisan Lunch & Coffee", "Facilitated Q&A"],
-    price: "₹1,500 / guest",
+    price: "₹8,000 / Person",
     icon: Users2
   },
   {
@@ -101,7 +85,7 @@ const PACKAGES = [
     tier: "Multi-Day Journey",
     description: "Our most popular choice, balancing intensive strategy with immersive craft workshops.",
     features: ["2 Days / 1 Night", "Premium Catering Package", "Two Signature Workshops", "Outdoor Team Challenges", "Evening Social Event"],
-    price: "₹4,500 / guest",
+    price: "₹12,000 / Person",
     icon: Target,
     popular: true
   },

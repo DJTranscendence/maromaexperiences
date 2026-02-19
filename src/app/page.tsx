@@ -139,7 +139,7 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="px-6 py-4 border-t border-border flex items-center justify-between bg-gray-50/50">
                     <div className="flex flex-col">
-                      <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
+                      <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ Person</span></span>
                     </div>
                     <Button 
                       className={cn(
