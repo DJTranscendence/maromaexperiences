@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Users } from "lucide-react";
+import { User, Menu, X, Settings, Image as ImageIcon, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Users, Home } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
@@ -118,6 +118,7 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
+            <Link href="/" className="text-sm font-medium hover:text-accent transition-colors">Home</Link>
             <Link 
               href="/#workshops" 
               onClick={handleScrollToWorkshops}
@@ -237,6 +238,7 @@ export default function Navbar() {
 
       <div className={cn("md:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-screen" : "max-h-0")}>
         <div className="px-4 pt-2 pb-6 space-y-4">
+          <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Home</Link>
           <Link 
             href="/#workshops" 
             className="block text-lg font-medium" 
