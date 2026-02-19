@@ -34,7 +34,8 @@ import {
   Clock,
   ArrowRight,
   Loader2,
-  MapPin
+  MapPin,
+  Circle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,6 +54,12 @@ const HOTEL_PACKAGES = [
   { id: 'h1', name: "Maroma Resort & Spa", price: "₹250/night", desc: "Ultra-luxury beachfront suites." },
   { id: 'h2', name: "Secrets Maroma Beach", price: "₹180/night", desc: "All-inclusive adults-only excellence." },
   { id: 'h3', name: "Catalonia Playa Maroma", price: "₹120/night", desc: "Authentic Mexican charm and comfort." },
+];
+
+const CATERING_OPTIONS = [
+  { id: 'cat1', name: 'Artisan Continental', price: 'Included', desc: 'Fresh local breads, pastries, and house blends.' },
+  { id: 'cat2', name: 'Fusion Harvest Lunch', price: '+₹25/pp', desc: 'Three-course organic meal served in the gardens.' },
+  { id: 'cat3', name: 'Starlit Tasting Menu', price: '+₹65/pp', desc: 'Curated dinner experience with master storytelling.' },
 ];
 
 const PACKAGES = [
@@ -93,6 +100,7 @@ export default function CorporatePage() {
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [itinerary, setItinerary] = useState<Tour[]>([]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [selectedCatering, setSelectedCatering] = useState<string>('cat1');
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
 
   const corporateHero = PlaceHolderImages.find(p => p.id === 'corporate-retreat')?.imageUrl || "";
@@ -133,6 +141,7 @@ export default function CorporatePage() {
     setIsBuilderOpen(false);
     setItinerary([]);
     setSelectedAddons([]);
+    setSelectedCatering('cat1');
     setSelectedHotel(null);
   };
 
@@ -316,27 +325,30 @@ export default function CorporatePage() {
                           <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
                             <Utensils className="w-5 h-5 text-accent" /> Catering Menus
                           </h3>
-                          <div className="space-y-3">
-                            {[
-                              { id: 'cat1', name: 'Artisan Continental', price: 'Included', desc: 'Fresh local breads, pastries, and house blends.' },
-                              { id: 'cat2', name: 'Fusion Harvest Lunch', price: '+₹25/pp', desc: 'Three-course organic meal served in the gardens.' },
-                              { id: 'cat3', name: 'Starlit Tasting Menu', price: '+₹65/pp', desc: 'Curated dinner experience with master storytelling.' },
-                            ].map(opt => (
-                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
-                                <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
-                                  <Checkbox 
-                                    checked={selectedAddons.includes(opt.id)} 
-                                    onCheckedChange={() => toggleAddon(opt.id)} 
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="rounded-full w-6 h-6" 
-                                  />
+                          <div className="space-y-4">
+                            {CATERING_OPTIONS.map(opt => (
+                              <div 
+                                key={opt.id} 
+                                className={cn(
+                                  "flex items-center gap-5 p-6 rounded-[2rem] border transition-all cursor-pointer bg-white group",
+                                  selectedCatering === opt.id ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
+                                )}
+                                onClick={() => setSelectedCatering(opt.id)}
+                              >
+                                <div className="relative flex items-center justify-center w-8 h-8 shrink-0">
+                                  <div className={cn(
+                                    "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all",
+                                    selectedCatering === opt.id ? "border-accent bg-accent" : "border-muted-foreground/30 bg-transparent"
+                                  )}>
+                                    {selectedCatering === opt.id && <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />}
+                                  </div>
                                 </div>
                                 <div className="flex-grow">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
+                                    <h4 className="font-bold text-primary text-base font-headline">{opt.name}</h4>
                                     <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
                                   </div>
-                                  <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-body">{opt.desc}</p>
                                 </div>
                               </div>
                             ))}
@@ -408,7 +420,7 @@ export default function CorporatePage() {
                   
                   <ScrollArea className="flex-grow pr-4 mb-6">
                     <div className="space-y-6 pb-4">
-                      {itinerary.length === 0 && (
+                      {itinerary.length === 0 && !selectedCatering && (
                         <div className="text-center py-12 px-4 border border-dashed rounded-2xl">
                           <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
                           <p className="text-xs text-muted-foreground">Add workshops to begin your journey planning.</p>
@@ -430,9 +442,18 @@ export default function CorporatePage() {
                         </div>
                       ))}
 
+                      {selectedCatering && (
+                        <div className="pt-4">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Catering</Label>
+                          <div className="text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
+                            <Utensils className="w-3 h-3 text-accent" /> {CATERING_OPTIONS.find(c => c.id === selectedCatering)?.name}
+                          </div>
+                        </div>
+                      )}
+
                       {selectedAddons.length > 0 && (
                         <div className="pt-4 space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Services & Add-ons</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Additional Services</Label>
                           {selectedAddons.map(id => {
                             return (
                               <div key={id} className="flex items-center gap-2 text-xs font-medium text-primary/80">
