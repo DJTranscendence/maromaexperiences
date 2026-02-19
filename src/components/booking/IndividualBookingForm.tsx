@@ -154,7 +154,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                 required 
               />
               <div className="text-sm text-muted-foreground whitespace-nowrap">
-                ₹{tour.price} / person
+                ₹{tour.price} / guest
               </div>
             </div>
           </div>

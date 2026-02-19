@@ -41,10 +41,10 @@ export default function Home() {
         />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-lg leading-tight">
-            Follow Your Heart and Find Your Fragrance
+            Maroma Experiences
           </h1>
           <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md">
-            Tell us your preferences using the Fragrance assistant below and we will find the perfect fragrance for you.
+            Curating unforgettable moments through connection, history, and craft. Join us in our next group tour or artisan workshop.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
@@ -124,7 +124,7 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="px-6 py-4 border-t border-border flex items-center justify-between bg-gray-50/50">
                     <div className="flex flex-col">
-                      <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ person</span></span>
+                      <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
                     </div>
                     <Button variant="ghost" className="rounded-full group-hover:translate-x-1 transition-transform">
                       <ArrowRight className="w-5 h-5 text-accent" />
