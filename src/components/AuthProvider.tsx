@@ -24,14 +24,25 @@ export default function AuthProvider({
   useEffect(() => {
     if (user && firestore) {
       const userRef = doc(firestore, "users", user.uid);
-      setDocumentNonBlocking(userRef, {
+      
+      // Prepare profile data. We use merge: true to avoid deleting existing fields.
+      const profileData: any = {
         id: user.uid,
         email: user.email || `guest-${user.uid.substring(0, 5)}@maroma.local`,
-        firstName: user.displayName?.split(' ')[0] || (user.isAnonymous ? "Guest" : "Member"),
-        lastName: user.displayName?.split(' ')[1] || "User",
         accountType: user.isAnonymous ? "Anonymous" : "Individual",
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      };
+
+      // Only sync names from the Auth provider if they exist there.
+      // We avoid setting hardcoded defaults like "Member" or "User" here 
+      // because that would overwrite custom names saved by the user in the Account page.
+      if (user.displayName) {
+        const parts = user.displayName.split(' ');
+        profileData.firstName = parts[0];
+        profileData.lastName = parts.slice(1).join(' ') || "";
+      }
+
+      setDocumentNonBlocking(userRef, profileData, { merge: true });
     }
   }, [user, firestore]);
 
