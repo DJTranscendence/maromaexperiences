@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -6,11 +7,12 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import Link from "next/link";
-import { Clock, MapPin, ArrowRight, Loader2 } from "lucide-react";
+import { Clock, MapPin, ArrowRight, Loader2, Sparkles, Bell } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { Tour } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   const firestore = useFirestore();
@@ -39,11 +41,10 @@ export default function Home() {
         />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-lg leading-tight">
-            Curated Experiences for the Curious
+            Follow Your Heart and Find Your Fragrance
           </h1>
           <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md">
-            From Campus Tours to Artisan-led workshops,<br />
-            discover the heart of Maroma through our bespoke experiences.
+            Tell us your preferences using the Fragrance assistant below and we will find the perfect fragrance for you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
@@ -73,7 +74,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {tours?.map((tour) => (
               <Link href={`/tours/${tour.id}`} key={tour.id}>
-                <Card className="group overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl bg-white h-full flex flex-col">
+                <Card className="group overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl bg-white h-full flex flex-col relative">
                   <div className="relative h-64 overflow-hidden">
                     <Image
                       src={tour.imageUrl}
@@ -81,8 +82,14 @@ export default function Home() {
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
-                    <div className="absolute top-4 left-4">
-                      <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} />
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {tour.status === 'coming-soon' ? (
+                        <Badge className="bg-amber-500/90 text-white hover:bg-amber-500 border-none shadow-lg rounded-full px-4 py-1 gap-1.5 backdrop-blur-sm">
+                          <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
+                        </Badge>
+                      ) : (
+                        <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} />
+                      )}
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
                       <span className="text-white text-xs font-bold uppercase tracking-widest">{tour.type}</span>
@@ -99,6 +106,13 @@ export default function Home() {
                     <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
                       {tour.description}
                     </p>
+                    
+                    {tour.status === 'coming-soon' && (
+                      <div className="mt-4 p-3 bg-accent/5 rounded-xl border border-accent/10 flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-accent animate-bounce" />
+                        <span className="text-xs font-medium text-primary">Want to be notified when this workshop becomes live? <span className="underline decoration-accent font-bold">Register here</span></span>
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter className="px-6 py-4 border-t border-border flex items-center justify-between bg-gray-50/50">
                     <div className="flex flex-col">

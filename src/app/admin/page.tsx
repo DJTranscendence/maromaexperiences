@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -10,8 +11,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
-import { Trash2, Edit, Save, Loader2, Check, X, Users } from "lucide-react";
+import { Trash2, Edit, Save, Loader2, Check, X, Users, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, doc } from "firebase/firestore";
@@ -20,6 +22,7 @@ import { ImageLibrary } from "@/components/admin/ImageLibrary";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 const HIGHLIGHT_OPTIONS = [
   "Tour",
@@ -57,7 +60,8 @@ export default function AdminPage() {
     price: 500,
     capacity: 20,
     minGroupSize: 8,
-    type: "group" as const,
+    type: "workshop" as Tour.type,
+    status: "live" as 'live' | 'coming-soon',
     imageUrls: [] as string[]
   });
 
@@ -74,7 +78,8 @@ export default function AdminPage() {
       price: 500,
       capacity: 20,
       minGroupSize: 8,
-      type: "group",
+      type: "workshop",
+      status: "live",
       imageUrls: []
     });
   };
@@ -99,7 +104,8 @@ export default function AdminPage() {
       price: tour.price,
       capacity: tour.capacity || 20,
       minGroupSize: tour.minGroupSize || 8,
-      type: tour.type || "group",
+      type: tour.type || "workshop",
+      status: tour.status || "live",
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : [])
     });
 
@@ -142,6 +148,7 @@ export default function AdminPage() {
       duration: newTour.duration,
       capacity: newTour.capacity,
       type: newTour.type,
+      status: newTour.status,
       highlights: newTour.highlights,
       isActive: true,
       updatedAt: serverTimestamp(),
@@ -214,6 +221,22 @@ export default function AdminPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
+                  <div className="flex flex-col gap-0.5">
+                    <Label className="text-sm font-bold text-primary">Experience Status</Label>
+                    <span className="text-xs text-muted-foreground">Set as Live or Coming Soon</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-xs font-bold uppercase tracking-wider", newTour.status === 'live' ? "text-green-600" : "text-amber-600")}>
+                      {newTour.status === 'live' ? "Live" : "Coming Soon"}
+                    </span>
+                    <Switch 
+                      checked={newTour.status === 'live'}
+                      onCheckedChange={(checked) => setNewTour({...newTour, status: checked ? 'live' : 'coming-soon'})}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Basic Details</Label>
                   <Input 
@@ -409,7 +432,7 @@ export default function AdminPage() {
                   <TableHeader>
                     <TableRow className="bg-muted/30">
                       <TableHead className="font-bold">Experience</TableHead>
-                      <TableHead className="font-bold">Type</TableHead>
+                      <TableHead className="font-bold">Status</TableHead>
                       <TableHead className="font-bold">Booking</TableHead>
                       <TableHead className="font-bold">Price</TableHead>
                       <TableHead className="text-right font-bold">Actions</TableHead>
@@ -426,7 +449,11 @@ export default function AdminPage() {
                             <span className="font-bold text-primary">{tour.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="capitalize text-muted-foreground">{tour.type}</TableCell>
+                        <TableCell>
+                          <Badge className={cn("rounded-full px-3 py-0.5 capitalize border-none", tour.status === 'live' ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700")}>
+                            {tour.status || 'live'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <span className="text-sm font-medium">{tour.bookedSpaces || 0} / {tour.capacity}</span>
                         </TableCell>

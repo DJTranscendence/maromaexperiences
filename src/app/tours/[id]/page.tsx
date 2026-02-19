@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -9,17 +10,23 @@ import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import IndividualBookingForm from "@/components/booking/IndividualBookingForm";
 import SchoolBookingForm from "@/components/booking/SchoolBookingForm";
 import CorporateBookingForm from "@/components/booking/CorporateBookingForm";
-import { MapPin, Clock, Users, Share2, Heart, Calendar, Loader2 } from "lucide-react";
+import { MapPin, Clock, Users, Share2, Heart, Calendar, Loader2, Sparkles, Bell, Send } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TourDetailsPage() {
   const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [notifyEmail, setNotifyEmail] = useState("");
 
   const tourRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -27,6 +34,15 @@ export default function TourDetailsPage() {
   }, [firestore, id]);
 
   const { data: tour, isLoading } = useDoc<Tour>(tourRef);
+
+  const handleNotifyMe = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Registration Successful",
+      description: "We'll let you know as soon as this experience goes live!",
+    });
+    setNotifyEmail("");
+  };
 
   if (isLoading) {
     return (
@@ -44,6 +60,8 @@ export default function TourDetailsPage() {
       </div>
     );
   }
+
+  const isComingSoon = tour.status === 'coming-soon';
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -75,7 +93,13 @@ export default function TourDetailsPage() {
               <Badge className="bg-white/90 text-primary hover:bg-white backdrop-blur-md px-4 py-1.5 rounded-full text-xs border-none shadow-lg capitalize">
                 {tour.type}
               </Badge>
-              <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} className="bg-white/90 backdrop-blur-md shadow-lg" />
+              {isComingSoon ? (
+                <Badge className="bg-amber-500/90 backdrop-blur-md shadow-lg text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
+                </Badge>
+              ) : (
+                <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} className="bg-white/90 backdrop-blur-md shadow-lg" />
+              )}
             </div>
           </div>
         </div>
@@ -119,42 +143,78 @@ export default function TourDetailsPage() {
 
             <div className="lg:col-span-1">
               <div className="sticky top-24 bg-white rounded-3xl shadow-xl border border-border p-8">
-                <div className="mb-6 flex justify-between items-end">
-                  <div>
-                    <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Starting from</span>
-                    <div className="text-4xl font-headline font-bold text-primary">₹{tour.price}</div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-muted-foreground">Min group: {tour.minGroupSize}</span>
-                  </div>
-                </div>
-
-                <Tabs defaultValue="individual" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 rounded-full h-12">
-                    <TabsTrigger value="individual" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">Individual</TabsTrigger>
-                    <TabsTrigger value="school" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">School</TabsTrigger>
-                    <TabsTrigger value="corporate" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">Corporate</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="individual">
-                    <div className="space-y-6">
-                      <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl mb-4">
-                        <p className="text-sm text-primary font-medium flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-accent" /> Next Date: {tour.scheduledDates?.[0] || 'TBA'}
-                        </p>
-                      </div>
-                      <IndividualBookingForm tour={tour} />
+                {isComingSoon ? (
+                  <div className="space-y-6">
+                    <div className="flex flex-col gap-2">
+                      <Badge className="w-fit bg-amber-50 text-amber-700 border-amber-200 rounded-full px-4 py-1 flex items-center gap-2">
+                        <Bell className="w-3.5 h-3.5" /> Coming Soon
+                      </Badge>
+                      <h3 className="text-2xl font-headline font-bold text-primary">Launching Shortly</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        This workshop is currently in preparation. Want to be notified when this workshop becomes live? 
+                      </p>
                     </div>
-                  </TabsContent>
 
-                  <TabsContent value="school">
-                    <SchoolBookingForm tour={tour} />
-                  </TabsContent>
+                    <form onSubmit={handleNotifyMe} className="space-y-4 pt-4 border-t">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-primary">Registration</label>
+                        <Input 
+                          type="email" 
+                          placeholder="your@email.com" 
+                          className="rounded-xl h-12"
+                          value={notifyEmail}
+                          onChange={(e) => setNotifyEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <Button className="w-full bg-accent hover:bg-accent/90 rounded-full h-12 gap-2 text-white font-bold">
+                        <Send className="w-4 h-4" /> Notify Me
+                      </Button>
+                      <p className="text-[10px] text-center text-muted-foreground">
+                        We respect your privacy. No spam, only fragrance updates.
+                      </p>
+                    </form>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-6 flex justify-between items-end">
+                      <div>
+                        <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Starting from</span>
+                        <div className="text-4xl font-headline font-bold text-primary">₹{tour.price}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground">Min group: {tour.minGroupSize}</span>
+                      </div>
+                    </div>
 
-                  <TabsContent value="corporate">
-                    <CorporateBookingForm tour={tour} />
-                  </TabsContent>
-                </Tabs>
+                    <Tabs defaultValue="individual" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 rounded-full h-12">
+                        <TabsTrigger value="individual" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">Individual</TabsTrigger>
+                        <TabsTrigger value="school" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">School</TabsTrigger>
+                        <TabsTrigger value="corporate" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">Corporate</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="individual">
+                        <div className="space-y-6">
+                          <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl mb-4">
+                            <p className="text-sm text-primary font-medium flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-accent" /> Next Date: {tour.scheduledDates?.[0] || 'TBA'}
+                            </p>
+                          </div>
+                          <IndividualBookingForm tour={tour} />
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="school">
+                        <SchoolBookingForm tour={tour} />
+                      </TabsContent>
+
+                      <TabsContent value="corporate">
+                        <CorporateBookingForm tour={tour} />
+                      </TabsContent>
+                    </Tabs>
+                  </>
+                )}
               </div>
             </div>
 

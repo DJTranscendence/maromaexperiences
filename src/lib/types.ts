@@ -16,6 +16,7 @@ export interface Tour {
   minGroupSize: number;
   scheduledDates: string[];
   isActive?: boolean;
+  status?: 'live' | 'coming-soon';
   tourOwnerId?: string;
   createdAt?: any;
   updatedAt?: any;
