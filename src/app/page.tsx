@@ -84,7 +84,7 @@ export default function Home() {
                     />
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       {tour.status === 'coming-soon' ? (
-                        <Badge className="bg-amber-500/90 text-white hover:bg-amber-500 border-none shadow-lg rounded-full px-4 py-1 gap-1.5 backdrop-blur-sm">
+                        <Badge className="bg-amber-500/90 text-white hover:bg-amber-500 border-none shadow-lg rounded-full px-4 py-1.5 gap-2 backdrop-blur-sm">
                           <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                         </Badge>
                       ) : (
@@ -108,9 +108,12 @@ export default function Home() {
                     </p>
                     
                     {tour.status === 'coming-soon' && (
-                      <div className="mt-4 p-3 bg-accent/5 rounded-xl border border-accent/10 flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-accent animate-bounce" />
-                        <span className="text-xs font-medium text-primary">Want to be notified when this workshop becomes live? <span className="underline decoration-accent font-bold">Register here</span></span>
+                      <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-3">
+                        <Bell className="w-5 h-5 text-amber-600 animate-bounce" />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-amber-800">Coming Soon!</span>
+                          <span className="text-[11px] text-amber-700 leading-tight">Want to be notified when this workshop becomes live? <span className="underline font-bold">Register here</span></span>
+                        </div>
                       </div>
                     )}
                   </CardContent>

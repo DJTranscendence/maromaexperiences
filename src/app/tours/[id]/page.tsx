@@ -47,16 +47,22 @@ export default function TourDetailsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-accent" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-accent" />
+          <p className="text-sm font-medium text-muted-foreground">Syncing experience details...</p>
+        </div>
       </div>
     );
   }
 
   if (!tour) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-headline font-bold">Tour not found</h1>
-        <Loader2 className="w-8 h-8 mt-4 animate-spin text-accent" />
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-3xl font-headline font-bold text-primary">Experience not found</h1>
+        <p className="text-muted-foreground mt-2">The experience you are looking for may have been moved or unpublished.</p>
+        <Button asChild className="mt-8 rounded-full px-8" variant="outline">
+          <a href="/">Back to Home</a>
+        </Button>
       </div>
     );
   }
@@ -70,18 +76,18 @@ export default function TourDetailsPage() {
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Tours & Workshops</span>
+            <a href="/" className="hover:text-accent transition-colors">Tours & Workshops</a>
             <span>/</span>
             <span className="text-primary font-medium">{tour.name}</span>
           </div>
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-1 hover:text-accent transition-colors"><Share2 className="w-4 h-4" /> Share</button>
-            <button className="flex items-center gap-1 hover:text-accent transition-colors"><Heart className="w-4 h-4" /> Save</button>
+            <button className="flex items-center gap-1.5 hover:text-accent transition-colors"><Share2 className="w-4 h-4" /> Share</button>
+            <button className="flex items-center gap-1.5 hover:text-accent transition-colors"><Heart className="w-4 h-4" /> Save</button>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-          <div className="relative h-[50vh] rounded-3xl overflow-hidden shadow-2xl">
+          <div className="relative h-[50vh] rounded-3xl overflow-hidden shadow-2xl border border-border/50">
             <Image
               src={tour.imageUrl}
               alt={tour.name}
@@ -90,11 +96,11 @@ export default function TourDetailsPage() {
               priority
             />
             <div className="absolute top-6 left-6 flex gap-2">
-              <Badge className="bg-white/90 text-primary hover:bg-white backdrop-blur-md px-4 py-1.5 rounded-full text-xs border-none shadow-lg capitalize">
+              <Badge className="bg-white/90 text-primary hover:bg-white backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold border-none shadow-lg capitalize">
                 {tour.type}
               </Badge>
               {isComingSoon ? (
-                <Badge className="bg-amber-500/90 backdrop-blur-md shadow-lg text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2">
+                <Badge className="bg-amber-500 text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2 shadow-lg">
                   <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                 </Badge>
               ) : (
@@ -121,95 +127,104 @@ export default function TourDetailsPage() {
 
               <div>
                 <h2 className="text-2xl font-headline font-bold text-primary mb-4">About this experience</h2>
-                <p className="text-lg text-muted-foreground leading-relaxed font-body">
+                <div className="text-lg text-muted-foreground leading-relaxed font-body whitespace-pre-wrap">
                   {tour.description}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-xl font-headline font-bold text-primary mb-4">Highlights</h3>
-                  <ul className="space-y-3">
-                    {tour.highlights.map((h, i) => (
-                      <li key={i} className="flex items-start gap-3 text-muted-foreground">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
+
+              {tour.highlights && tour.highlights.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-headline font-bold text-primary mb-6">Experience Highlights</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                    {tour.highlights.map((h, i) => (
+                      <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 group hover:bg-white hover:shadow-md transition-all">
+                        <div className="mt-1 w-2 h-2 rounded-full bg-accent group-hover:scale-125 transition-transform flex-shrink-0" />
+                        <span className="text-muted-foreground font-medium">{h}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-1">
-              <div className="sticky top-24 bg-white rounded-3xl shadow-xl border border-border p-8">
+              <div className="sticky top-24 bg-white rounded-[2rem] shadow-2xl border border-border p-8 overflow-hidden">
                 {isComingSoon ? (
-                  <div className="space-y-6">
-                    <div className="flex flex-col gap-2">
-                      <Badge className="w-fit bg-amber-50 text-amber-700 border-amber-200 rounded-full px-4 py-1 flex items-center gap-2">
+                  <div className="space-y-6 relative">
+                    <div className="flex flex-col gap-4">
+                      <Badge className="w-fit bg-amber-50 text-amber-700 border-amber-200 rounded-full px-4 py-1.5 flex items-center gap-2 font-bold uppercase tracking-wider text-[10px]">
                         <Bell className="w-3.5 h-3.5" /> Coming Soon
                       </Badge>
-                      <h3 className="text-2xl font-headline font-bold text-primary">Launching Shortly</h3>
+                      <h3 className="text-3xl font-headline font-bold text-primary leading-tight">Launching Shortly</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        This workshop is currently in preparation. Want to be notified when this workshop becomes live? 
+                        This exclusive experience is currently in final preparation. Want to be notified exactly when this workshop becomes live? 
                       </p>
                     </div>
 
-                    <form onSubmit={handleNotifyMe} className="space-y-4 pt-4 border-t">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-widest text-primary">Registration</label>
-                        <Input 
-                          type="email" 
-                          placeholder="your@email.com" 
-                          className="rounded-xl h-12"
-                          value={notifyEmail}
-                          onChange={(e) => setNotifyEmail(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <Button className="w-full bg-accent hover:bg-accent/90 rounded-full h-12 gap-2 text-white font-bold">
-                        <Send className="w-4 h-4" /> Notify Me
-                      </Button>
-                      <p className="text-[10px] text-center text-muted-foreground">
-                        We respect your privacy. No spam, only fragrance updates.
+                    <div className="p-6 bg-amber-50/50 rounded-2xl border border-amber-100/50 space-y-4">
+                      <form onSubmit={handleNotifyMe} className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Registration</label>
+                          <Input 
+                            type="email" 
+                            placeholder="your@email.com" 
+                            className="rounded-xl h-12 border-amber-200 focus-visible:ring-amber-500"
+                            value={notifyEmail}
+                            onChange={(e) => setNotifyEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <Button className="w-full bg-primary hover:bg-primary/90 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-primary/20">
+                          <Send className="w-4 h-4" /> Notify Me
+                        </Button>
+                      </form>
+                      <p className="text-[10px] text-center text-amber-600/80 font-medium">
+                        Secure your spot in the notification queue.
                       </p>
-                    </form>
+                    </div>
                   </div>
                 ) : (
                   <>
-                    <div className="mb-6 flex justify-between items-end">
+                    <div className="mb-8 flex justify-between items-end">
                       <div>
-                        <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Starting from</span>
-                        <div className="text-4xl font-headline font-bold text-primary">₹{tour.price}</div>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Starting from</span>
+                        <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
+                          ₹{tour.price}
+                          <span className="text-sm font-normal text-muted-foreground">/pp</span>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-xs text-muted-foreground">Min group: {tour.minGroupSize}</span>
+                        <Badge variant="outline" className="rounded-full px-3 py-1 border-accent/20 text-accent font-bold">
+                          Min: {tour.minGroupSize}
+                        </Badge>
                       </div>
                     </div>
 
                     <Tabs defaultValue="individual" className="w-full">
                       <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 rounded-full h-12">
-                        <TabsTrigger value="individual" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">Individual</TabsTrigger>
-                        <TabsTrigger value="school" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">School</TabsTrigger>
-                        <TabsTrigger value="corporate" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs font-bold tracking-tighter uppercase">Corporate</TabsTrigger>
+                        <TabsTrigger value="individual" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px] font-bold tracking-tight uppercase">Individual</TabsTrigger>
+                        <TabsTrigger value="school" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px] font-bold tracking-tight uppercase">School</TabsTrigger>
+                        <TabsTrigger value="corporate" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px] font-bold tracking-tight uppercase">Corporate</TabsTrigger>
                       </TabsList>
                       
-                      <TabsContent value="individual">
+                      <TabsContent value="individual" className="mt-0">
                         <div className="space-y-6">
-                          <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl mb-4">
-                            <p className="text-sm text-primary font-medium flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-accent" /> Next Date: {tour.scheduledDates?.[0] || 'TBA'}
-                            </p>
+                          <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center gap-3">
+                            <Calendar className="w-5 h-5 text-accent" />
+                            <div>
+                              <div className="text-[10px] font-bold text-accent uppercase tracking-wider">Upcoming Date</div>
+                              <div className="text-sm font-bold text-primary">{tour.scheduledDates?.[0] || 'TBA'}</div>
+                            </div>
                           </div>
                           <IndividualBookingForm tour={tour} />
                         </div>
                       </TabsContent>
 
-                      <TabsContent value="school">
+                      <TabsContent value="school" className="mt-0">
                         <SchoolBookingForm tour={tour} />
                       </TabsContent>
 
-                      <TabsContent value="corporate">
+                      <TabsContent value="corporate" className="mt-0">
                         <CorporateBookingForm tour={tour} />
                       </TabsContent>
                     </Tabs>
