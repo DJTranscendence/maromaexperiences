@@ -157,19 +157,20 @@ export default function TourDetailsPage() {
                 {isComingSoon ? (
                   <div className="space-y-6 relative">
                     <div className="flex flex-col gap-4">
-                      <Badge className="w-fit bg-amber-50 text-amber-700 border-amber-200 rounded-full px-4 py-1.5 flex items-center gap-2 font-bold uppercase tracking-wider text-[10px]">
-                        <Bell className="w-3.5 h-3.5" /> Coming Soon
-                      </Badge>
-                      <h3 className="text-3xl font-headline font-bold text-primary leading-tight">Launching Shortly</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        This exclusive experience is currently in final preparation. Click here to be notified when this event goes live.
-                      </p>
+                      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-4">
+                        <Bell className="w-6 h-6 text-amber-600 shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-amber-900 font-headline">Coming Soon!</span>
+                          <span className="text-[11px] text-amber-800 leading-tight">Click the button below to be notified when this event goes live</span>
+                        </div>
+                      </div>
+                      <h3 className="text-3xl font-headline font-bold text-primary leading-tight px-1">Launching Shortly</h3>
                     </div>
 
-                    <div className="p-6 bg-amber-50/50 rounded-2xl border border-amber-100/50 space-y-4">
+                    <div className="p-6 bg-amber-50/30 rounded-2xl border border-amber-100/50 space-y-4">
                       <form onSubmit={handleNotifyMe} className="space-y-4">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Registration</label>
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Email Registration</label>
                           <Input 
                             type="email" 
                             placeholder="your@email.com" 
@@ -183,7 +184,7 @@ export default function TourDetailsPage() {
                           <Send className="w-4 h-4" /> Notify Me
                         </Button>
                       </form>
-                      <p className="text-[10px] text-center text-amber-600/80 font-medium">
+                      <p className="text-[10px] text-center text-amber-700/80 font-medium">
                         Secure your spot in the notification queue.
                       </p>
                     </div>

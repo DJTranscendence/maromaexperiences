@@ -113,11 +113,11 @@ export default function Home() {
                     </p>
                     
                     {tour.status === 'coming-soon' && (
-                      <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-3">
-                        <Bell className="w-5 h-5 text-amber-600 animate-bounce" />
+                      <div className="mt-4 p-4 bg-amber-50/50 rounded-2xl border border-amber-100 flex items-center gap-4">
+                        <Bell className="w-5 h-5 text-amber-600 shrink-0" />
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-amber-800">Coming Soon!</span>
-                          <span className="text-[11px] text-amber-700 leading-tight">Click here to be notified when this event goes live</span>
+                          <span className="text-sm font-bold text-amber-900 font-headline">Coming Soon!</span>
+                          <span className="text-[11px] text-amber-800 leading-tight">Click the button below to be notified when this event goes live</span>
                         </div>
                       </div>
                     )}
