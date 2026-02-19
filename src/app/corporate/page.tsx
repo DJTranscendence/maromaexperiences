@@ -250,7 +250,7 @@ export default function CorporatePage() {
         {/* Builder Dialog */}
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
           <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-[3rem]">
-            <div className="flex flex-col h-full bg-white">
+            <div className="flex flex-col h-full bg-white min-h-0">
               <div className="p-8 border-b bg-muted/10 flex items-center justify-between shrink-0">
                 <div>
                   <DialogTitle className="text-3xl font-headline font-bold text-primary">
@@ -267,131 +267,133 @@ export default function CorporatePage() {
                 )}
               </div>
 
-              <div className="flex-grow flex overflow-hidden">
+              <div className="flex-grow flex min-h-0 overflow-hidden">
                 {/* Selection Menu */}
-                <ScrollArea className="flex-grow p-8">
-                  <div className="space-y-12">
-                    {/* Workshops Selection */}
-                    <section>
-                      <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-accent" /> Select Workshops & Tours
-                      </h3>
-                      {isToursLoading ? (
-                        <div className="flex justify-center p-12"><Loader2 className="animate-spin text-accent" /></div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {availableTours?.map(tour => (
-                            <button 
-                              key={tour.id} 
-                              onClick={() => addToItinerary(tour)}
-                              disabled={!!itinerary.find(t => t.id === tour.id)}
+                <div className="flex-grow flex flex-col min-h-0 overflow-hidden">
+                  <ScrollArea className="flex-grow">
+                    <div className="p-8 space-y-12 pb-20">
+                      {/* Workshops Selection */}
+                      <section>
+                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-accent" /> Select Workshops & Tours
+                        </h3>
+                        {isToursLoading ? (
+                          <div className="flex justify-center p-12"><Loader2 className="animate-spin text-accent" /></div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {availableTours?.map(tour => (
+                              <button 
+                                key={tour.id} 
+                                onClick={() => addToItinerary(tour)}
+                                disabled={!!itinerary.find(t => t.id === tour.id)}
+                                className={cn(
+                                  "flex text-left items-center gap-4 p-4 rounded-2xl border transition-all group",
+                                  itinerary.find(t => t.id === tour.id) 
+                                    ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
+                                    : "bg-white border-border hover:border-accent hover:shadow-md"
+                                )}
+                              >
+                                <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                                  <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
+                                </div>
+                                <div className="flex-grow">
+                                  <h4 className="font-bold text-primary leading-tight">{tour.name}</h4>
+                                  <div className="flex items-center gap-3 text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration}</span>
+                                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {tour.location}</span>
+                                  </div>
+                                </div>
+                                {itinerary.find(t => t.id === tour.id) ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </section>
+
+                      {/* Catering & Addons */}
+                      <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div>
+                          <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                            <Utensils className="w-5 h-5 text-accent" /> Catering Menus
+                          </h3>
+                          <div className="space-y-3">
+                            {[
+                              { id: 'cat1', name: 'Artisan Continental', price: 'Included', desc: 'Fresh local breads, pastries, and house blends.' },
+                              { id: 'cat2', name: 'Fusion Harvest Lunch', price: '+₹25/pp', desc: 'Three-course organic meal served in the gardens.' },
+                              { id: 'cat3', name: 'Starlit Tasting Menu', price: '+₹65/pp', desc: 'Curated dinner experience with master storytelling.' },
+                            ].map(opt => (
+                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer" onClick={() => toggleAddon(opt.id)}>
+                                <Checkbox checked={selectedAddons.includes(opt.id)} onCheckedChange={() => toggleAddon(opt.id)} className="rounded-full" />
+                                <div className="flex-grow">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
+                                    <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
+                                  </div>
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                            <Camera className="w-5 h-5 text-accent" /> Professional Services
+                          </h3>
+                          <div className="space-y-3">
+                            {[
+                              { id: 'srv1', name: 'Event Photography', price: '₹250', icon: Camera },
+                              { id: 'srv2', name: 'Team Strategy Facilitator', price: '₹400', icon: Users2 },
+                              { id: 'srv3', name: 'Premium Coffee Bar', price: '₹15/pp', icon: Coffee },
+                            ].map(opt => (
+                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer" onClick={() => toggleAddon(opt.id)}>
+                                <Checkbox checked={selectedAddons.includes(opt.id)} onCheckedChange={() => toggleAddon(opt.id)} className="rounded-full" />
+                                <opt.icon className="w-4 h-4 text-accent shrink-0" />
+                                <div className="flex-grow">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
+                                    <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Accommodation Selection */}
+                      <section>
+                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                          <Hotel className="w-5 h-5 text-accent" /> Luxury Accommodation
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {HOTEL_PACKAGES.map(hotel => (
+                            <div 
+                              key={hotel.id} 
+                              onClick={() => setSelectedHotel(hotel.id)}
                               className={cn(
-                                "flex text-left items-center gap-4 p-4 rounded-2xl border transition-all group",
-                                itinerary.find(t => t.id === tour.id) 
-                                  ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
-                                  : "bg-white border-border hover:border-accent hover:shadow-md"
+                                "p-5 rounded-2xl border transition-all cursor-pointer bg-white relative",
+                                selectedHotel === hotel.id ? "border-accent shadow-lg ring-1 ring-accent/20" : "border-border hover:border-accent/30"
                               )}
                             >
-                              <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
-                                <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
-                              </div>
-                              <div className="flex-grow">
-                                <h4 className="font-bold text-primary leading-tight">{tour.name}</h4>
-                                <div className="flex items-center gap-3 text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration}</span>
-                                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {tour.location}</span>
-                                </div>
-                              </div>
-                              {itinerary.find(t => t.id === tour.id) ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-
-                    {/* Catering & Addons */}
-                    <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                      <div>
-                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                          <Utensils className="w-5 h-5 text-accent" /> Catering Menus
-                        </h3>
-                        <div className="space-y-3">
-                          {[
-                            { id: 'cat1', name: 'Artisan Continental', price: 'Included', desc: 'Fresh local breads, pastries, and house blends.' },
-                            { id: 'cat2', name: 'Fusion Harvest Lunch', price: '+₹25/pp', desc: 'Three-course organic meal served in the gardens.' },
-                            { id: 'cat3', name: 'Starlit Tasting Menu', price: '+₹65/pp', desc: 'Curated dinner experience with master storytelling.' },
-                          ].map(opt => (
-                            <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer" onClick={() => toggleAddon(opt.id)}>
-                              <Checkbox checked={selectedAddons.includes(opt.id)} onCheckedChange={() => toggleAddon(opt.id)} className="rounded-full" />
-                              <div className="flex-grow">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
-                                  <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
-                                </div>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
-                              </div>
+                              <h4 className="font-bold text-primary mb-1">{hotel.name}</h4>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">{hotel.desc}</p>
+                              <div className="text-xs font-bold text-accent uppercase tracking-widest">{hotel.price}</div>
+                              {selectedHotel === hotel.id && <div className="absolute top-4 right-4"><CheckCircle2 className="w-4 h-4 text-accent" /></div>}
                             </div>
                           ))}
                         </div>
-                      </div>
-
-                      <div>
-                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                          <Camera className="w-5 h-5 text-accent" /> Professional Services
-                        </h3>
-                        <div className="space-y-3">
-                          {[
-                            { id: 'srv1', name: 'Event Photography', price: '₹250', icon: Camera },
-                            { id: 'srv2', name: 'Team Strategy Facilitator', price: '₹400', icon: Users2 },
-                            { id: 'srv3', name: 'Premium Coffee Bar', price: '₹15/pp', icon: Coffee },
-                          ].map(opt => (
-                            <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer" onClick={() => toggleAddon(opt.id)}>
-                              <Checkbox checked={selectedAddons.includes(opt.id)} onCheckedChange={() => toggleAddon(opt.id)} className="rounded-full" />
-                              <opt.icon className="w-4 h-4 text-accent shrink-0" />
-                              <div className="flex-grow">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
-                                  <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* Accommodation Selection */}
-                    <section>
-                      <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                        <Hotel className="w-5 h-5 text-accent" /> Luxury Accommodation
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {HOTEL_PACKAGES.map(hotel => (
-                          <div 
-                            key={hotel.id} 
-                            onClick={() => setSelectedHotel(hotel.id)}
-                            className={cn(
-                              "p-5 rounded-2xl border transition-all cursor-pointer bg-white relative",
-                              selectedHotel === hotel.id ? "border-accent shadow-lg ring-1 ring-accent/20" : "border-border hover:border-accent/30"
-                            )}
-                          >
-                            <h4 className="font-bold text-primary mb-1">{hotel.name}</h4>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">{hotel.desc}</p>
-                            <div className="text-xs font-bold text-accent uppercase tracking-widest">{hotel.price}</div>
-                            {selectedHotel === hotel.id && <div className="absolute top-4 right-4"><CheckCircle2 className="w-4 h-4 text-accent" /></div>}
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  </div>
-                </ScrollArea>
+                      </section>
+                    </div>
+                  </ScrollArea>
+                </div>
 
                 {/* Summary Sidebar */}
-                <aside className="w-96 bg-muted/20 border-l p-8 flex flex-col shrink-0">
-                  <h3 className="text-xl font-headline font-bold text-primary mb-6">Your Itinerary</h3>
+                <aside className="w-96 bg-muted/20 border-l p-8 flex flex-col shrink-0 min-h-0">
+                  <h3 className="text-xl font-headline font-bold text-primary mb-6 shrink-0">Your Itinerary</h3>
                   
-                  <ScrollArea className="flex-grow pr-4">
-                    <div className="space-y-6">
+                  <ScrollArea className="flex-grow pr-4 mb-6">
+                    <div className="space-y-6 pb-4">
                       {itinerary.length === 0 && (
                         <div className="text-center py-12 px-4 border border-dashed rounded-2xl">
                           <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
@@ -438,7 +440,7 @@ export default function CorporatePage() {
                     </div>
                   </ScrollArea>
 
-                  <div className="pt-8 border-t mt-auto space-y-4">
+                  <div className="pt-8 border-t mt-auto space-y-4 shrink-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-muted-foreground">Est. Base Total</span>
                       <span className="text-xl font-bold text-primary font-headline">Custom Quote</span>
