@@ -4,26 +4,32 @@
     {
       "id": "tour-coastal",
       "description": "Scenic coastal tour at sunset",
-      "imageUrl": "https://picsum.photos/seed/maroma-coast/1200/800",
+      "imageUrl": "https://images.unsplash.com/photo-1689733325483-7fbc938a8cfc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHh8fHh8fHx8fHwxNzc2MzM2Mjk2fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "coastal sunset"
     },
     {
       "id": "workshop-pottery",
       "description": "Artisan pottery workshop",
-      "imageUrl": "https://picsum.photos/seed/maroma-pottery/1200/800",
+      "imageUrl": "https://images.unsplash.com/photo-1659367057358-87cd8dede838?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHh8fHh8fHx8fHwxNzc2MzM2MzE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pottery workshop"
     },
     {
       "id": "tour-historical",
       "description": "Guided historical city walk",
-      "imageUrl": "https://picsum.photos/seed/maroma-history/1200/800",
+      "imageUrl": "https://images.unsplash.com/photo-1755194354784-d83bcd1c3709?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHh8fHh8fHx8fHwxNzc2MzM2MzE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "historical city"
     },
     {
       "id": "corporate-retreat",
       "description": "Team building corporate retreat",
-      "imageUrl": "https://picsum.photos/seed/maroma-corporate/1200/800",
+      "imageUrl": "https://images.unsplash.com/photo-1764726354660-5e64ffbffe79?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHh8fHh8fHx8fHwxNzc2MzM2MzE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "corporate retreat"
+    },
+    {
+      "id": "map-campus",
+      "description": "Maroma Aspiration Campus Map",
+      "imageUrl": "https://picsum.photos/seed/maroma-map/400/300",
+      "imageHint": "campus map"
     }
   ]
 }

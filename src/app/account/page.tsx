@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -10,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save, MapPin } from "lucide-react";
+import { User, Mail, Phone, Calendar, History, Settings, ExternalLink, Loader2, Save, MapPin, Navigation } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
@@ -78,6 +79,8 @@ export default function AccountPage() {
   };
 
   const isLoading = isUserLoading || isBookingsLoading;
+
+  const DIRECTIONS_URL = "https://www.google.com/maps/search/?api=1&query=Maroma+Aspiration+Campus";
 
   if (!user) {
     return (
@@ -242,7 +245,15 @@ export default function AccountPage() {
                                 <h4 className="font-bold text-lg text-primary">{booking.tourName}</h4>
                                 <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-2 mt-1">
                                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-accent" /> {booking.tourDate || 'Date TBD'}</span>
-                                  <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-accent" /> {booking.location || 'Maroma Campus'}</span>
+                                  <a 
+                                    href={DIRECTIONS_URL} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 hover:text-accent transition-colors group/loc"
+                                  >
+                                    <MapPin className="w-3.5 h-3.5 text-accent" /> {booking.location || 'Maroma Campus'}
+                                    <Navigation className="w-3 h-3 ml-1 opacity-0 group-hover/loc:opacity-100 transition-opacity" />
+                                  </a>
                                   <div className="flex items-center gap-4 w-full md:w-auto">
                                     <span>{booking.numberOfAttendees} Guests</span>
                                   </div>

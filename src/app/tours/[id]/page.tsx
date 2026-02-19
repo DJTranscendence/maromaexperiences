@@ -32,7 +32,8 @@ import {
   History,
   Trees,
   Users2,
-  CheckCircle2
+  CheckCircle2,
+  ExternalLink
 } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -43,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const getHighlightIcon = (text: string) => {
   const t = text.toLowerCase();
@@ -82,6 +84,9 @@ export default function TourDetailsPage() {
     });
     setNotifyEmail("");
   };
+
+  const DIRECTIONS_URL = "https://www.google.com/maps/search/?api=1&query=Maroma+Aspiration+Campus";
+  const mapPlaceholder = PlaceHolderImages.find(p => p.id === 'map-campus')?.imageUrl || "https://picsum.photos/seed/maroma-map/400/300";
 
   if (isLoading) {
     return (
@@ -159,11 +164,49 @@ export default function TourDetailsPage() {
             
             <div className="lg:col-span-2 space-y-10">
               <div>
-                <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-4">{tour.name}</h1>
-                <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
-                  <div className="flex items-center gap-2"><MapPin className="w-5 h-5 text-accent" /> {tour.location}</div>
-                  <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-accent" /> {tour.duration}</div>
-                  <div className="flex items-center gap-2"><Users className="w-5 h-5 text-accent" /> Up to {tour.capacity} guests</div>
+                <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-6">{tour.name}</h1>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {/* Location Card */}
+                  <a 
+                    href={DIRECTIONS_URL} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex flex-col p-4 bg-white rounded-2xl border border-border hover:border-accent hover:shadow-lg transition-all group"
+                  >
+                    <div className="relative h-20 w-full mb-3 rounded-xl overflow-hidden">
+                      <Image 
+                        src={mapPlaceholder} 
+                        alt="Campus Map" 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform" 
+                      />
+                      <div className="absolute inset-0 bg-accent/10 group-hover:bg-transparent transition-colors" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <MapPin className="w-6 h-6 text-accent drop-shadow-md" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-primary truncate">{tour.location}</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-accent" />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Get Directions</span>
+                  </a>
+
+                  <div className="flex flex-col p-4 bg-muted/20 border border-transparent rounded-2xl">
+                    <div className="p-2 bg-white rounded-xl shadow-sm w-fit mb-3">
+                      <Clock className="w-5 h-5 text-accent" />
+                    </div>
+                    <span className="text-sm font-bold text-primary">{tour.duration}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Duration</span>
+                  </div>
+
+                  <div className="flex flex-col p-4 bg-muted/20 border border-transparent rounded-2xl">
+                    <div className="p-2 bg-white rounded-xl shadow-sm w-fit mb-3">
+                      <Users className="w-5 h-5 text-accent" />
+                    </div>
+                    <span className="text-sm font-bold text-primary">Up to {tour.capacity} guests</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Capacity</span>
+                  </div>
                 </div>
               </div>
 
