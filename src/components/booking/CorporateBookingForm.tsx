@@ -15,7 +15,8 @@ import {
   Camera, 
   Hotel, 
   ChevronDown,
-  Info
+  Info,
+  ExternalLink
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,8 +34,14 @@ interface CorporateBookingFormProps {
 const ADD_ONS = [
   { id: "catering", label: "Gourmet Catering", icon: UtensilsCrossed, price: 45 },
   { id: "coffee", label: "Premium Coffee Service", icon: Coffee, price: 15 },
-  { id: "accommodation", label: "On-Campus Accommodation", icon: Hotel, price: 250 },
+  { id: "accommodation", label: "Accommodation", icon: Hotel, price: 250 },
   { id: "photo", label: "Event Photographer", icon: Camera, price: 200 },
+];
+
+const LOCAL_HOTELS = [
+  { name: "Maroma Resort & Spa", url: "https://www.belmond.com/hotels/north-america/mexico/riviera-maya/belmond-maroma-resort-and-spa/" },
+  { name: "Secrets Maroma Beach", url: "https://www.amrcollection.com/en/resorts-hotels/secrets/mexico/maroma-beach-riviera-cancun/" },
+  { name: "Catalonia Playa Maroma", url: "https://www.cataloniahotels.com/en/hotel/catalonia-playa-maroma" },
 ];
 
 export default function CorporateBookingForm({ tour }: CorporateBookingFormProps) {
@@ -147,6 +154,43 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
                             <div className="p-3 bg-muted/20 rounded-xl text-[10px] text-muted-foreground leading-relaxed flex items-start gap-2">
                               <Info className="w-3.5 h-3.5 shrink-0 text-accent" />
                               Selecting a menu will update your formal proposal details.
+                            </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
+
+                    {addon.id === 'accommodation' && (
+                      <>
+                        <span className="text-muted-foreground/30">•</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-accent font-bold text-[10px] uppercase tracking-widest hover:text-accent/80 transition-colors gap-1">
+                              View Hotels <ChevronDown className="w-2.5 h-2.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="rounded-2xl w-64 shadow-2xl border-none p-2" align="start">
+                            <DropdownMenuLabel className="font-headline text-sm flex items-center gap-2">
+                              <Hotel className="w-4 h-4 text-accent" /> Local Hotels
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {LOCAL_HOTELS.map((hotel) => (
+                              <a 
+                                key={hotel.name}
+                                href={hotel.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between rounded-xl py-2 px-3 text-sm hover:bg-accent/5 transition-colors group/link"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span className="truncate">{hotel.name}</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover/link:text-accent transition-colors" />
+                              </a>
+                            ))}
+                            <DropdownMenuSeparator />
+                            <div className="p-3 bg-muted/20 rounded-xl text-[10px] text-muted-foreground leading-relaxed flex items-start gap-2">
+                              <Info className="w-3.5 h-3.5 shrink-0 text-accent" />
+                              We can coordinate direct group booking rates for these locations.
                             </div>
                           </DropdownMenuContent>
                         </DropdownMenu>
