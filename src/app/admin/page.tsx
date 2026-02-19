@@ -303,12 +303,12 @@ export default function AdminPage() {
                 <Users className="w-5 h-5" /> Users
               </TabsTrigger>
               <TabsTrigger value="admin" className="rounded-full h-full px-8 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Settings className="w-5 h-5" /> Admin
+                <Settings className="w-5 h-5" /> Experiences
               </TabsTrigger>
             </TabsList>
           </div>
 
-          {/* ADMIN / EXPERIENCES TAB */}
+          {/* EXPERIENCES TAB */}
           <TabsContent value="admin" className="m-0 focus-visible:ring-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
