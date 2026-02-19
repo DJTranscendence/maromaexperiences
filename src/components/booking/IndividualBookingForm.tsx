@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -153,7 +154,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                 required 
               />
               <div className="text-sm text-muted-foreground whitespace-nowrap">
-                ₹{tour.price} / each
+                ₹{tour.price} / person
               </div>
             </div>
           </div>

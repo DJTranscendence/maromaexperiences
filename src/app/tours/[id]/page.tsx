@@ -194,7 +194,7 @@ export default function TourDetailsPage() {
                       <div>
                         <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
                           ₹{tour.price}
-                          <span className="text-sm font-normal text-muted-foreground">/pp</span>
+                          <span className="text-sm font-normal text-muted-foreground">/ person</span>
                         </div>
                       </div>
                       <div className="text-right">
