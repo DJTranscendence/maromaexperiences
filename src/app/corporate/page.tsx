@@ -140,10 +140,8 @@ export default function CorporatePage() {
   }, [firestore]);
   const { data: availableTours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
 
-  // Derived images from media library if available
-  const heroImage = useMemo(() => {
-    return mediaItems?.[4]?.url || CORPORATE_HERO_URL;
-  }, [mediaItems]);
+  // Hero image is explicitly set as per request
+  const heroImage = CORPORATE_HERO_URL;
 
   const packageImages = useMemo(() => {
     return {
@@ -576,7 +574,7 @@ export default function CorporatePage() {
           </DialogContent>
         </Dialog>
 
-        {/* Gallery Section - Now Powered by Media Library */}
+        {/* Gallery Section */}
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
@@ -611,7 +609,6 @@ export default function CorporatePage() {
                   </div>
                 ))
               ) : (
-                // Fallback to placeholders if no media exists
                 [PlaceHolderImages[0].imageUrl, PlaceHolderImages[1].imageUrl, PlaceHolderImages[2].imageUrl, CORPORATE_HERO_URL, PlaceHolderImages[4].imageUrl, PlaceHolderImages[5].imageUrl].map((img, i) => (
                   <div key={i} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
                     <Image
