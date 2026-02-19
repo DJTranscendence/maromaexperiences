@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -42,7 +41,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { Tour } from "@/lib/types";
@@ -93,7 +92,7 @@ const PACKAGES = [
     features: ["Private Meeting Space", "Signature Workshop Choice", "Artisan Lunch & Coffee", "Facilitated Q&A"],
     price: "₹8,000 / Person",
     icon: Users2,
-    image: PlaceHolderImages.find(p => p.id === 'corporate-retreat')?.imageUrl || "https://picsum.photos/seed/corp-day/600/300"
+    image: "https://picsum.photos/seed/corp-day/600/400"
   },
   {
     id: 'multi',
@@ -104,7 +103,7 @@ const PACKAGES = [
     price: "₹12,000 / Person",
     icon: Target,
     popular: true,
-    image: PlaceHolderImages.find(p => p.id === 'corp-meeting')?.imageUrl || "https://picsum.photos/seed/corp-multi/600/300"
+    image: "https://picsum.photos/seed/corp-multi/600/400"
   },
   {
     id: 'bespoke',
@@ -114,7 +113,7 @@ const PACKAGES = [
     features: ["3 Days / 2 Nights", "Private Chef Experience", "Exclusive Venue Access", "Leadership Coaching Integration", "Full Concierge Support"],
     price: "On Request",
     icon: ShieldCheck,
-    image: PlaceHolderImages.find(p => p.id === 'corp-stay')?.imageUrl || "https://picsum.photos/seed/corp-exec/600/300"
+    image: "https://picsum.photos/seed/corp-exec/600/400"
   }
 ];
 
@@ -128,17 +127,31 @@ export default function CorporatePage() {
   const [selectedCatering, setSelectedCatering] = useState<string>('cat1');
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
 
-  const corporateHero = CORPORATE_HERO_URL;
-  const cateringImg = PlaceHolderImages.find(p => p.id === 'corp-catering')?.imageUrl || "";
-  const meetingImg = PlaceHolderImages.find(p => p.id === 'corp-meeting')?.imageUrl || "";
-  const stayImg = PlaceHolderImages.find(p => p.id === 'corp-stay')?.imageUrl || "";
+  // Fetch real media from Firestore
+  const mediaQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "media");
+  }, [firestore]);
+  const { data: mediaItems, isLoading: isMediaLoading } = useCollection<any>(mediaQuery);
 
   const toursQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "tours"), where("isActive", "==", true));
   }, [firestore]);
-
   const { data: availableTours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
+
+  // Derived images from media library if available
+  const heroImage = useMemo(() => {
+    return mediaItems?.[4]?.url || CORPORATE_HERO_URL;
+  }, [mediaItems]);
+
+  const packageImages = useMemo(() => {
+    return {
+      day: mediaItems?.[0]?.url || PACKAGES[0].image,
+      multi: mediaItems?.[8]?.url || PACKAGES[1].image,
+      bespoke: mediaItems?.[3]?.url || PACKAGES[2].image,
+    };
+  }, [mediaItems]);
 
   const handleOpenBuilder = (pkg: any) => {
     setSelectedPkg(pkg);
@@ -178,14 +191,14 @@ export default function CorporatePage() {
         {/* Hero Section */}
         <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
           <Image
-            src={corporateHero}
+            src={heroImage}
             alt="Corporate Retreat"
             fill
             className="object-cover brightness-[0.5]"
             priority
           />
           <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-            <Badge className="mb-6 bg-accent text-white border-none px-6 py-2 rounded-full uppercase tracking-[0.3em] font-bold text-xs animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <Badge className="mb-6 bg-accent text-white border-none px-6 py-2 rounded-full uppercase tracking-[0.3em] font-bold text-xs">
               Corporate Excellence
             </Badge>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-8 drop-shadow-2xl leading-tight">
@@ -233,7 +246,7 @@ export default function CorporatePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Signature Packages</h2>
-              <p className="text-muted-foreground font-body">Choose a foundation and customize it to your specific goals. Click any package to build your menu.</p>
+              <p className="text-muted-foreground font-body">Choose a foundation and customise it to your specific goals.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -252,11 +265,10 @@ export default function CorporatePage() {
                     )}
                     <div className="relative h-48 w-full">
                       <Image
-                        src={pkg.image}
+                        src={packageImages[pkg.id as keyof typeof packageImages] || pkg.image}
                         alt={pkg.name}
                         fill
                         className="object-cover transition-transform duration-700 group-hover/card:scale-110"
-                        data-ai-hint="corporate"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent" />
                     </div>
@@ -564,7 +576,7 @@ export default function CorporatePage() {
           </DialogContent>
         </Dialog>
 
-        {/* Gallery Section */}
+        {/* Gallery Section - Now Powered by Media Library */}
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
@@ -580,19 +592,40 @@ export default function CorporatePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[meetingImg, cateringImg, stayImg, corporateHero, meetingImg, cateringImg].map((img, i) => (
-                <div key={i} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
-                  <Image
-                    src={img}
-                    alt={`Gallery ${i}`}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                    <Sparkles className="w-8 h-8 text-white/50" />
+              {isMediaLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="aspect-square bg-muted animate-pulse rounded-[2rem]" />
+                ))
+              ) : mediaItems && mediaItems.length > 0 ? (
+                mediaItems.slice(0, 6).map((item: any, i: number) => (
+                  <div key={item.id} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
+                    <Image
+                      src={item.url}
+                      alt={item.altText || `Gallery ${i}`}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                      <Sparkles className="w-8 h-8 text-white/50" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                // Fallback to placeholders if no media exists
+                [PlaceHolderImages[0].imageUrl, PlaceHolderImages[1].imageUrl, PlaceHolderImages[2].imageUrl, CORPORATE_HERO_URL, PlaceHolderImages[4].imageUrl, PlaceHolderImages[5].imageUrl].map((img, i) => (
+                  <div key={i} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
+                    <Image
+                      src={img}
+                      alt={`Gallery ${i}`}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                      <Sparkles className="w-8 h-8 text-white/50" />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
@@ -629,7 +662,7 @@ export default function CorporatePage() {
               <div className="relative">
                 <div className="aspect-square relative rounded-[3rem] overflow-hidden rotate-3 shadow-2xl border-8 border-white/5">
                   <Image
-                    src={stayImg}
+                    src={mediaItems?.[7]?.url || "https://picsum.photos/seed/luxury/800/800"}
                     alt="Luxury Service"
                     fill
                     className="object-cover"
