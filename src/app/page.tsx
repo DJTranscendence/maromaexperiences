@@ -41,10 +41,10 @@ export default function Home() {
         />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-lg leading-tight">
-            Maroma Experiences
+            Curated experiences for curious travellers.
           </h1>
           <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md">
-            Curating unforgettable moments through connection, history, and craft. Join us in our next group tour or artisan workshop.
+            From Campus-wide tours to artisan-led workshops, Maroma Experiences promises you an eye-opening and enriching enounter.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
