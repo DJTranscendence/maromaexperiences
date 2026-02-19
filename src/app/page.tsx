@@ -88,6 +88,11 @@ export default function Home() {
                           <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                         </Badge>
                       ) : (
+                        <Badge className="bg-green-600/90 text-white hover:bg-green-600 border-none shadow-lg rounded-full px-4 py-1.5 gap-2 backdrop-blur-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live
+                        </Badge>
+                      )}
+                      {tour.status !== 'coming-soon' && (
                         <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} />
                       )}
                     </div>
@@ -112,14 +117,13 @@ export default function Home() {
                         <Bell className="w-5 h-5 text-amber-600 animate-bounce" />
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-amber-800">Coming Soon!</span>
-                          <span className="text-[11px] text-amber-700 leading-tight">Want to be notified when this workshop becomes live? <span className="underline font-bold">Register here</span></span>
+                          <span className="text-[11px] text-amber-700 leading-tight">Click here to be notified when this event goes live</span>
                         </div>
                       </div>
                     )}
                   </CardContent>
                   <CardFooter className="px-6 py-4 border-t border-border flex items-center justify-between bg-gray-50/50">
                     <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">From</span>
                       <span className="text-xl font-bold text-primary font-headline">₹{tour.price} <span className="text-xs font-normal">/ guest</span></span>
                     </div>
                     <Button variant="ghost" className="rounded-full group-hover:translate-x-1 transition-transform">

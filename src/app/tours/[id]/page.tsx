@@ -10,7 +10,7 @@ import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import IndividualBookingForm from "@/components/booking/IndividualBookingForm";
 import SchoolBookingForm from "@/components/booking/SchoolBookingForm";
 import CorporateBookingForm from "@/components/booking/CorporateBookingForm";
-import { MapPin, Clock, Users, Share2, Heart, Calendar, Loader2, Sparkles, Bell, Send } from "lucide-react";
+import { MapPin, Clock, Users, Share2, Heart, Calendar, Loader2, Sparkles, Bell, Send, Check } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -104,6 +104,11 @@ export default function TourDetailsPage() {
                   <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                 </Badge>
               ) : (
+                <Badge className="bg-green-600 text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2 shadow-lg">
+                  <Check className="w-3.5 h-3.5" /> Live
+                </Badge>
+              )}
+              {!isComingSoon && (
                 <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} className="bg-white/90 backdrop-blur-md shadow-lg" />
               )}
             </div>
@@ -157,7 +162,7 @@ export default function TourDetailsPage() {
                       </Badge>
                       <h3 className="text-3xl font-headline font-bold text-primary leading-tight">Launching Shortly</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        This exclusive experience is currently in final preparation. Want to be notified exactly when this workshop becomes live? 
+                        This exclusive experience is currently in final preparation. Click here to be notified when this event goes live.
                       </p>
                     </div>
 
@@ -187,7 +192,6 @@ export default function TourDetailsPage() {
                   <>
                     <div className="mb-8 flex justify-between items-end">
                       <div>
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Starting from</span>
                         <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
                           ₹{tour.price}
                           <span className="text-sm font-normal text-muted-foreground">/pp</span>
