@@ -42,7 +42,8 @@ export default function Home() {
             Curated Experiences for the Curious
           </h1>
           <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md">
-            From Campus Tours to Artisan-led workshops, discover the heart of Maroma through our bespoke group tours.
+            From Campus Tours to Artisan-led workshops,<br />
+            discover the heart of Maroma through our bespoke experiences.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-10 text-lg h-14 font-bold shadow-lg">
