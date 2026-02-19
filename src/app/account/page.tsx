@@ -250,8 +250,7 @@ export default function AccountPage() {
                                 asChild
                               >
                                 <Link 
-                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location || "Maroma Campus")}`} 
-                                  target="_blank"
+                                  href={`/tours/${booking.tourId}`}
                                 >
                                   <ExternalLink className="w-4 h-4" />
                                 </Link>
