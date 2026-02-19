@@ -233,8 +233,6 @@ export default function AccountPage() {
                                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-accent" /> {booking.tourDate || 'Date TBD'}</span>
                                   <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-accent" /> {booking.location || 'Maroma Campus'}</span>
                                   <div className="flex items-center gap-4 w-full md:w-auto">
-                                    <span>ID: {booking.id.substring(0, 8).toUpperCase()}</span>
-                                    <span>•</span>
                                     <span>{booking.numberOfAttendees} Guests</span>
                                   </div>
                                 </div>
