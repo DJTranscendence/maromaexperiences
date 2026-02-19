@@ -22,6 +22,8 @@ export default function Home() {
 
   const { data: tours, isLoading } = useCollection<Tour>(toursQuery);
 
+  const HERO_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Clay%20Perfume%20Hero.png?alt=media&token=29a10f37-f9c6-4ec5-98b0-6cf2ce53d8e2";
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -29,12 +31,11 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
         <Image
-          src="https://picsum.photos/seed/maroma-hero/1920/1080"
+          src={HERO_IMAGE_URL}
           alt="Maroma Experiences Hero"
           fill
           className="object-cover brightness-[0.6] transition-transform duration-10000 hover:scale-110"
           priority
-          data-ai-hint="beautiful landscape"
         />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-lg leading-tight">
