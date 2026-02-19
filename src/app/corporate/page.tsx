@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -92,7 +93,7 @@ const PACKAGES = [
     features: ["Private Meeting Space", "Signature Workshop Choice", "Artisan Lunch & Coffee", "Facilitated Q&A"],
     price: "₹8,000 / Person",
     icon: Users2,
-    image: "https://picsum.photos/seed/corp-day/600/300"
+    image: PlaceHolderImages.find(p => p.id === 'corporate-retreat')?.imageUrl || "https://picsum.photos/seed/corp-day/600/300"
   },
   {
     id: 'multi',
@@ -103,7 +104,7 @@ const PACKAGES = [
     price: "₹12,000 / Person",
     icon: Target,
     popular: true,
-    image: "https://picsum.photos/seed/corp-multi/600/300"
+    image: PlaceHolderImages.find(p => p.id === 'corp-meeting')?.imageUrl || "https://picsum.photos/seed/corp-multi/600/300"
   },
   {
     id: 'bespoke',
@@ -113,7 +114,7 @@ const PACKAGES = [
     features: ["3 Days / 2 Nights", "Private Chef Experience", "Exclusive Venue Access", "Leadership Coaching Integration", "Full Concierge Support"],
     price: "On Request",
     icon: ShieldCheck,
-    image: "https://picsum.photos/seed/corp-exec/600/300"
+    image: PlaceHolderImages.find(p => p.id === 'corp-stay')?.imageUrl || "https://picsum.photos/seed/corp-exec/600/300"
   }
 ];
 
@@ -237,7 +238,7 @@ export default function CorporatePage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {PACKAGES.map((pkg, i) => (
-                <button key={i} onClick={() => handleOpenBuilder(pkg)} className="flex text-left w-full outline-none focus:ring-0 group">
+                <button key={i} onClick={() => handleOpenBuilder(pkg)} className="flex text-left w-full outline-none focus:ring-0 group h-full">
                   <Card className={cn(
                     "rounded-[2.5rem] border-none shadow-xl relative overflow-hidden flex flex-col w-full h-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group/card",
                     pkg.popular ? "ring-2 ring-accent z-10" : ""
@@ -255,7 +256,7 @@ export default function CorporatePage() {
                         alt={pkg.name}
                         fill
                         className="object-cover transition-transform duration-700 group-hover/card:scale-110"
-                        data-ai-hint="corporate events"
+                        data-ai-hint="corporate"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent" />
                     </div>
