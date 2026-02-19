@@ -35,7 +35,12 @@ import {
   ArrowRight,
   Loader2,
   MapPin,
-  Circle
+  Circle,
+  ChevronDown,
+  Info,
+  ExternalLink,
+  Sprout,
+  Heart
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,6 +54,14 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const HOTEL_PACKAGES = [
   { id: 'h1', name: "Maroma Resort & Spa", price: "₹250/night", desc: "Ultra-luxury beachfront suites." },
@@ -61,6 +74,15 @@ const CATERING_OPTIONS = [
   { id: 'cat2', name: 'Solitude Farm-to-Table', price: '+₹25/pp', desc: 'Rustic, home-grown and very healthy ingredients.' },
   { id: 'cat3', name: 'Cafe 73', price: '+₹15/pp', desc: 'Hearty burgers, wraps, and chips in a biker-styled cafe.' },
   { id: 'cat4', name: 'Maroma Spa Cafe', price: '+₹40/pp', desc: 'Vegan, healthy, rooftop dining with panoramic views.' },
+];
+
+const SPA_TREATMENTS = [
+  { id: 'spa1', name: "Deep Tissue Massage", price: "₹3,000", duration: "60 Mins", desc: "Intensive targeted massage for deep muscle release.", image: "https://picsum.photos/seed/spa1/400/300" },
+  { id: 'spa2', name: "Maroma Holistic Facial", price: "₹3,000", duration: "60 Mins", desc: "Nature-based products to cleanse and nourish the skin.", image: "https://picsum.photos/seed/spa2/400/300" },
+  { id: 'spa3', name: "Maroma Sound Harmonisation", price: "From ₹1,800", duration: "50+ Mins", desc: "Vibrations from singing bowls and tuning forks for deep stillness.", image: "https://picsum.photos/seed/spa3/400/300" },
+  { id: 'spa4', name: "Foot Reflexology", price: "₹2,700", duration: "60 Mins", desc: "Therapeutic treatment working specific reflex points.", image: "https://picsum.photos/seed/spa4/400/300" },
+  { id: 'spa5', name: "Thai Yoga Massage", price: "From ₹3,000", duration: "60+ Mins", desc: "Full-body therapy to restore balance and improve mobility.", image: "https://picsum.photos/seed/spa5/400/300" },
+  { id: 'spa6', name: "Lomi Lomi Massage", price: "₹4,200", duration: "90 Mins", desc: "Nurturing massage rooted in Hawaiian tradition.", image: "https://picsum.photos/seed/spa6/400/300" },
 ];
 
 const PACKAGES = [
@@ -99,7 +121,7 @@ export default function CorporatePage() {
   const { toast } = useToast();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
-  const [itinerary, setItinerary] = useState<Tour[]>([]);
+  const [itinerary, setItinerary] = useState<any[]>([]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [selectedCatering, setSelectedCatering] = useState<string>('cat1');
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
@@ -121,12 +143,12 @@ export default function CorporatePage() {
     setIsBuilderOpen(true);
   };
 
-  const addToItinerary = (tour: Tour) => {
-    if (itinerary.find(t => t.id === tour.id)) return;
-    setItinerary([...itinerary, tour]);
+  const addItemToItinerary = (item: any) => {
+    if (itinerary.find(t => t.id === item.id)) return;
+    setItinerary([...itinerary, item]);
   };
 
-  const removeFromItinerary = (id: string) => {
+  const removeItemFromItinerary = (id: string) => {
     setItinerary(itinerary.filter(t => t.id !== id));
   };
 
@@ -267,7 +289,7 @@ export default function CorporatePage() {
                     Build Your Corporate Itinerary
                   </DialogTitle>
                   <DialogDescription className="text-muted-foreground mt-1">
-                    Select your preferred workshops, dining options, and accommodation.
+                    Select your preferred workshops, wellness treatments, and dining.
                   </DialogDescription>
                 </div>
                 {selectedPkg && (
@@ -294,7 +316,7 @@ export default function CorporatePage() {
                             {availableTours?.map(tour => (
                               <button 
                                 key={tour.id} 
-                                onClick={() => addToItinerary(tour)}
+                                onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Experience' })}
                                 disabled={!!itinerary.find(t => t.id === tour.id)}
                                 className={cn(
                                   "flex text-left items-center gap-4 p-4 rounded-2xl border transition-all group",
@@ -318,6 +340,40 @@ export default function CorporatePage() {
                             ))}
                           </div>
                         )}
+                      </section>
+
+                      {/* Spa Treatments Selection */}
+                      <section>
+                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                          <Sprout className="w-5 h-5 text-accent" /> Spa & Wellness Treatments
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {SPA_TREATMENTS.map(spa => (
+                            <button 
+                              key={spa.id} 
+                              onClick={() => addItemToItinerary({ id: spa.id, name: spa.name, imageUrl: spa.image, duration: spa.duration, type: 'Wellness' })}
+                              disabled={!!itinerary.find(t => t.id === spa.id)}
+                              className={cn(
+                                "flex text-left items-center gap-4 p-4 rounded-2xl border transition-all group",
+                                itinerary.find(t => t.id === spa.id) 
+                                  ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
+                                  : "bg-white border-border hover:border-accent hover:shadow-md"
+                              )}
+                            >
+                              <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0">
+                                <Image src={spa.image} alt={spa.name} fill className="object-cover" />
+                              </div>
+                              <div className="flex-grow">
+                                <h4 className="font-bold text-primary text-sm leading-tight">{spa.name}</h4>
+                                <div className="flex items-center gap-3 text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
+                                  <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {spa.duration}</span>
+                                  <span className="font-bold text-accent">{spa.price}</span>
+                                </div>
+                              </div>
+                              {itinerary.find(t => t.id === spa.id) ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />}
+                            </button>
+                          ))}
+                        </div>
                       </section>
 
                       {/* Catering & Addons */}
@@ -424,20 +480,21 @@ export default function CorporatePage() {
                       {itinerary.length === 0 && !selectedCatering && (
                         <div className="text-center py-12 px-4 border border-dashed rounded-2xl">
                           <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                          <p className="text-xs text-muted-foreground">Add workshops to begin your journey planning.</p>
+                          <p className="text-xs text-muted-foreground">Add workshops or treatments to begin planning.</p>
                         </div>
                       )}
                       
-                      {itinerary.map(tour => (
-                        <div key={tour.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border animate-in fade-in slide-in-from-right-4">
+                      {itinerary.map(item => (
+                        <div key={item.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border animate-in fade-in slide-in-from-right-4">
                           <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                            <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
+                            <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                           </div>
                           <div className="flex-grow min-w-0">
-                            <h5 className="text-xs font-bold text-primary truncate">{tour.name}</h5>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{tour.duration}</span>
+                            <div className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
+                            <h5 className="text-xs font-bold text-primary truncate">{item.name}</h5>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
                           </div>
-                          <button onClick={() => removeFromItinerary(tour.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -458,7 +515,7 @@ export default function CorporatePage() {
                           {selectedAddons.map(id => {
                             return (
                               <div key={id} className="flex items-center gap-2 text-xs font-medium text-primary/80">
-                                <CheckCircle2 className="w-3 h-3 text-accent" /> Custom Selection
+                                <CheckCircle2 className="w-3 h-3 text-accent" /> Service Included
                               </div>
                             );
                           })}
