@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Sprout, 
@@ -23,11 +22,26 @@ import {
   Zap,
   ChevronRight,
   ArrowRight,
-  Trophy,
-  Plus,
-  Wand2
+  History,
+  Sparkles,
+  Award,
+  CircleCheck,
+  Package,
+  Factory,
+  Target,
+  IndianRupee,
+  Users
 } from "lucide-react";
-import { INGREDIENTS, PRODUCT_TYPES, Ingredient } from "@/lib/simulator-data";
+import { 
+  CATEGORIES, 
+  INGREDIENT_BASES, 
+  SOURCING_MODELS, 
+  PACKAGING_TYPES, 
+  PRODUCTION_METHODS, 
+  TARGET_AUDIENCES, 
+  PRICE_TIERS, 
+  CORE_VALUES 
+} from "@/lib/simulator-data";
 import { cn } from "@/lib/utils";
 import {
   LineChart,
@@ -43,62 +57,90 @@ import {
 export default function SimulatorPage() {
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(PRODUCT_TYPES[0]);
-  const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
-  const [message, setMessage] = useState("");
-  const [price, setPrice] = useState(500);
-
-  // Product Creator State
-  const [creatorType, setCreatorType] = useState<string>("");
-  const [creatorFunction, setCreatorFunction] = useState<string>("");
-  const [isCustomMode, setIsCustomMode] = useState(false);
   
-  // Scoring
+  // 9-Step Selection State
+  const [config, setConfig] = useState({
+    category: CATEGORIES[0].id,
+    format: CATEGORIES[0].formats[0],
+    ingredientBase: INGREDIENT_BASES[0].id,
+    sourcingModel: SOURCING_MODELS[0].id,
+    packagingType: PACKAGING_TYPES[0].id,
+    productionMethod: PRODUCTION_METHODS[0].id,
+    targetAudience: TARGET_AUDIENCES[0].id,
+    priceTier: PRICE_TIERS[0].id,
+    coreValue: CORE_VALUES[0].id,
+    message: ""
+  });
+
+  const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category)!, [config.category]);
+  const selectedBase = useMemo(() => INGREDIENT_BASES.find(b => b.id === config.ingredientBase)!, [config.ingredientBase]);
+  const selectedSourcing = useMemo(() => SOURCING_MODELS.find(s => s.id === config.sourcingModel)!, [config.sourcingModel]);
+  const selectedPackaging = useMemo(() => PACKAGING_TYPES.find(p => p.id === config.packagingType)!, [config.packagingType]);
+  const selectedProduction = useMemo(() => PRODUCTION_METHODS.find(p => p.id === config.productionMethod)!, [config.productionMethod]);
+  const selectedAudience = useMemo(() => TARGET_AUDIENCES.find(a => a.id === config.targetAudience)!, [config.targetAudience]);
+  const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier)!, [config.priceTier]);
+  const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue)!, [config.coreValue]);
+
+  // Comprehensive Scoring Logic
   const scores = useMemo(() => {
-    const baseCost = selectedProduct.baseCost;
-    const earth = selectedIngredients.reduce((acc, curr) => acc + curr.earthScore, 0) / (selectedIngredients.length || 1);
-    const appeal = selectedIngredients.reduce((acc, curr) => acc + curr.appeal, 0) / (selectedIngredients.length || 1);
-    const cost = baseCost + selectedIngredients.reduce((acc, curr) => acc + curr.cost, 0);
+    // 1. Production Cost
+    const productionCost = selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta;
     
-    // Logic: Trust drops if Earth is low. Profit drops if Trust is low.
-    const trust = (earth * 10);
-    const shortTermSales = (appeal * 1.5) - (price / 200);
-    const longevity = (trust * 0.7) + (earth * 2);
+    // 2. Retail Price
+    const retailPrice = productionCost * (1 + selectedPriceTier.margin);
 
-    return { earth, appeal, cost, trust, shortTermSales, longevity };
-  }, [selectedIngredients, price, selectedProduct]);
+    // 3. Environmental Score (Average Ingredient E score * Packaging Multiplier)
+    const baseEarth = selectedBase.earthScore;
+    const environmentalScore = Math.min(10, baseEarth * selectedPackaging.envMultiplier);
 
-  // Simulation Data
+    // 4. Ethical Consistency Check
+    let consistency = 1.0;
+    // Greenwashing Penalty: Zero waste / Low carbon value with plastic packaging
+    if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') {
+      consistency -= 0.5;
+    }
+    // Fair Trade value with industrial supplier
+    if (config.coreValue === 'fts' && config.sourcingModel === 'is') {
+      consistency -= 0.5;
+    }
+
+    // 5. Short-Term Sales
+    const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal;
+    const accessibility = selectedPriceTier.accessibility / selectedAudience.priceSensitivity;
+    const marketingClarity = config.message.length > 5 ? 1.0 : 0.5;
+    const shortTermSales = (appealScore * 0.4) + (accessibility * 0.3 * 10) + (marketingClarity * 0.3 * 10);
+
+    // 6. Customer Trust
+    const trustBase = (environmentalScore * 0.5) + (consistency * 0.3 * 10) + (selectedPriceTier.fairness * 0.2 * 10);
+    const trust = Math.min(100, (trustBase * 10) + selectedSourcing.trustBonus + selectedProduction.trustBonus);
+
+    // 7. Longevity Index
+    const reinvestmentCapacity = selectedPriceTier.margin * 10;
+    const longevity = (trust * 0.06) + (reinvestmentCapacity * 0.4);
+
+    return { 
+      environmentalScore, 
+      trust, 
+      shortTermSales, 
+      longevity, 
+      productionCost, 
+      retailPrice,
+      consistency 
+    };
+  }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier, selectedValue]);
+
+  // Simulation Data (Trajectory)
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: i + 1,
-      profit: Math.max(0, (scores.shortTermSales * 10) - (i * (10 - scores.earth))),
-      trust: Math.min(100, scores.trust + (i * (scores.earth > 5 ? 2 : -5))),
-      longevity: Math.max(0, scores.longevity + (i * (scores.earth - 4)))
+      profit: Math.max(0, (scores.shortTermSales * 8) + (i * (scores.longevity - 5))),
+      trust: Math.min(100, scores.trust + (i * (scores.environmentalScore > 5 ? 2 : -4))),
+      impact: Math.min(10, scores.environmentalScore + (i * 0.1))
     }));
   }, [scores]);
 
-  const toggleIngredient = (ing: Ingredient) => {
-    if (selectedIngredients.find(i => i.id === ing.id)) {
-      setSelectedIngredients(selectedIngredients.filter(i => i.id !== ing.id));
-    } else {
-      setSelectedIngredients([...selectedIngredients, ing]);
-    }
-  };
-
-  const handleGenerateCustomProduct = () => {
-    if (!creatorType || !creatorFunction) return;
-    
-    // Dynamic naming based on selections
-    const customName = `${creatorType} that ${creatorFunction}`;
-    const customBase = {
-      id: `custom-${Date.now()}`,
-      name: customName,
-      baseCost: 250 // Custom creator base is slightly more expensive due to R&D
-    };
-    
-    setSelectedProduct(customBase);
-    setIsCustomMode(false);
+  const handleUpdateConfig = (key: string, value: string) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -115,9 +157,6 @@ export default function SimulatorPage() {
             <p className="text-xl text-muted-foreground font-body leading-relaxed">
               Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
             </p>
-            <p className="text-lg text-muted-foreground/80 font-body">
-              Design your base product, choose your ingredients, and see if your ethical commitments can survive a year in the market.
-            </p>
             <div className="space-y-4 pt-8">
               <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Team Name</Label>
               <Input 
@@ -131,7 +170,7 @@ export default function SimulatorPage() {
                 onClick={() => setPhase('lab')}
                 className="w-full bg-primary rounded-full h-14 text-lg font-bold shadow-lg"
               >
-                Create Your Product <ChevronRight className="ml-2" />
+                Enter the Workshop <ChevronRight className="ml-2" />
               </Button>
             </div>
           </div>
@@ -139,207 +178,187 @@ export default function SimulatorPage() {
 
         {phase === 'lab' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Sidebar Stats */}
+            {/* Real-time Dashboard */}
             <div className="lg:col-span-1 space-y-6">
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-primary text-white sticky top-24 overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                   <Dna className="w-32 h-32" />
                 </div>
                 <CardHeader>
-                  <CardTitle className="font-headline text-2xl">Brand DNA</CardTitle>
-                  <p className="text-primary-foreground/70 text-sm">Real-time Impact Analysis</p>
+                  <CardTitle className="font-headline text-2xl">Market Readiness</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-8">
                   <div className="space-y-3">
                     <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
                       <span>Earth Score</span>
-                      <span>{Math.round(scores.earth)}/10</span>
+                      <span>{Math.round(scores.environmentalScore * 10)}/100</span>
                     </div>
-                    <Progress value={scores.earth * 10} className="h-2 bg-white/20" />
+                    <Progress value={scores.environmentalScore * 10} className="h-2 bg-white/20" />
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                      <span>Customer Trust</span>
-                      <span>{Math.round(scores.trust)}/100</span>
+                      <span>Brand Longevity</span>
+                      <span>{Math.round(scores.longevity * 10)}%</span>
                     </div>
-                    <Progress value={scores.trust} className="h-2 bg-white/20" />
+                    <Progress value={scores.longevity * 10} className="h-2 bg-white/20" />
                   </div>
-                  <div className="pt-4 border-t border-white/10">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50">Production Cost</p>
-                        <p className="text-3xl font-headline font-bold">₹{scores.cost}</p>
-                      </div>
-                      <Badge className={cn("border-none", scores.cost > 600 ? "bg-red-500/20" : "bg-white/20")}>
-                        {scores.cost > 600 ? "Over Budget" : "On Budget"}
-                      </Badge>
+                  <div className="pt-4 border-t border-white/10 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50">Est. Retail Price</span>
+                      <span className="text-2xl font-bold">₹{Math.round(scores.retailPrice)}</span>
                     </div>
+                    {scores.consistency < 1 && (
+                      <div className="bg-red-500/20 p-3 rounded-xl flex items-center gap-2 border border-red-500/30">
+                        <AlertCircle className="w-4 h-4 text-red-300" />
+                        <span className="text-[10px] font-bold uppercase text-red-100">Greenwashing Detected</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-              
-              <div className="p-6 bg-white rounded-3xl border border-border/50">
-                <h3 className="font-headline font-bold text-primary mb-4 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-accent" /> Expert Insight
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed italic">
-                  {scores.earth < 4 ? "Careful: Low Earth scores might boost early profits, but consumers will eventually turn away." : "Strong ethics! Your trust index is climbing, which is the key to longevity."}
-                </p>
-              </div>
             </div>
 
-            {/* Main Lab */}
-            <div className="lg:col-span-2 space-y-12">
-              <section>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-headline font-bold text-primary">1. Choose Your Product</h3>
-                  <Button 
-                    variant="ghost" 
-                    className="text-accent gap-2"
-                    onClick={() => setIsCustomMode(!isCustomMode)}
-                  >
-                    {isCustomMode ? "Back to Presets" : <><Plus className="w-4 h-4" /> Create Entirely New Product</>}
-                  </Button>
-                </div>
-
-                {isCustomMode ? (
-                  <Card className="rounded-3xl border-2 border-dashed border-accent/40 bg-accent/5 overflow-hidden">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Wand2 className="w-5 h-5 text-accent" /> Product Creator
-                      </CardTitle>
-                      <CardDescription>Use dropdowns to generate a unique base product.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase tracking-widest">Primary Type</Label>
-                          <Select value={creatorType} onValueChange={setCreatorType}>
-                            <SelectTrigger className="rounded-xl h-12 bg-white">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Homeware">Homeware</SelectItem>
-                              <SelectItem value="Body Product">Body Product</SelectItem>
-                              <SelectItem value="Fragrance Product">Fragrance Product</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase tracking-widest">Core Function</Label>
-                          <Select value={creatorFunction} onValueChange={setCreatorFunction}>
-                            <SelectTrigger className="rounded-xl h-12 bg-white">
-                              <SelectValue placeholder="Select function" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="burns">It burns</SelectItem>
-                              <SelectItem value="decorates">It decorates</SelectItem>
-                              <SelectItem value="cleanses">It cleanses</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={handleGenerateCustomProduct}
-                        disabled={!creatorType || !creatorFunction}
-                        className="w-full bg-accent hover:bg-accent/90 rounded-full h-12 font-bold"
-                      >
-                        Generate Base Product
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {PRODUCT_TYPES.map(p => (
-                      <button 
-                        key={p.id} 
-                        onClick={() => setSelectedProduct(p)}
-                        className={cn(
-                          "p-6 rounded-3xl border-2 transition-all text-center group",
-                          selectedProduct.id === p.id ? "border-primary bg-primary/5 shadow-lg" : "border-border hover:border-primary/30"
-                        )}
-                      >
-                        <span className={cn("block font-bold", selectedProduct.id === p.id ? "text-primary" : "text-muted-foreground")}>{p.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                {selectedProduct && (
-                  <div className="mt-4 flex items-center gap-2 px-4">
-                    <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Current Base:</span>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none">{selectedProduct.name}</Badge>
-                  </div>
-                )}
-              </section>
-
-              <section>
-                <h3 className="text-2xl font-headline font-bold text-primary mb-6">2. Build the Formula</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {INGREDIENTS.map(ing => (
-                    <button 
-                      key={ing.id} 
-                      onClick={() => toggleIngredient(ing)}
-                      className={cn(
-                        "flex items-center gap-4 p-4 rounded-3xl border-2 text-left transition-all",
-                        selectedIngredients.find(i => i.id === ing.id) ? "border-accent bg-accent/5 shadow-md" : "border-border hover:border-accent/30"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
-                        selectedIngredients.find(i => i.id === ing.id) ? "bg-accent text-white" : "bg-muted text-muted-foreground"
-                      )}>
-                        {ing.category === 'fragrance' ? <Leaf className="w-6 h-6" /> : ing.category === 'base' ? <TrendingUp className="w-6 h-6" /> : <ShieldCheck className="w-6 h-6" />}
-                      </div>
-                      <div className="flex-grow">
-                        <div className="flex justify-between">
-                          <h4 className="font-bold text-primary">{ing.name}</h4>
-                          <span className="text-xs font-bold text-accent">₹{ing.cost}</span>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{ing.description}</p>
-                        <div className="flex gap-4 mt-2">
-                          <div className="flex items-center gap-1 text-[9px] font-bold uppercase"><Sprout className="w-3 h-3" /> E: {ing.earthScore}</div>
-                          <div className="flex items-center gap-1 text-[9px] font-bold uppercase"><Heart className="w-3 h-3" /> A: {ing.appeal}</div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-              <section>
-                <h3 className="text-2xl font-headline font-bold text-primary mb-6">3. Market Positioning</h3>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Market Message</Label>
-                    <Input 
-                      placeholder="e.g., Purely Natural. Purely Maroma." 
-                      value={message} 
-                      onChange={e => setMessage(e.target.value)} 
-                      className="rounded-xl h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Retail Price Point (₹)</Label>
-                    <div className="flex items-center gap-4">
-                      <Input 
-                        type="number"
-                        value={price}
-                        onChange={e => setPrice(parseInt(e.target.value) || 0)}
-                        className="rounded-xl h-12 w-32"
-                      />
-                      <span className="text-sm text-muted-foreground">Average market price for student groups: ₹400-600</span>
+            {/* Step-by-Step Lab */}
+            <div className="lg:col-span-2 space-y-12 pb-20">
+              <div className="space-y-10">
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                    <Award className="w-6 h-6 text-accent" /> 1. Product & Format
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
+                      <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
+                      <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                  <Button 
-                    onClick={() => setPhase('market')}
-                    disabled={selectedIngredients.length === 0 || scores.cost === 0}
-                    className="w-full bg-accent hover:bg-accent/90 rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20"
-                  >
-                    Launch Simulation <ArrowRight className="ml-2" />
-                  </Button>
-                </div>
-              </section>
+                </section>
+
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-accent" /> 2. The Formula
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ingredient Base</Label>
+                      <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sourcing Model</Label>
+                      <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                    <Package className="w-6 h-6 text-accent" /> 3. Packaging & Production
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Packaging Type</Label>
+                      <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Production Method</Label>
+                      <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                    <Target className="w-6 h-6 text-accent" /> 4. Strategy
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Target Audience</Label>
+                      <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price Tier</Label>
+                      <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                    <Heart className="w-6 h-6 text-accent" /> 5. Brand Identity
+                  </h3>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Core Value Emphasis</Label>
+                      <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground italic px-1">{selectedValue.description}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Marketing Message</Label>
+                      <Input 
+                        placeholder="e.g., Purely Natural. Purely Maroma." 
+                        value={config.message} 
+                        onChange={e => handleUpdateConfig('message', e.target.value)} 
+                        className="rounded-xl h-12"
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <Button 
+                onClick={() => setPhase('market')}
+                className="w-full bg-accent hover:bg-accent/90 rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20"
+              >
+                Launch Simulation <ArrowRight className="ml-2" />
+              </Button>
             </div>
           </div>
         )}
@@ -347,19 +366,19 @@ export default function SimulatorPage() {
         {phase === 'market' && (
           <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000">
             <div className="text-center space-y-4">
-              <Badge className="bg-green-100 text-green-700 px-6 py-2 rounded-full font-bold">Market Active: Year 1</Badge>
-              <h2 className="text-5xl font-headline font-bold text-primary">Simulation Results</h2>
-              <p className="text-muted-foreground">Watch how your choices influenced the market over 12 months.</p>
+              <Badge className="bg-green-100 text-green-700 px-6 py-2 rounded-full font-bold">Launch Successful: Year 1 trajectory</Badge>
+              <h2 className="text-5xl font-headline font-bold text-primary">Simulation Analysis</h2>
+              <p className="text-muted-foreground">How your {config.format} performed in the real world.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Metric Cards */}
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Short-term Profit", val: Math.round(scores.shortTermSales * 10), icon: TrendingUp, color: "text-blue-600" },
-                  { label: "Final Trust Index", val: Math.round(chartData[11].trust), icon: ShieldCheck, color: "text-green-600" },
-                  { label: "Brand Longevity", val: Math.round(chartData[11].longevity), icon: History },
-                  { label: "Earth Impact", val: `${Math.round(scores.earth * 10)}%`, icon: Leaf, color: "text-emerald-600" }
+                  { label: "Year 1 Revenue", val: Math.round(chartData[11].profit), icon: IndianRupee },
+                  { label: "Public Trust Index", val: Math.round(chartData[11].trust), icon: ShieldCheck, color: "text-green-600" },
+                  { label: "Brand Longevity", val: Math.round(scores.longevity * 10), icon: History },
+                  { label: "Earth Score", val: Math.round(scores.environmentalScore * 10), icon: Leaf, color: "text-emerald-600" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-2xl border-none shadow-lg">
                     <CardContent className="p-6 flex items-center gap-4">
@@ -378,21 +397,21 @@ export default function SimulatorPage() {
               {/* Chart */}
               <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white p-8">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="font-headline">Trajectory Forecast</CardTitle>
+                  <CardTitle className="font-headline">Trajectory: Month 1-12</CardTitle>
                 </CardHeader>
                 <div className="h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottom', offset: -5 }} />
+                      <XAxis dataKey="month" label={{ value: 'Months Active', position: 'insideBottom', offset: -5 }} />
                       <YAxis />
                       <Tooltip 
                         contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                       />
                       <Legend verticalAlign="top" height={36}/>
-                      <Line type="monotone" dataKey="profit" stroke="#2563eb" strokeWidth={3} name="Profitability" dot={false} />
-                      <Line type="monotone" dataKey="trust" stroke="#16a34a" strokeWidth={3} name="Consumer Trust" dot={false} />
-                      <Line type="monotone" dataKey="longevity" stroke="#db2777" strokeWidth={3} name="Longevity Index" dot={false} />
+                      <Line type="monotone" dataKey="profit" stroke="#2563eb" strokeWidth={3} name="Revenue" dot={false} />
+                      <Line type="monotone" dataKey="trust" stroke="#16a34a" strokeWidth={3} name="Trust Index" dot={false} />
+                      <Line type="monotone" dataKey="impact" stroke="#db2777" strokeWidth={3} name="Earth Impact" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -403,13 +422,13 @@ export default function SimulatorPage() {
               <Card className="rounded-3xl border-none shadow-xl bg-muted/20">
                 <CardHeader>
                   <CardTitle className="font-headline flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" /> What Helped
+                    <CircleCheck className="w-5 h-5 text-green-600" /> What Helped
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.earth > 6 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Your high-integrity ingredients built deep consumer trust.</div>}
-                  {scores.appeal > 7 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">The product's high appeal ensured a strong market entry.</div>}
-                  {price < 500 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Accessible pricing encouraged widespread early adoption.</div>}
+                  {scores.consistency >= 1 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Your brand integrity is perfect. Customers see your actions match your values.</div>}
+                  {scores.environmentalScore > 7 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">High Earth Score is attracting the growing eco-conscious segment.</div>}
+                  {selectedProduction.id === 'spw' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Solar-powered production is a massive trust-builder for your {selectedAudience.name} audience.</div>}
                 </CardContent>
               </Card>
 
@@ -420,16 +439,16 @@ export default function SimulatorPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.earth < 4 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Environmental neglect is causing a massive trust deficit.</div>}
-                  {price > 600 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">High price point limited your total market share.</div>}
-                  {selectedIngredients.some(i => i.id === 'plastic') && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Plastic packaging is being flagged by eco-conscious buyers.</div>}
+                  {scores.consistency < 1 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
+                  {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
+                  {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Your pricing is way too high for your target audience (Students).</div>}
                 </CardContent>
               </Card>
             </div>
 
             <div className="flex justify-center gap-4 pt-8">
               <Button variant="outline" onClick={() => setPhase('lab')} className="rounded-full px-12 h-14">Iterate Product</Button>
-              <Button onClick={() => window.location.reload()} className="bg-primary rounded-full px-12 h-14 font-bold shadow-xl">New Session</Button>
+              <Button onClick={() => window.location.reload()} className="bg-primary rounded-full px-12 h-14 font-bold shadow-xl">Start New Team Session</Button>
             </div>
           </div>
         )}
@@ -439,7 +458,3 @@ export default function SimulatorPage() {
     </div>
   );
 }
-
-const History = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-);
