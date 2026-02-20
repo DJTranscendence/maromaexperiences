@@ -230,10 +230,6 @@ export default function SimulatorPage() {
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         {phase === 'intro' && (
           <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto">
-              <Sprout className="w-10 h-10 text-primary" />
-            </div>
-            
             <div className="space-y-4">
               <div className="relative h-40 w-full max-w-2xl mx-auto">
                 <Image 
