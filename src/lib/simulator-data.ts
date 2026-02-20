@@ -120,4 +120,6 @@ export const CORE_VALUES: CoreValue[] = [
   { id: 'lcf', name: 'Low carbon footprint', description: 'Minimizing energy impact in every step.' },
   { id: 'ce', name: 'Community empowerment', description: 'Supporting local artisan development.' },
   { id: 'ml', name: 'Mindful living', description: 'Designing for stillness and presence.' },
+  { id: 'euc', name: 'Enviromentally-Unfriendly but Cheap', description: 'Prioritizing low price over environmental concerns.' },
+  { id: 'len', name: 'Looks Environmental but is not', description: 'Marketing a sustainable image while ignoring real impact.' },
 ];

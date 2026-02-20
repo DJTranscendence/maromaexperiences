@@ -95,6 +95,7 @@ export default function SimulatorPage() {
 
     // 4. Ethical Consistency Check
     let consistency = 1.0;
+    
     // Greenwashing Penalty: Zero waste / Low carbon value with plastic packaging
     if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') {
       consistency -= 0.5;
@@ -102,6 +103,10 @@ export default function SimulatorPage() {
     // Fair Trade value with industrial supplier
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') {
       consistency -= 0.5;
+    }
+    // "Looks Environmental but is not" is a deliberate consistency failure
+    if (config.coreValue === 'len') {
+      consistency -= 0.7;
     }
 
     // 5. Short-Term Sales
@@ -155,7 +160,7 @@ export default function SimulatorPage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Ethical Market Simulator</h1>
             <p className="text-xl text-muted-foreground font-body leading-relaxed">
-              Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
+              Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator to see how it performs against other teams' products.
             </p>
             <div className="space-y-4 pt-8">
               <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Team Name</Label>
