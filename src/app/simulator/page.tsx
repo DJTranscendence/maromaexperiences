@@ -207,7 +207,8 @@ export default function SimulatorPage() {
       longevity, 
       productionCost, 
       retailPrice,
-      consistency 
+      consistency,
+      socialImpact: selectedSourcing.humanScore
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier, selectedValue]);
 
@@ -579,21 +580,50 @@ export default function SimulatorPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="font-headline text-3xl">Final Market Scorecard</CardTitle>
                 </CardHeader>
-                <CardContent className="p-8 space-y-10">
-                  <div className="space-y-4">
+                <CardContent className="p-8 space-y-8">
+                  {/* Earth Score */}
+                  <div className="space-y-2">
                     <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/70">Earth Score</span>
-                      <span className="text-3xl font-bold font-headline">{Math.round(scores.environmentalScore * 10)}/100</span>
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Environmental Friendliness</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.environmentalScore * 10)}/100</span>
                     </div>
-                    <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/10" />
+                    <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
+                  </div>
+
+                  {/* Public Trust */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Public Trust Index</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.trust)}%</span>
+                    </div>
+                    <Progress value={scores.trust} className="h-3 bg-white/10 [&>div]:bg-blue-500" />
+                  </div>
+
+                  {/* Market Resonance */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">Market Resonance</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.shortTermSales * 10)}%</span>
+                    </div>
+                    <Progress value={scores.shortTermSales * 10} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
+                  </div>
+
+                  {/* Social Impact */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Human & Social Impact</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.socialImpact * 10)}/100</span>
+                    </div>
+                    <Progress value={scores.socialImpact * 10} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
                   </div>
                   
-                  <div className="space-y-4">
+                  {/* Brand Longevity */}
+                  <div className="space-y-2">
                     <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/70">Brand Longevity</span>
-                      <span className="text-3xl font-bold font-headline">{Math.round(scores.longevity * 10)}%</span>
+                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400">Brand Longevity</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.longevity * 10)}%</span>
                     </div>
-                    <Progress value={scores.longevity * 10} className="h-3 bg-white/10" />
+                    <Progress value={scores.longevity * 10} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
                   </div>
 
                   <div className="pt-8 border-t border-white/10 flex justify-between items-center">
@@ -620,7 +650,7 @@ export default function SimulatorPage() {
                   { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit)}`, icon: IndianRupee },
                   { label: "Public Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Market Resonance", val: Math.round(scores.shortTermSales * 10), icon: Zap, color: "text-amber-400" },
-                  { label: "Human Impact", val: Math.round(selectedSourcing.humanScore * 10), icon: Users, color: "text-blue-400" }
+                  { label: "Human Impact", val: Math.round(scores.socialImpact * 10), icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-2xl border-none shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm">
                     <CardContent className="p-6 flex items-center gap-4">
