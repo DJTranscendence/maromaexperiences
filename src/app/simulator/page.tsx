@@ -261,7 +261,7 @@ export default function SimulatorPage() {
                 onClick={() => setPhase('lab')}
                 className="w-full bg-primary hover:bg-primary/90 rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95"
               >
-                Enter the Workshop <ChevronRight className="ml-2" />
+                Join the Game <ChevronRight className="ml-2" />
               </Button>
             </div>
           </div>
