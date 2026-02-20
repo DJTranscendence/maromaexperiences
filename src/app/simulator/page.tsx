@@ -213,7 +213,9 @@ export default function SimulatorPage() {
 
             <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-xl border border-border/50">
               <div className="space-y-4">
-                <Label className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">Team Name</Label>
+                <Label className="text-sm font-bold text-muted-foreground tracking-wide">
+                  1. Choose Your Team Name (it can be different to your logo name)
+                </Label>
                 <Input 
                   placeholder="The Eco-Warriors" 
                   value={teamName} 
@@ -223,7 +225,9 @@ export default function SimulatorPage() {
               </div>
 
               <div className="space-y-6">
-                <Label className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">Choose Your Emblem</Label>
+                <Label className="text-sm font-bold text-muted-foreground tracking-wide">
+                  2. Choose Your Logo Emblem
+                </Label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                   {TEAM_EMBLEMS.map((emblem) => (
                     <button
@@ -285,7 +289,7 @@ export default function SimulatorPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -294,7 +298,7 @@ export default function SimulatorPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
