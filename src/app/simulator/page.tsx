@@ -55,19 +55,22 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
+import { useFirestore, addDocumentNonBlocking } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
 
 const MAROMA_LOGO = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 const TEAM_EMBLEMS = [
+  { id: 'logo-1', name: 'Brand 01', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e', hint: 'brand logo' },
   { id: 'elephant', name: 'Elephant', url: 'https://picsum.photos/seed/maroma-elephant/200/200', hint: 'strength wisdom' },
   { id: 'tiger', name: 'Tiger', url: 'https://picsum.photos/seed/maroma-tiger/200/200', hint: 'power spirit' },
   { id: 'deer', name: 'Deer', url: 'https://picsum.photos/seed/maroma-deer/200/200', hint: 'grace nature' },
   { id: 'owl', name: 'Owl', url: 'https://picsum.photos/seed/maroma-owl/200/200', hint: 'vision wisdom' },
   { id: 'bee', name: 'Bee', url: 'https://picsum.photos/seed/maroma-bee/200/200', hint: 'community craft' },
-  { id: 'leaf', name: 'Leaf', url: 'https://picsum.photos/seed/maroma-leaf/200/200', hint: 'growth earth' },
 ];
 
 export default function SimulatorPage() {
+  const firestore = useFirestore();
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
@@ -160,6 +163,24 @@ export default function SimulatorPage() {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
+  const launchSimulation = () => {
+    if (firestore) {
+      addDocumentNonBlocking(collection(firestore, "simulator_sessions"), {
+        teamName,
+        productType: config.format,
+        ingredients: [selectedBase.name, selectedSourcing.name],
+        scores: {
+          earth: Math.round(scores.environmentalScore * 10),
+          trust: Math.round(scores.trust),
+          profit: Math.round(chartData[11].profit),
+          longevity: Math.round(scores.longevity * 10)
+        },
+        createdAt: serverTimestamp()
+      });
+    }
+    setPhase('market');
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -197,7 +218,7 @@ export default function SimulatorPage() {
                       key={emblem.id}
                       onClick={() => setSelectedEmblem(emblem.url)}
                       className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group",
+                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-muted/20",
                         selectedEmblem === emblem.url ? "border-primary scale-105 shadow-lg" : "border-transparent hover:border-muted-foreground/30"
                       )}
                     >
@@ -205,12 +226,13 @@ export default function SimulatorPage() {
                         src={emblem.url} 
                         alt={emblem.name} 
                         fill 
-                        className="object-cover"
+                        className="object-contain p-2"
                         data-ai-hint={emblem.hint}
+                        unoptimized
                       />
                       {selectedEmblem === emblem.url && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                          <CheckCircle2 className="text-white w-6 h-6 drop-shadow-md" />
+                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                          <CheckCircle2 className="text-primary w-6 h-6 drop-shadow-md" />
                         </div>
                       )}
                     </button>
@@ -230,47 +252,21 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'lab' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-1 space-y-8 sticky top-24 h-fit">
-              <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8">
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-primary/10 shadow-lg">
-                      <Image 
-                        src={selectedEmblem}
-                        alt="Team Emblem"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Active Team</span>
-                      <h2 className="text-3xl font-headline font-bold text-primary leading-tight">
-                        {teamName}
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="pt-6 border-t border-border flex justify-center">
-                    <div className="relative w-32 h-12">
-                      <Image 
-                        src={MAROMA_LOGO}
-                        alt="Maroma Logo"
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Card>
-              
-              <div className="text-center px-4">
-                <h3 className="text-3xl font-headline font-bold text-accent tracking-tight">Empower Your Vision.</h3>
-                <h4 className="text-xl font-headline font-bold text-primary/70">Create Your Product</h4>
+          <div className="animate-in fade-in duration-1000">
+            <div className="col-span-full mb-16 text-center space-y-4">
+              <div className="relative w-32 h-32 mx-auto mb-6">
+                <Image src={selectedEmblem} alt="Team Logo" fill className="object-contain" unoptimized />
               </div>
+              <h1 className="text-5xl md:text-7xl font-headline font-bold text-primary tracking-tight">
+                Welcome, {teamName}
+              </h1>
+              <p className="text-2xl md:text-3xl font-headline font-bold text-accent italic uppercase tracking-widest">
+                Empower Your Vision. Create Your Product.
+              </p>
             </div>
 
-            <div className="lg:col-span-2 space-y-12 pb-20">
-              <div className="space-y-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="space-y-12 pb-20">
                 <section className="space-y-6">
                   <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
                     <Award className="w-6 h-6 text-accent" /> 1. Choose Your Product
@@ -279,9 +275,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
@@ -290,9 +284,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                         </SelectContent>
@@ -309,9 +301,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
                         </SelectContent>
@@ -320,9 +310,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Where do we get our ingredients?</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
@@ -339,9 +327,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -350,9 +336,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -360,7 +344,9 @@ export default function SimulatorPage() {
                     </div>
                   </div>
                 </section>
+              </div>
 
+              <div className="space-y-12 pb-20">
                 <section className="space-y-6">
                   <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
                     <Target className="w-6 h-6 text-accent" /> 4. Strategy
@@ -369,9 +355,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Target Audience</Label>
                       <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                         </SelectContent>
@@ -380,9 +364,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price Tier</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -399,9 +381,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Core Value Emphasis</Label>
                       <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
                         </SelectContent>
@@ -419,14 +399,14 @@ export default function SimulatorPage() {
                     </div>
                   </div>
                 </section>
-              </div>
 
-              <Button 
-                onClick={() => setPhase('market')}
-                className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
-              >
-                Launch Simulation <ArrowRight className="ml-2" />
-              </Button>
+                <Button 
+                  onClick={launchSimulation}
+                  className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
+                >
+                  Launch Simulation <ArrowRight className="ml-2" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
