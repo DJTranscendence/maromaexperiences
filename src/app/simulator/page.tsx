@@ -128,7 +128,22 @@ export default function SimulatorPage() {
         if (lastEventId !== null && latest.type === 'join') {
           toast({
             title: "Player Joined",
-            description: `${latest.teamName} joined the game`,
+            description: (
+              <div className="flex items-center gap-3 mt-1">
+                {latest.emblem && (
+                  <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-white/10 shrink-0 border border-border/20">
+                    <Image 
+                      src={latest.emblem} 
+                      alt={latest.teamName} 
+                      fill 
+                      className="object-contain p-1" 
+                      unoptimized 
+                    />
+                  </div>
+                )}
+                <span className="font-medium">{latest.teamName} joined the game</span>
+              </div>
+            ),
           });
         }
         setLastEventId(latest.id);
