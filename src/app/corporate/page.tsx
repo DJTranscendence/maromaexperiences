@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { 
   Dialog, 
   DialogContent, 
@@ -37,13 +39,16 @@ import {
   ChevronRight,
   ChevronDown,
   Info,
-  ExternalLink
+  ExternalLink,
+  Phone,
+  User,
+  Mail
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo } from "react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking, useDoc } from "@/firebase";
+import { collection, query, where, serverTimestamp, doc } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -119,6 +124,7 @@ const PACKAGES = [
 
 export default function CorporatePage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
@@ -126,6 +132,33 @@ export default function CorporatePage() {
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [selectedCatering, setSelectedCatering] = useState<string>('cat1');
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [contactForm, setContactForm] = useState({
+    companyName: "",
+    contactName: "",
+    email: "",
+    phone: ""
+  });
+
+  const isInitialized = useRef(false);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user]);
+  const { data: userData } = useDoc(userDocRef);
+
+  useEffect(() => {
+    if (userData && !isInitialized.current) {
+      setContactForm({
+        companyName: userData.companyName || "",
+        contactName: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
+        email: userData.email || "",
+        phone: userData.phoneNumber || ""
+      });
+      isInitialized.current = true;
+    }
+  }, [userData]);
 
   // Fetch real media from Firestore
   const mediaQuery = useMemoFirebase(() => {
@@ -140,7 +173,6 @@ export default function CorporatePage() {
   }, [firestore]);
   const { data: availableTours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
 
-  // Hero image is explicitly set as per request
   const heroImage = CORPORATE_HERO_URL;
 
   const packageImages = useMemo(() => {
@@ -169,16 +201,48 @@ export default function CorporatePage() {
     setSelectedAddons(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
   };
 
-  const handleRequestProposal = () => {
-    toast({
-      title: "Proposal Requested!",
-      description: "Our team will build your custom itinerary and send a quote within 12 hours.",
-    });
-    setIsBuilderOpen(false);
-    setItinerary([]);
-    setSelectedAddons([]);
-    setSelectedCatering('cat1');
-    setSelectedHotel(null);
+  const handleRequestProposal = async () => {
+    if (!firestore || !user) {
+      toast({ variant: "destructive", title: "Authentication Required", description: "Please sign in to request a proposal." });
+      return;
+    }
+
+    if (!contactForm.companyName || !contactForm.email || !contactForm.contactName) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Please complete the contact form in the sidebar." });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      addDocumentNonBlocking(collection(firestore, "proposals"), {
+        userId: user.uid,
+        ...contactForm,
+        packageName: selectedPkg?.name || "Custom Itinerary",
+        itinerary: itinerary.map(item => ({ id: item.id, name: item.name, type: item.type })),
+        catering: CATERING_OPTIONS.find(c => c.id === selectedCatering)?.name || "Standard",
+        addons: selectedAddons,
+        hotel: HOTEL_PACKAGES.find(h => h.id === selectedHotel)?.name || "Not selected",
+        status: "pending",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      toast({
+        title: "Proposal Requested!",
+        description: "Our admin team is reviewing your itinerary. We'll contact you with the final proposal shortly.",
+      });
+
+      setIsBuilderOpen(false);
+      setItinerary([]);
+      setSelectedAddons([]);
+      setSelectedCatering('cat1');
+      setSelectedHotel(null);
+    } catch (err) {
+      toast({ variant: "destructive", title: "Submission Failed", description: "Could not send proposal request." });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -497,20 +561,20 @@ export default function CorporatePage() {
                 </div>
 
                 {/* Summary Sidebar */}
-                <aside className="w-full lg:w-96 bg-muted/20 border-t lg:border-t-0 lg:border-l p-6 lg:p-8 flex flex-col shrink-0 min-h-0 order-2 lg:order-2">
+                <aside className="w-full lg:w-96 bg-muted/20 border-t lg:border-t-0 lg:border-l p-6 lg:p-8 flex flex-col shrink-0 min-h-0 order-2 lg:order-2 overflow-y-auto">
                   <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 shrink-0">Your Itinerary</h3>
                   
-                  <ScrollArea className="flex-grow max-h-48 lg:max-h-none pr-2 lg:pr-4 mb-4 lg:mb-6">
-                    <div className="space-y-4 lg:space-y-6 pb-4">
-                      {itinerary.length === 0 && !selectedCatering && (
-                        <div className="text-center py-8 lg:py-12 px-4 border border-dashed rounded-2xl">
-                          <Calendar className="w-6 lg:w-8 h-6 lg:h-8 text-muted-foreground/30 mx-auto mb-3" />
-                          <p className="text-[10px] lg:text-xs text-muted-foreground">Add workshops or treatments to begin planning.</p>
-                        </div>
-                      )}
-                      
+                  <div className="flex-grow space-y-6 mb-8">
+                    {itinerary.length === 0 && !selectedCatering && (
+                      <div className="text-center py-8 lg:py-12 px-4 border border-dashed rounded-2xl">
+                        <Calendar className="w-6 lg:w-8 h-6 lg:h-8 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-[10px] lg:text-xs text-muted-foreground">Add workshops or treatments to begin planning.</p>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-3">
                       {itinerary.map(item => (
-                        <div key={item.id} className="flex items-start gap-3 p-2 lg:p-3 bg-white rounded-xl shadow-sm border border-border animate-in fade-in slide-in-from-right-4">
+                        <div key={item.id} className="flex items-start gap-3 p-2 lg:p-3 bg-white rounded-xl shadow-sm border border-border">
                           <div className="relative w-10 lg:w-12 h-10 lg:h-12 rounded-lg overflow-hidden shrink-0">
                             <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                           </div>
@@ -524,49 +588,64 @@ export default function CorporatePage() {
                           </button>
                         </div>
                       ))}
-
-                      {selectedCatering && (
-                        <div className="pt-2 lg:pt-4">
-                          <Label className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Catering</Label>
-                          <div className="text-[10px] lg:text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
-                            <Utensils className="w-3 h-3 text-accent" /> {CATERING_OPTIONS.find(c => c.id === selectedCatering)?.name}
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedAddons.length > 0 && (
-                        <div className="pt-2 lg:pt-4 space-y-2">
-                          <Label className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Services & Add-ons</Label>
-                          {selectedAddons.map(id => {
-                            return (
-                              <div key={id} className="flex items-center gap-2 text-[10px] lg:text-xs font-medium text-primary/80">
-                                <CheckCircle2 className="w-3 h-3 text-accent" /> Service Included
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {selectedHotel && (
-                        <div className="pt-2 lg:pt-4">
-                          <Label className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stay</Label>
-                          <div className="text-[10px] lg:text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
-                            <Hotel className="w-3 h-3 text-accent" /> {HOTEL_PACKAGES.find(h => h.id === selectedHotel)?.name}
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  </ScrollArea>
 
-                  <div className="pt-4 lg:pt-8 border-t mt-auto space-y-4 shrink-0">
+                    <div className="space-y-4 pt-4 border-t border-primary/10">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company Details</Label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input 
+                            placeholder="Company Name" 
+                            className="pl-9 h-10 text-xs rounded-xl"
+                            value={contactForm.companyName}
+                            onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
+                          />
+                        </div>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input 
+                            placeholder="Contact Person" 
+                            className="pl-9 h-10 text-xs rounded-xl"
+                            value={contactForm.contactName}
+                            onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
+                          />
+                        </div>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input 
+                            placeholder="Email Address" 
+                            className="pl-9 h-10 text-xs rounded-xl"
+                            value={contactForm.email}
+                            onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                          />
+                        </div>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input 
+                            placeholder="Phone Number" 
+                            className="pl-9 h-10 text-xs rounded-xl"
+                            value={contactForm.phone}
+                            onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 lg:pt-8 border-t mt-auto space-y-4 shrink-0 bg-muted/5 p-4 rounded-2xl">
                     <div className="flex items-center justify-between">
                       <span className="text-xs lg:text-sm font-medium text-muted-foreground">Est. Base Total</span>
-                      <span className="text-lg lg:text-xl font-bold text-primary font-headline">Custom Quote</span>
+                      <span className="text-lg lg:text-xl font-bold text-primary font-headline">Pending Review</span>
                     </div>
-                    <Button onClick={handleRequestProposal} disabled={itinerary.length === 0} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-12 lg:h-14 font-bold text-base lg:text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3">
-                      Request Detailed Proposal
+                    <Button 
+                      onClick={handleRequestProposal} 
+                      disabled={itinerary.length === 0 || isSubmitting} 
+                      className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-12 lg:h-14 font-bold text-base lg:text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
+                    >
+                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Detailed Proposal"}
                     </Button>
-                    <p className="text-[9px] lg:text-[10px] text-center text-muted-foreground uppercase tracking-widest">Formal PDF sent within 12h</p>
+                    <p className="text-[9px] lg:text-[10px] text-center text-muted-foreground uppercase tracking-widest">Formal Admin Approval Required</p>
                   </div>
                 </aside>
               </div>

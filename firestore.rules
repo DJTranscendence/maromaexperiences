@@ -34,6 +34,13 @@ service cloud.firestore {
       allow delete: if false; 
     }
 
+    match /proposals/{proposalId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn(); // Filtered client-side, but rules must allow list
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
     match /roles_admin/{userId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isSignedIn(); // Relaxed for prototype

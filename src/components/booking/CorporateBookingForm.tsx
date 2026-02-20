@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tour } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, useUser, addDocumentNonBlocking } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
 import { 
   Building2, 
   UtensilsCrossed, 
@@ -16,7 +19,8 @@ import {
   Hotel, 
   ChevronDown,
   Info,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -46,8 +50,18 @@ const LOCAL_HOTELS = [
 
 export default function CorporateBookingForm({ tour }: CorporateBookingFormProps) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [formData, setFormData] = useState({
+    companyName: "",
+    contactName: "",
+    email: "",
+    phone: "",
+    participants: "10",
+    packageTier: "standard"
+  });
 
   const toggleAddon = (id: string) => {
     setSelectedAddons(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
@@ -55,13 +69,37 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firestore || !user) {
+      toast({ variant: "destructive", title: "Auth Required", description: "Sign in to request a proposal." });
+      return;
+    }
+
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
-    toast({
-      title: "Proposal Requested",
-      description: "A customized PDF proposal has been sent to your email.",
-    });
+    
+    try {
+      addDocumentNonBlocking(collection(firestore, "proposals"), {
+        userId: user.uid,
+        ...formData,
+        tourId: tour.id,
+        packageName: tour.name,
+        itinerary: [{ id: tour.id, name: tour.name, type: 'Experience' }],
+        catering: selectedAddons.includes('catering') ? "Gourmet Catering" : "Standard",
+        addons: selectedAddons,
+        hotel: selectedAddons.includes('accommodation') ? "To be confirmed" : "Not selected",
+        status: "pending",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      toast({
+        title: "Proposal Requested",
+        description: "Your request has been sent to our admin team for review and approval.",
+      });
+    } catch (err) {
+      toast({ variant: "destructive", title: "Error", description: "Could not submit proposal request." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,28 +107,50 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="companyName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company Name</Label>
-          <Input id="companyName" placeholder="Acme Corp" required className="rounded-xl h-12" />
+          <Input 
+            id="companyName" 
+            placeholder="Acme Corp" 
+            required 
+            className="rounded-xl h-12"
+            value={formData.companyName}
+            onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="bookingPerson" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Booking Manager</Label>
-          <Input id="bookingPerson" placeholder="Jane Doe" required className="rounded-xl h-12" />
+          <Label htmlFor="contactName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Booking Manager</Label>
+          <Input 
+            id="contactName" 
+            placeholder="Jane Doe" 
+            required 
+            className="rounded-xl h-12" 
+            value={formData.contactName}
+            onChange={(e) => setFormData({...formData, contactName: e.target.value})}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="groupSize" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Participants</Label>
-          <Input id="groupSize" type="number" min="5" placeholder="Min 5 Person(s)" required className="rounded-xl h-12" />
+          <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            placeholder="jane@company.com" 
+            required 
+            className="rounded-xl h-12" 
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="packageType" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Package Tier</Label>
-          <Select defaultValue="standard">
-            <SelectTrigger className="rounded-xl h-12">
-              <SelectValue placeholder="Select Tier" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="basic">Essential</SelectItem>
-              <SelectItem value="standard">Premium Connection</SelectItem>
-              <SelectItem value="luxury">Executive Retreat</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="participants" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Participants</Label>
+          <Input 
+            id="participants" 
+            type="number" 
+            min="5" 
+            placeholder="Min 5 Person(s)" 
+            required 
+            className="rounded-xl h-12" 
+            value={formData.participants}
+            onChange={(e) => setFormData({...formData, participants: e.target.value})}
+          />
         </div>
       </div>
 
@@ -113,6 +173,7 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
                 <Checkbox 
                   checked={selectedAddons.includes(addon.id)} 
                   className="w-6 h-6 rounded-full border-muted-foreground data-[state=checked]:bg-accent data-[state=checked]:border-accent transition-colors"
+                  onCheckedChange={() => toggleAddon(addon.id)}
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -126,76 +187,6 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
                   <span className="text-lg font-headline font-bold text-primary leading-tight">{addon.label}</span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-sm text-muted-foreground font-medium">₹{addon.price}{addon.id !== "photo" ? "/pp" : ""}</span>
-                    
-                    {addon.id === 'catering' && (
-                      <>
-                        <span className="text-muted-foreground/30">•</span>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-accent font-bold text-[10px] uppercase tracking-widest hover:text-accent/80 transition-colors gap-1">
-                              View Menu <ChevronDown className="w-2.5 h-2.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="rounded-2xl w-64 shadow-2xl border-none p-2" align="start">
-                            <DropdownMenuLabel className="font-headline text-sm flex items-center gap-2">
-                              <UtensilsCrossed className="w-4 h-4 text-accent" /> Catering Options
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuCheckboxItem className="rounded-xl py-2 cursor-pointer" checked>
-                              Standard Continental (included)
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="rounded-xl py-2 cursor-pointer">
-                              Vegetarian Fusion (+₹10/pp)
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="rounded-xl py-2 cursor-pointer">
-                              Organic Farm-to-Table (+₹25/pp)
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuSeparator />
-                            <div className="p-3 bg-muted/20 rounded-xl text-[10px] text-muted-foreground leading-relaxed flex items-start gap-2">
-                              <Info className="w-3.5 h-3.5 shrink-0 text-accent" />
-                              Selecting a menu will update your formal proposal details.
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </>
-                    )}
-
-                    {addon.id === 'accommodation' && (
-                      <>
-                        <span className="text-muted-foreground/30">•</span>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-accent font-bold text-[10px] uppercase tracking-widest hover:text-accent/80 transition-colors gap-1">
-                              View Hotels <ChevronDown className="w-2.5 h-2.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="rounded-2xl w-64 shadow-2xl border-none p-2" align="start">
-                            <DropdownMenuLabel className="font-headline text-sm flex items-center gap-2">
-                              <Hotel className="w-4 h-4 text-accent" /> Local Hotels
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {LOCAL_HOTELS.map((hotel) => (
-                              <a 
-                                key={hotel.name}
-                                href={hotel.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-between rounded-xl py-2 px-3 text-sm hover:bg-accent/5 transition-colors group/link"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span className="truncate">{hotel.name}</span>
-                                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover/link:text-accent transition-colors" />
-                              </a>
-                            ))}
-                            <DropdownMenuSeparator />
-                            <div className="p-3 bg-muted/20 rounded-xl text-[10px] text-muted-foreground leading-relaxed flex items-start gap-2">
-                              <Info className="w-3.5 h-3.5 shrink-0 text-accent" />
-                              We can coordinate direct group booking rates for these locations.
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -208,8 +199,8 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
         <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3" disabled={loading}>
           {loading ? (
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Generating Proposal...
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Processing...
             </div>
           ) : (
             <>
@@ -218,7 +209,7 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
           )}
         </Button>
         <p className="text-center text-[10px] text-muted-foreground mt-4 uppercase tracking-[0.2em] font-medium">
-          No credit card required for proposals
+          Subject to Admin Approval
         </p>
       </div>
     </form>

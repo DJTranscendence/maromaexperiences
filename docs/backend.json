@@ -53,6 +53,30 @@
         "createdAt"
       ]
     },
+    "CorporateProposal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CorporateProposal",
+      "type": "object",
+      "description": "Represents a custom itinerary request from a corporate client, awaiting admin review and approval.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "packageName": { "type": "string" },
+        "itinerary": { "type": "array", "items": { "type": "object" } },
+        "catering": { "type": "string" },
+        "addons": { "type": "array", "items": { "type": "string" } },
+        "hotel": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "approved", "sent"] },
+        "adminNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "companyName", "email", "status", "createdAt"]
+    },
     "TourCategory": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "TourCategory",
@@ -518,6 +542,22 @@
             {
               "name": "userId",
               "description": "The unique identifier of the user, matching `request.auth.uid`."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/proposals/{proposalId}",
+        "definition": {
+          "entityName": "CorporateProposal",
+          "schema": {
+            "$ref": "#/backend/entities/CorporateProposal"
+          },
+          "description": "Stores custom corporate itinerary requests for admin review.",
+          "params": [
+            {
+              "name": "proposalId",
+              "description": "The unique identifier for the proposal."
             }
           ]
         }
