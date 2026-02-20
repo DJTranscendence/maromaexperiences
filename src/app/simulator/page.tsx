@@ -30,7 +30,11 @@ import {
   Activity,
   Globe,
   Megaphone,
-  ShieldCheck
+  ShieldCheck,
+  Loader2,
+  MessageSquareQuote,
+  TrendingUp,
+  BrainCircuit
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -58,6 +62,7 @@ import {
 import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
 
 const TEAM_EMBLEMS = [
   { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
@@ -90,6 +95,10 @@ export default function SimulatorPage() {
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   
+  // AI Feedback State
+  const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
   // Real-time listener for events
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -262,7 +271,10 @@ export default function SimulatorPage() {
     broadcastStatus('lab');
   };
 
-  const launchSimulation = () => {
+  const launchSimulation = async () => {
+    setPhase('market');
+    setIsAiLoading(true);
+    
     if (firestore) {
       addDocumentNonBlocking(collection(firestore, "simulator_sessions"), {
         teamName,
@@ -278,7 +290,25 @@ export default function SimulatorPage() {
       });
       broadcastStatus('market');
     }
-    setPhase('market');
+
+    try {
+      const feedback = await generateMarketFeedback({
+        teamName,
+        productName: config.format,
+        ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
+        earthScore: Math.round(scores.environmentalScore * 10),
+        trustScore: Math.round(scores.trust),
+        pricePoint: Math.round(scores.retailPrice),
+        message: config.message,
+        targetAudience: selectedAudience.name,
+        coreValue: selectedValue.name
+      });
+      setAiFeedback(feedback);
+    } catch (err) {
+      console.error("AI Analysis failed:", err);
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   const getStatusLabel = (status: string) => {
@@ -569,10 +599,10 @@ export default function SimulatorPage() {
               <p className="text-slate-300">Market results for {teamName}'s {config.format}.</p>
             </div>
 
-            <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/5 backdrop-blur-sm text-white overflow-hidden relative border border-white/10">
                 <div className="absolute top-0 right-0 p-8 opacity-10"><Dna className="w-32 h-32" /></div>
-                <CardHeader className="pb-2"><CardTitle className="font-headline text-3xl">Final Market Scorecard</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="font-headline text-3xl">Performance Scorecard</CardTitle></CardHeader>
                 <CardContent className="p-8 space-y-8">
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
@@ -613,13 +643,68 @@ export default function SimulatorPage() {
                     <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Overall Brand Score</span>
                     <span className="text-5xl font-bold font-headline text-accent">{overallScore}/100</span>
                   </div>
-                  {scores.consistency < 1 && (
-                    <div className="bg-red-500/20 p-4 rounded-2xl flex items-center gap-3 border border-red-500/30">
-                      <AlertCircle className="w-6 h-6 text-red-300" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold uppercase text-red-100 tracking-widest">Consistency Warning</span>
-                        <span className="text-xs text-red-100/70">Market feedback suggests your packaging or sourcing contradicts your brand message.</span>
+                </CardContent>
+              </Card>
+
+              {/* AI ANALYST FEEDBACK CARD */}
+              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-slate-900/60 backdrop-blur-xl text-white overflow-hidden border border-white/10 flex flex-col">
+                <CardHeader className="bg-white/5 border-b border-white/5 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-accent/20 rounded-xl">
+                        <BrainCircuit className="w-6 h-6 text-accent" />
                       </div>
+                      <CardTitle className="font-headline text-2xl tracking-wide uppercase">Market Analyst Report</CardTitle>
+                    </div>
+                    {isAiLoading ? (
+                      <Badge variant="outline" className="animate-pulse text-slate-400 border-white/20">Analyzing Trends...</Badge>
+                    ) : aiFeedback && (
+                      <Badge className={cn(
+                        "uppercase tracking-widest font-bold",
+                        aiFeedback.analystTone === 'enthusiastic' ? "bg-emerald-500" : 
+                        aiFeedback.analystTone === 'cynical' ? "bg-rose-500" : "bg-amber-500"
+                      )}>
+                        {aiFeedback.analystTone}
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8 flex-grow space-y-8">
+                  {isAiLoading ? (
+                    <div className="flex flex-col items-center justify-center py-20 gap-4">
+                      <Loader2 className="w-12 h-12 animate-spin text-accent" />
+                      <p className="text-slate-400 font-medium animate-pulse uppercase tracking-[0.2em] text-xs">Simulating Market Variables</p>
+                    </div>
+                  ) : aiFeedback ? (
+                    <div className="space-y-8 animate-in fade-in duration-1000">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Summary Analysis</Label>
+                        <p className="text-lg text-slate-200 leading-relaxed font-body italic">
+                          "{aiFeedback.feedbackText}"
+                        </p>
+                      </div>
+
+                      <div className="p-6 bg-white/5 rounded-3xl border border-white/5 relative">
+                        <MessageSquareQuote className="absolute -top-3 -left-3 w-10 h-10 text-white/10" />
+                        <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 block mb-3">Customer Sentiment</Label>
+                        <p className="text-xl font-headline font-bold text-white">
+                          "{aiFeedback.customerQuote}"
+                        </p>
+                      </div>
+
+                      <div className="space-y-3 p-6 bg-accent/5 rounded-3xl border border-accent/10">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-4 h-4 text-accent" />
+                          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Year 2 Strategic Pivot</Label>
+                        </div>
+                        <p className="text-sm text-slate-300">
+                          {aiFeedback.suggestion}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-20">
+                      <p className="text-slate-500">Wait, the analyst is busy...</p>
                     </div>
                   )}
                 </CardContent>
