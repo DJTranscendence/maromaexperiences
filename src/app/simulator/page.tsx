@@ -75,6 +75,8 @@ const TEAM_EMBLEMS = [
   { id: 'brand-special', name: 'Special Brand', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
 ];
 
+const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
+
 export default function SimulatorPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -233,7 +235,15 @@ export default function SimulatorPage() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary tracking-tight uppercase">The Maroma Product Game</h1>
+              <div className="relative h-40 w-full max-w-2xl mx-auto">
+                <Image 
+                  src={TITLE_IMAGE_URL}
+                  alt="The Maroma Product Game"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
               <p className="text-xl text-muted-foreground font-body leading-relaxed max-w-2xl mx-auto">
                 Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
               </p>
