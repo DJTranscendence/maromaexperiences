@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Sprout, 
   TrendingUp, 
@@ -22,8 +23,9 @@ import {
   Zap,
   ChevronRight,
   ArrowRight,
-  Loader2,
-  Trophy
+  Trophy,
+  Plus,
+  Wand2
 } from "lucide-react";
 import { INGREDIENTS, PRODUCT_TYPES, Ingredient } from "@/lib/simulator-data";
 import { cn } from "@/lib/utils";
@@ -45,12 +47,18 @@ export default function SimulatorPage() {
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
   const [message, setMessage] = useState("");
   const [price, setPrice] = useState(500);
+
+  // Product Creator State
+  const [creatorType, setCreatorType] = useState<string>("");
+  const [creatorFunction, setCreatorFunction] = useState<string>("");
+  const [isCustomMode, setIsCustomMode] = useState(false);
   
   // Scoring
   const scores = useMemo(() => {
+    const baseCost = selectedProduct.baseCost;
     const earth = selectedIngredients.reduce((acc, curr) => acc + curr.earthScore, 0) / (selectedIngredients.length || 1);
     const appeal = selectedIngredients.reduce((acc, curr) => acc + curr.appeal, 0) / (selectedIngredients.length || 1);
-    const cost = selectedIngredients.reduce((acc, curr) => acc + curr.cost, 0);
+    const cost = baseCost + selectedIngredients.reduce((acc, curr) => acc + curr.cost, 0);
     
     // Logic: Trust drops if Earth is low. Profit drops if Trust is low.
     const trust = (earth * 10);
@@ -58,7 +66,7 @@ export default function SimulatorPage() {
     const longevity = (trust * 0.7) + (earth * 2);
 
     return { earth, appeal, cost, trust, shortTermSales, longevity };
-  }, [selectedIngredients, price]);
+  }, [selectedIngredients, price, selectedProduct]);
 
   // Simulation Data
   const chartData = useMemo(() => {
@@ -78,6 +86,21 @@ export default function SimulatorPage() {
     }
   };
 
+  const handleGenerateCustomProduct = () => {
+    if (!creatorType || !creatorFunction) return;
+    
+    // Dynamic naming based on selections
+    const customName = `${creatorType} that ${creatorFunction}`;
+    const customBase = {
+      id: `custom-${Date.now()}`,
+      name: customName,
+      baseCost: 250 // Custom creator base is slightly more expensive due to R&D
+    };
+    
+    setSelectedProduct(customBase);
+    setIsCustomMode(false);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -88,12 +111,12 @@ export default function SimulatorPage() {
             <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto">
               <Sprout className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Create Your Product</h1>
+            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Ethical Market Simulator</h1>
             <p className="text-xl text-muted-foreground font-body leading-relaxed">
-              Based on what you have learned today about how Maroma makes it's products, you will now create an imaginary product that we will run through a market simulator to see how it performs against the other teams' products.
+              Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
             </p>
             <p className="text-lg text-muted-foreground/80 font-body">
-              Then you'll get a chance to modify all aspects of your product to see if you can improve your score.
+              Design your base product, choose your ingredients, and see if your ethical commitments can survive a year in the market.
             </p>
             <div className="space-y-4 pt-8">
               <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Team Name</Label>
@@ -108,7 +131,7 @@ export default function SimulatorPage() {
                 onClick={() => setPhase('lab')}
                 className="w-full bg-primary rounded-full h-14 text-lg font-bold shadow-lg"
               >
-                Start Creating <ChevronRight className="ml-2" />
+                Create Your Product <ChevronRight className="ml-2" />
               </Button>
             </div>
           </div>
@@ -144,10 +167,12 @@ export default function SimulatorPage() {
                   <div className="pt-4 border-t border-white/10">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50">Estimated Cost</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50">Production Cost</p>
                         <p className="text-3xl font-headline font-bold">₹{scores.cost}</p>
                       </div>
-                      <Badge className="bg-white/20 border-none">Budget: ₹500</Badge>
+                      <Badge className={cn("border-none", scores.cost > 600 ? "bg-red-500/20" : "bg-white/20")}>
+                        {scores.cost > 600 ? "Over Budget" : "On Budget"}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -166,21 +191,86 @@ export default function SimulatorPage() {
             {/* Main Lab */}
             <div className="lg:col-span-2 space-y-12">
               <section>
-                <h3 className="text-2xl font-headline font-bold text-primary mb-6">1. Choose Your Product</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {PRODUCT_TYPES.map(p => (
-                    <button 
-                      key={p.id} 
-                      onClick={() => setSelectedProduct(p)}
-                      className={cn(
-                        "p-6 rounded-3xl border-2 transition-all text-center group",
-                        selectedProduct.id === p.id ? "border-primary bg-primary/5 shadow-lg" : "border-border hover:border-primary/30"
-                      )}
-                    >
-                      <span className={cn("block font-bold", selectedProduct.id === p.id ? "text-primary" : "text-muted-foreground")}>{p.name}</span>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-headline font-bold text-primary">1. Choose Your Product</h3>
+                  <Button 
+                    variant="ghost" 
+                    className="text-accent gap-2"
+                    onClick={() => setIsCustomMode(!isCustomMode)}
+                  >
+                    {isCustomMode ? "Back to Presets" : <><Plus className="w-4 h-4" /> Create Entirely New Product</>}
+                  </Button>
                 </div>
+
+                {isCustomMode ? (
+                  <Card className="rounded-3xl border-2 border-dashed border-accent/40 bg-accent/5 overflow-hidden">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Wand2 className="w-5 h-5 text-accent" /> Product Creator
+                      </CardTitle>
+                      <CardDescription>Use dropdowns to generate a unique base product.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase tracking-widest">Primary Type</Label>
+                          <Select value={creatorType} onValueChange={setCreatorType}>
+                            <SelectTrigger className="rounded-xl h-12 bg-white">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Homeware">Homeware</SelectItem>
+                              <SelectItem value="Body Product">Body Product</SelectItem>
+                              <SelectItem value="Fragrance Product">Fragrance Product</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase tracking-widest">Core Function</Label>
+                          <Select value={creatorFunction} onValueChange={setCreatorFunction}>
+                            <SelectTrigger className="rounded-xl h-12 bg-white">
+                              <SelectValue placeholder="Select function" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="burns">It burns</SelectItem>
+                              <SelectItem value="decorates">It decorates</SelectItem>
+                              <SelectItem value="cleanses">It cleanses</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={handleGenerateCustomProduct}
+                        disabled={!creatorType || !creatorFunction}
+                        className="w-full bg-accent hover:bg-accent/90 rounded-full h-12 font-bold"
+                      >
+                        Generate Base Product
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {PRODUCT_TYPES.map(p => (
+                      <button 
+                        key={p.id} 
+                        onClick={() => setSelectedProduct(p)}
+                        className={cn(
+                          "p-6 rounded-3xl border-2 transition-all text-center group",
+                          selectedProduct.id === p.id ? "border-primary bg-primary/5 shadow-lg" : "border-border hover:border-primary/30"
+                        )}
+                      >
+                        <span className={cn("block font-bold", selectedProduct.id === p.id ? "text-primary" : "text-muted-foreground")}>{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {selectedProduct && (
+                  <div className="mt-4 flex items-center gap-2 px-4">
+                    <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Current Base:</span>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none">{selectedProduct.name}</Badge>
+                  </div>
+                )}
               </section>
 
               <section>
@@ -218,7 +308,7 @@ export default function SimulatorPage() {
               </section>
 
               <section>
-                <h3 className="text-2xl font-headline font-bold text-primary mb-6">3. Position Your Brand</h3>
+                <h3 className="text-2xl font-headline font-bold text-primary mb-6">3. Market Positioning</h3>
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Market Message</Label>
@@ -229,9 +319,21 @@ export default function SimulatorPage() {
                       className="rounded-xl h-12"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Retail Price Point (₹)</Label>
+                    <div className="flex items-center gap-4">
+                      <Input 
+                        type="number"
+                        value={price}
+                        onChange={e => setPrice(parseInt(e.target.value) || 0)}
+                        className="rounded-xl h-12 w-32"
+                      />
+                      <span className="text-sm text-muted-foreground">Average market price for student groups: ₹400-600</span>
+                    </div>
+                  </div>
                   <Button 
                     onClick={() => setPhase('market')}
-                    disabled={selectedIngredients.length === 0}
+                    disabled={selectedIngredients.length === 0 || scores.cost === 0}
                     className="w-full bg-accent hover:bg-accent/90 rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20"
                   >
                     Launch Simulation <ArrowRight className="ml-2" />
@@ -247,7 +349,7 @@ export default function SimulatorPage() {
             <div className="text-center space-y-4">
               <Badge className="bg-green-100 text-green-700 px-6 py-2 rounded-full font-bold">Market Active: Year 1</Badge>
               <h2 className="text-5xl font-headline font-bold text-primary">Simulation Results</h2>
-              <p className="text-muted-foreground">Watch how your ethical choices influence the market over 12 months.</p>
+              <p className="text-muted-foreground">Watch how your choices influenced the market over 12 months.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -307,6 +409,7 @@ export default function SimulatorPage() {
                 <CardContent className="space-y-4">
                   {scores.earth > 6 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Your high-integrity ingredients built deep consumer trust.</div>}
                   {scores.appeal > 7 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">The product's high appeal ensured a strong market entry.</div>}
+                  {price < 500 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Accessible pricing encouraged widespread early adoption.</div>}
                 </CardContent>
               </Card>
 
@@ -318,7 +421,7 @@ export default function SimulatorPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {scores.earth < 4 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Environmental neglect is causing a massive trust deficit.</div>}
-                  {price > 600 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Price accessibility is low for student demographics.</div>}
+                  {price > 600 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">High price point limited your total market share.</div>}
                   {selectedIngredients.some(i => i.id === 'plastic') && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Plastic packaging is being flagged by eco-conscious buyers.</div>}
                 </CardContent>
               </Card>
