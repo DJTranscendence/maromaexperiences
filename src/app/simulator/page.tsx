@@ -229,7 +229,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
@@ -238,7 +238,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                         </SelectContent>
@@ -255,16 +255,16 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sourcing Model</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Where do we get our ingredients?</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
@@ -281,7 +281,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -290,7 +290,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -307,7 +307,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Target Audience</Label>
                       <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                         </SelectContent>
@@ -316,7 +316,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price Tier</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -333,7 +333,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Core Value Emphasis</Label>
                       <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectValue></SelectTrigger>
                         <SelectContent>
                           {CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
                         </SelectContent>
