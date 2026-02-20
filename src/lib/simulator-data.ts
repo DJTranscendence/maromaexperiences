@@ -52,6 +52,13 @@ export interface CoreValue {
   description: string;
 }
 
+export interface MarketingChannel {
+  id: string;
+  name: string;
+  cost: number;
+  resonance: Record<string, number>;
+}
+
 export const CATEGORIES = [
   { id: 'hf', name: 'Home Fragrance', formats: ['Candle', 'Incense sticks', 'Resin blend', 'Room mist', 'Oil diffuser blend'] },
   { id: 'bc', name: 'Body Care', formats: ['Soap bar', 'Solid balm', 'Roll-on perfume', 'Body mist', 'Lotion bar'] },
@@ -122,4 +129,12 @@ export const CORE_VALUES: CoreValue[] = [
   { id: 'ml', name: 'Mindful living', description: 'Designing for stillness and presence.' },
   { id: 'euc', name: 'Enviromentally-Unfriendly but Cheap', description: 'Prioritizing low price over environmental concerns.' },
   { id: 'len', name: 'Looks Environmental but is not', description: 'Marketing a sustainable image while ignoring real impact.' },
+];
+
+export const MARKETING_CHANNELS: MarketingChannel[] = [
+  { id: 'fb', name: 'Facebook', cost: 15, resonance: { stu: 0.5, fam: 1.2, med: 0.8, lux: 0.7, eco: 0.9, bud: 1.1 } },
+  { id: 'ig', name: 'Instagram', cost: 20, resonance: { stu: 1.3, fam: 0.9, med: 1.1, lux: 1.2, eco: 1.2, bud: 0.8 } },
+  { id: 'inf', name: 'Influencer', cost: 40, resonance: { stu: 1.5, fam: 0.7, med: 1.2, lux: 1.4, eco: 1.3, bud: 0.6 } },
+  { id: 'fly', name: 'Flyers', cost: 5, resonance: { stu: 0.8, fam: 1.0, med: 0.7, lux: 0.4, eco: 0.6, bud: 1.2 } },
+  { id: 'pos', name: 'Posters', cost: 10, resonance: { stu: 1.1, fam: 1.0, med: 0.8, lux: 0.6, eco: 0.7, bud: 1.1 } },
 ];

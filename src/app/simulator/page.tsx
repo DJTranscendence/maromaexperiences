@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Sprout, 
@@ -29,7 +30,8 @@ import {
   Users,
   Activity,
   Flame,
-  Globe
+  Globe,
+  Megaphone
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -40,7 +42,8 @@ import {
   PRODUCTION_METHODS, 
   TARGET_AUDIENCES, 
   PRICE_TIERS, 
-  CORE_VALUES 
+  CORE_VALUES,
+  MARKETING_CHANNELS
 } from "@/lib/simulator-data";
 import { cn } from "@/lib/utils";
 import {
@@ -161,6 +164,7 @@ export default function SimulatorPage() {
     targetAudience: TARGET_AUDIENCES[0].id,
     priceTier: PRICE_TIERS[0].id,
     coreValue: CORE_VALUES[0].id,
+    marketingChannels: [] as string[],
     message: ""
   });
 
@@ -175,8 +179,14 @@ export default function SimulatorPage() {
 
   // Scoring Logic
   const scores = useMemo(() => {
-    // Cumulative Production Cost
-    const productionCost = selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta;
+    // Marketing Cost
+    const marketingCost = config.marketingChannels.reduce((acc, channelId) => {
+      const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
+      return acc + (channel?.cost || 0);
+    }, 0);
+
+    // Cumulative Production Cost (including marketing)
+    const productionCost = selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta + marketingCost;
     
     // Calculated Retail Price based on Margin
     const retailPrice = productionCost * (1 + selectedPriceTier.margin);
@@ -189,7 +199,15 @@ export default function SimulatorPage() {
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
-    const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal;
+    // Marketing Resonance
+    const marketingResonance = config.marketingChannels.length > 0 
+      ? config.marketingChannels.reduce((acc, channelId) => {
+          const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
+          return acc + (channel?.resonance[config.targetAudience] || 1);
+        }, 0) / config.marketingChannels.length
+      : 0.5;
+
+    const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal * marketingResonance;
     const accessibility = selectedPriceTier.accessibility / selectedAudience.priceSensitivity;
     const marketingClarity = config.message.length > 5 ? 1.0 : 0.5;
     const shortTermSales = (appealScore * 0.4) + (accessibility * 0.3 * 10) + (marketingClarity * 0.3 * 10);
@@ -231,8 +249,14 @@ export default function SimulatorPage() {
     }));
   }, [scores]);
 
-  const handleUpdateConfig = (key: string, value: string) => {
+  const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const toggleMarketingChannel = (id: string) => {
+    const current = config.marketingChannels;
+    const next = current.includes(id) ? current.filter(c => c !== id) : [...current, id];
+    handleUpdateConfig('marketingChannels', next);
   };
 
   const broadcastStatus = (status: 'join' | 'lab' | 'market') => {
@@ -548,6 +572,34 @@ export default function SimulatorPage() {
                         onChange={e => handleUpdateConfig('message', e.target.value)} 
                         className="rounded-xl h-12 bg-white border-none shadow-lg text-primary font-medium"
                       />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
+                    <Megaphone className="w-6 h-6 text-accent" /> 6. Marketing Strategy
+                  </h3>
+                  <div className="space-y-4 bg-white/5 p-6 rounded-2xl border border-white/10">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 block">Select Channels</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      {MARKETING_CHANNELS.map(channel => (
+                        <div 
+                          key={channel.id} 
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer",
+                            config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent hover:border-white/20"
+                          )}
+                          onClick={() => toggleMarketingChannel(channel.id)}
+                        >
+                          <Checkbox 
+                            checked={config.marketingChannels.includes(channel.id)}
+                            onCheckedChange={() => toggleMarketingChannel(channel.id)}
+                            className="border-white/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                          />
+                          <span className="text-sm font-medium text-white">{channel.name}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </section>
