@@ -57,37 +57,37 @@ import {
 } from "recharts";
 import { useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
-
-const MAROMA_LOGO = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
+import { useToast } from "@/hooks/use-toast";
 
 const TEAM_EMBLEMS = [
-  { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31', hint: 'brand logo' },
-  { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86', hint: 'brand logo' },
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e', hint: 'brand logo' },
-  { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c', hint: 'brand logo' },
-  { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557', hint: 'brand logo' },
-  { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8', hint: 'brand logo' },
-  { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60', hint: 'brand logo' },
-  { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5', hint: 'brand logo' },
-  { id: 'brand-main', name: 'Main Logo', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2', hint: 'brand logo' },
-  { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6', hint: 'brand logo' },
-  { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885', hint: 'brand logo' },
-  { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3', hint: 'brand logo' },
-  { id: 'brand-18', name: 'Brand 18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1', hint: 'brand logo' },
-  { id: 'brand-2', name: 'Brand 2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123', hint: 'brand logo' },
-  { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96', hint: 'brand logo' },
-  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55', hint: 'brand logo' },
-  { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f', hint: 'brand logo' },
-  { id: 'brand-special', name: 'Special Brand', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327', hint: 'brand logo' },
+  { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
+  { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
+  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e' },
+  { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
+  { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
+  { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
+  { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
+  { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
+  { id: 'brand-main', name: 'Main Logo', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2' },
+  { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
+  { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
+  { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
+  { id: 'brand-18', name: 'Brand 18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1' },
+  { id: 'brand-2', name: 'Brand 2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
+  { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
+  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
+  { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
+  { id: 'brand-special', name: 'Special Brand', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
 ];
 
 export default function SimulatorPage() {
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   
-  // 9-Step Selection State
+  // Selection State
   const [config, setConfig] = useState({
     category: CATEGORIES[0].id,
     format: CATEGORIES[0].formats[0],
@@ -110,43 +110,26 @@ export default function SimulatorPage() {
   const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier)!, [config.priceTier]);
   const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue)!, [config.coreValue]);
 
-  // Comprehensive Scoring Logic
+  // Scoring Logic
   const scores = useMemo(() => {
-    // 1. Production Cost
     const productionCost = selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta;
-    
-    // 2. Retail Price
     const retailPrice = productionCost * (1 + selectedPriceTier.margin);
-
-    // 3. Environmental Score (Average Ingredient E score * Packaging Multiplier)
     const baseEarth = selectedBase.earthScore;
     const environmentalScore = Math.min(10, baseEarth * selectedPackaging.envMultiplier);
 
-    // 4. Ethical Consistency Check
     let consistency = 1.0;
-    
-    // Greenwashing Penalty
-    if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') {
-      consistency -= 0.5;
-    }
-    if (config.coreValue === 'fts' && config.sourcingModel === 'is') {
-      consistency -= 0.5;
-    }
-    if (config.coreValue === 'len') {
-      consistency -= 0.7;
-    }
+    if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') consistency -= 0.5;
+    if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
+    if (config.coreValue === 'len') consistency -= 0.7;
 
-    // 5. Short-Term Sales
     const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal;
     const accessibility = selectedPriceTier.accessibility / selectedAudience.priceSensitivity;
     const marketingClarity = config.message.length > 5 ? 1.0 : 0.5;
     const shortTermSales = (appealScore * 0.4) + (accessibility * 0.3 * 10) + (marketingClarity * 0.3 * 10);
 
-    // 6. Customer Trust
     const trustBase = (environmentalScore * 0.5) + (consistency * 0.3 * 10) + (selectedPriceTier.fairness * 0.2 * 10);
     const trust = Math.min(100, (trustBase * 10) + selectedSourcing.trustBonus + selectedProduction.trustBonus);
 
-    // 7. Longevity Index
     const reinvestmentCapacity = selectedPriceTier.margin * 10;
     const longevity = (trust * 0.06) + (reinvestmentCapacity * 0.4);
 
@@ -161,7 +144,6 @@ export default function SimulatorPage() {
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier, selectedValue]);
 
-  // Simulation Data (Trajectory)
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: i + 1,
@@ -173,6 +155,18 @@ export default function SimulatorPage() {
 
   const handleUpdateConfig = (key: string, value: string) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleJoinGame = () => {
+    if (!teamName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Team Name Required",
+        description: "Please enter a team name to start the workshop."
+      });
+      return;
+    }
+    setPhase('lab');
   };
 
   const launchSimulation = () => {
@@ -212,20 +206,20 @@ export default function SimulatorPage() {
             </div>
 
             <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-xl border border-border/50">
-              <div className="space-y-4">
-                <Label className="text-sm font-bold text-muted-foreground tracking-wide">
+              <div className="space-y-4 text-left">
+                <Label className="text-sm font-bold text-muted-foreground tracking-wide px-2">
                   1. Choose Your Team Name (it can be different to your logo name)
                 </Label>
                 <Input 
-                  placeholder="The Eco-Warriors" 
+                  placeholder="e.g. The Eco-Warriors" 
                   value={teamName} 
                   onChange={e => setTeamName(e.target.value)}
                   className="rounded-2xl h-16 text-center text-2xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner"
                 />
               </div>
 
-              <div className="space-y-6">
-                <Label className="text-sm font-bold text-muted-foreground tracking-wide">
+              <div className="space-y-6 text-left">
+                <Label className="text-sm font-bold text-muted-foreground tracking-wide px-2">
                   2. Choose Your Logo Emblem
                 </Label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
@@ -238,14 +232,7 @@ export default function SimulatorPage() {
                         selectedEmblem === emblem.url ? "border-primary scale-105 shadow-lg" : "border-transparent hover:border-muted-foreground/30"
                       )}
                     >
-                      <Image 
-                        src={emblem.url} 
-                        alt={emblem.name} 
-                        fill 
-                        className="object-contain p-2"
-                        data-ai-hint={emblem.hint}
-                        unoptimized
-                      />
+                      <Image src={emblem.url} alt={emblem.name} fill className="object-contain p-2" unoptimized />
                       {selectedEmblem === emblem.url && (
                         <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                           <CheckCircle2 className="text-primary w-6 h-6 drop-shadow-md" />
@@ -257,11 +244,10 @@ export default function SimulatorPage() {
               </div>
 
               <Button 
-                disabled={!teamName} 
-                onClick={() => setPhase('lab')}
-                className="w-full bg-primary hover:bg-primary/90 rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95"
+                onClick={handleJoinGame}
+                className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2"
               >
-                Join the Game <ChevronRight className="ml-2" />
+                Join the Game <ChevronRight className="w-6 h-6" />
               </Button>
             </div>
           </div>
@@ -289,7 +275,7 @@ export default function SimulatorPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product Category</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -298,7 +284,7 @@ export default function SimulatorPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product Format</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
