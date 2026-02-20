@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -129,7 +128,7 @@ export default function Navbar() {
             </Link>
             <Link href="/corporate" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/corporate" && "text-accent")}>Corporate</Link>
             <Link href="/simulator" className={cn("text-sm font-bold text-accent hover:text-primary transition-colors flex items-center gap-1", pathname === "/simulator" && "text-primary")}>
-              <Sprout className="w-4 h-4" /> Eco-Simulator
+              <Sprout className="w-4 h-4" /> Product Game
             </Link>
             
             {isAdmin && (
@@ -234,7 +233,7 @@ export default function Navbar() {
             Tours & Workshops
           </Link>
           <Link href="/corporate" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Corporate Events</Link>
-          <Link href="/simulator" className="block text-lg font-bold text-accent" onClick={() => setIsOpen(false)}>Eco-Simulator</Link>
+          <Link href="/simulator" className="block text-lg font-bold text-accent" onClick={() => setIsOpen(false)}>Product Game</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
           
           {isAdmin && (
@@ -276,4 +275,3 @@ export default function Navbar() {
     </nav>
   );
 }
-

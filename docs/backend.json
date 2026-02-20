@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "User": {
@@ -17,7 +16,7 @@
     "SimulatorSession": {
       "title": "SimulatorSession",
       "type": "object",
-      "description": "Records a team's game session in the Ethical Market Simulator.",
+      "description": "Records a team's game session in The Maroma Product Game.",
       "properties": {
         "id": { "type": "string" },
         "teamName": { "type": "string" },

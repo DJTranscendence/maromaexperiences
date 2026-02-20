@@ -161,7 +161,7 @@ export default function SimulatorPage() {
             <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto">
               <Sprout className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Ethical Market Simulator</h1>
+            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">The Maroma Product Game</h1>
             <p className="text-xl text-muted-foreground font-body leading-relaxed">
               Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator to see how it performs against other teams' products.
             </p>
@@ -186,7 +186,6 @@ export default function SimulatorPage() {
 
         {phase === 'lab' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Personalised Branding Sidebar */}
             <div className="lg:col-span-1 space-y-6 sticky top-24 h-fit">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -206,12 +205,11 @@ export default function SimulatorPage() {
               </div>
             </div>
 
-            {/* Step-by-Step Lab */}
             <div className="lg:col-span-2 space-y-12 pb-20">
               <div className="space-y-10">
                 <section className="space-y-6">
                   <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
-                    <Award className="w-6 h-6 text-accent" /> 1. Product & Format
+                    <Award className="w-6 h-6 text-accent" /> 1. Choose Your Product
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -377,7 +375,6 @@ export default function SimulatorPage() {
               <p className="text-muted-foreground">How your {config.format} performed in the real world.</p>
             </div>
 
-            {/* Final Market Scorecard Card */}
             <div className="max-w-4xl mx-auto">
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-primary text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -422,7 +419,6 @@ export default function SimulatorPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Metric Cards */}
               <div className="lg:col-span-1 space-y-4">
                 {[
                   { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit)}`, icon: IndianRupee },
@@ -444,7 +440,6 @@ export default function SimulatorPage() {
                 ))}
               </div>
 
-              {/* Chart */}
               <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white p-8">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle className="font-headline">Trajectory: Month 1-12</CardTitle>
@@ -497,8 +492,12 @@ export default function SimulatorPage() {
             </div>
 
             <div className="flex justify-center gap-4 pt-8 pb-20">
-              <Button variant="outline" onClick={() => setPhase('lab')} className="rounded-full px-12 h-14">Iterate Product</Button>
-              <Button onClick={() => window.location.reload()} className="bg-primary rounded-full px-12 h-14 font-bold shadow-xl">Start New Team Session</Button>
+              <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
+                <div className="flex gap-4 w-full">
+                  <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14">Iterate Product</Button>
+                  <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl">Start New Team Session</Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
