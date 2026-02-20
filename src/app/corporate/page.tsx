@@ -306,32 +306,32 @@ export default function CorporatePage() {
 
         {/* Builder Dialog */}
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-          <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-[3rem]">
+          <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-3xl lg:rounded-[3rem]">
             <div className="flex flex-col h-full bg-white min-h-0">
-              <div className="p-8 border-b bg-muted/10 flex items-center justify-between shrink-0">
+              <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
                 <div>
-                  <DialogTitle className="text-3xl font-headline font-bold text-primary">
+                  <DialogTitle className="text-2xl lg:text-3xl font-headline font-bold text-primary">
                     Customise Your Experience
                   </DialogTitle>
-                  <DialogDescription className="text-muted-foreground mt-1">
+                  <DialogDescription className="text-muted-foreground mt-1 text-sm lg:text-base">
                     Select your preferred workshops, wellness treatments, and dining.
                   </DialogDescription>
                 </div>
                 {selectedPkg && (
-                  <Badge className="bg-accent text-white px-6 py-2 rounded-full uppercase tracking-widest text-xs font-bold">
+                  <Badge className="bg-accent text-white px-4 lg:px-6 py-2 rounded-full uppercase tracking-widest text-[10px] lg:text-xs font-bold w-fit">
                     {selectedPkg.name}
                   </Badge>
                 )}
               </div>
 
-              <div className="flex-grow flex min-h-0 overflow-hidden">
+              <div className="flex-grow flex flex-col lg:flex-row min-h-0 overflow-hidden">
                 {/* Selection Menu */}
-                <div className="flex-grow flex flex-col min-h-0 overflow-hidden">
+                <div className="flex-grow flex flex-col min-h-0 overflow-hidden order-1 lg:order-1">
                   <ScrollArea className="flex-grow">
-                    <div className="p-8 space-y-12 pb-20">
+                    <div className="p-4 lg:p-8 space-y-8 lg:space-y-12 pb-20">
                       {/* Workshops Selection */}
                       <section>
-                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                        <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                           <Sparkles className="w-5 h-5 text-accent" /> Select Workshops & Tours
                         </h3>
                         {isToursLoading ? (
@@ -344,18 +344,18 @@ export default function CorporatePage() {
                                 onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Experience' })}
                                 disabled={!!itinerary.find(t => t.id === tour.id)}
                                 className={cn(
-                                  "flex text-left items-center gap-4 p-4 rounded-2xl border transition-all group",
+                                  "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
                                   itinerary.find(t => t.id === tour.id) 
                                     ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
                                     : "bg-white border-border hover:border-accent hover:shadow-md"
                                 )}
                               >
-                                <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                                <div className="relative w-16 lg:w-20 h-16 lg:h-20 rounded-xl overflow-hidden shrink-0">
                                   <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
                                 </div>
-                                <div className="flex-grow">
-                                  <h4 className="font-bold text-primary leading-tight">{tour.name}</h4>
-                                  <div className="flex items-center gap-3 text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                                <div className="flex-grow min-w-0">
+                                  <h4 className="font-bold text-primary text-sm lg:text-base leading-tight truncate">{tour.name}</h4>
+                                  <div className="flex items-center gap-2 lg:gap-3 text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
                                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration}</span>
                                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {tour.location}</span>
                                   </div>
@@ -369,7 +369,7 @@ export default function CorporatePage() {
 
                       {/* Spa Treatments Selection */}
                       <section>
-                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                        <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                           <Sprout className="w-5 h-5 text-accent" /> Spa & Wellness Treatments
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -379,18 +379,18 @@ export default function CorporatePage() {
                               onClick={() => addItemToItinerary({ id: spa.id, name: spa.name, imageUrl: spa.image, duration: spa.duration, type: 'Wellness' })}
                               disabled={!!itinerary.find(t => t.id === spa.id)}
                               className={cn(
-                                "flex text-left items-center gap-4 p-4 rounded-2xl border transition-all group",
+                                "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
                                 itinerary.find(t => t.id === spa.id) 
                                   ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
                                   : "bg-white border-border hover:border-accent hover:shadow-md"
                               )}
                             >
-                              <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0">
+                              <div className="relative w-14 lg:w-16 h-14 lg:h-16 rounded-xl overflow-hidden shrink-0">
                                 <Image src={spa.image} alt={spa.name} fill className="object-cover" />
                               </div>
-                              <div className="flex-grow">
-                                <h4 className="font-bold text-primary text-sm leading-tight">{spa.name}</h4>
-                                <div className="flex items-center gap-3 text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
+                              <div className="flex-grow min-w-0">
+                                <h4 className="font-bold text-primary text-xs lg:text-sm leading-tight truncate">{spa.name}</h4>
+                                <div className="flex items-center gap-2 lg:gap-3 text-[8px] lg:text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
                                   <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {spa.duration}</span>
                                   <span className="font-bold text-accent">{spa.price}</span>
                                 </div>
@@ -402,9 +402,9 @@ export default function CorporatePage() {
                       </section>
 
                       {/* Catering & Addons */}
-                      <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                         <div>
-                          <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                          <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                             <Utensils className="w-5 h-5 text-accent" /> Catering Menus
                           </h3>
                           <div className="space-y-4">
@@ -412,25 +412,25 @@ export default function CorporatePage() {
                               <div 
                                 key={opt.id} 
                                 className={cn(
-                                  "flex items-center gap-5 p-6 rounded-[2rem] border transition-all cursor-pointer bg-white group",
+                                  "flex items-center gap-4 lg:gap-5 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border transition-all cursor-pointer bg-white group",
                                   selectedCatering === opt.id ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
                                 )}
                                 onClick={() => setSelectedCatering(opt.id)}
                               >
-                                <div className="relative flex items-center justify-center w-8 h-8 shrink-0">
+                                <div className="relative flex items-center justify-center w-7 lg:w-8 h-7 lg:h-8 shrink-0">
                                   <div className={cn(
-                                    "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all",
+                                    "w-6 lg:w-7 h-6 lg:h-7 rounded-full border-2 flex items-center justify-center transition-all",
                                     selectedCatering === opt.id ? "border-accent bg-accent" : "border-muted-foreground/30 bg-transparent"
                                   )}>
-                                    {selectedCatering === opt.id && <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />}
+                                    {selectedCatering === opt.id && <div className="w-2 lg:w-2.5 h-2 lg:h-2.5 rounded-full bg-white shadow-sm" />}
                                   </div>
                                 </div>
                                 <div className="flex-grow">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-primary text-base font-headline">{opt.name}</h4>
-                                    <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
+                                    <h4 className="font-bold text-primary text-sm lg:text-base font-headline">{opt.name}</h4>
+                                    <span className="text-[9px] lg:text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
                                   </div>
-                                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-body">{opt.desc}</p>
+                                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-1 leading-relaxed font-body">{opt.desc}</p>
                                 </div>
                               </div>
                             ))}
@@ -438,7 +438,7 @@ export default function CorporatePage() {
                         </div>
 
                         <div>
-                          <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                          <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                             <Camera className="w-5 h-5 text-accent" /> Professional Services
                           </h3>
                           <div className="space-y-3">
@@ -447,20 +447,20 @@ export default function CorporatePage() {
                               { id: 'srv2', name: 'Team Strategy Facilitator', price: '₹400', icon: Users2 },
                               { id: 'srv3', name: 'Premium Coffee Bar', price: '₹15/pp', icon: Coffee },
                             ].map(opt => (
-                              <div key={opt.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
-                                <div className="relative flex items-center justify-center w-6 h-6 shrink-0">
+                              <div key={opt.id} className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
+                                <div className="relative flex items-center justify-center w-5 lg:w-6 h-5 lg:h-6 shrink-0">
                                   <Checkbox 
                                     checked={selectedAddons.includes(opt.id)} 
                                     onCheckedChange={() => toggleAddon(opt.id)} 
                                     onClick={(e) => e.stopPropagation()}
-                                    className="rounded-full w-6 h-6" 
+                                    className="rounded-full w-5 lg:w-6 h-5 lg:h-6" 
                                   />
                                 </div>
                                 <opt.icon className="w-4 h-4 text-accent shrink-0" />
                                 <div className="flex-grow">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-primary text-sm">{opt.name}</h4>
-                                    <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
+                                    <h4 className="font-bold text-primary text-xs lg:text-sm">{opt.name}</h4>
+                                    <span className="text-[9px] lg:text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
                                   </div>
                                 </div>
                               </div>
@@ -471,7 +471,7 @@ export default function CorporatePage() {
 
                       {/* Accommodation Selection */}
                       <section>
-                        <h3 className="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                        <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                           <Hotel className="w-5 h-5 text-accent" /> Luxury Accommodation
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -480,13 +480,13 @@ export default function CorporatePage() {
                               key={hotel.id} 
                               onClick={() => setSelectedHotel(hotel.id)}
                               className={cn(
-                                "p-5 rounded-2xl border transition-all cursor-pointer bg-white relative",
+                                "p-4 lg:p-5 rounded-2xl border transition-all cursor-pointer bg-white relative",
                                 selectedHotel === hotel.id ? "border-accent shadow-lg ring-1 ring-accent/20" : "border-border hover:border-accent/30"
                               )}
                             >
-                              <h4 className="font-bold text-primary mb-1">{hotel.name}</h4>
-                              <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">{hotel.desc}</p>
-                              <div className="text-xs font-bold text-accent uppercase tracking-widest">{hotel.price}</div>
+                              <h4 className="font-bold text-primary text-sm lg:text-base mb-1 truncate pr-6">{hotel.name}</h4>
+                              <p className="text-[10px] lg:text-[11px] text-muted-foreground leading-relaxed mb-4 line-clamp-2">{hotel.desc}</p>
+                              <div className="text-[10px] lg:text-xs font-bold text-accent uppercase tracking-widest">{hotel.price}</div>
                               {selectedHotel === hotel.id && <div className="absolute top-4 right-4"><CheckCircle2 className="w-4 h-4 text-accent" /></div>}
                             </div>
                           ))}
@@ -497,49 +497,49 @@ export default function CorporatePage() {
                 </div>
 
                 {/* Summary Sidebar */}
-                <aside className="w-96 bg-muted/20 border-l p-8 flex flex-col shrink-0 min-h-0">
-                  <h3 className="text-xl font-headline font-bold text-primary mb-6 shrink-0">Your Itinerary</h3>
+                <aside className="w-full lg:w-96 bg-muted/20 border-t lg:border-t-0 lg:border-l p-6 lg:p-8 flex flex-col shrink-0 min-h-0 order-2 lg:order-2">
+                  <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 shrink-0">Your Itinerary</h3>
                   
-                  <ScrollArea className="flex-grow pr-4 mb-6">
-                    <div className="space-y-6 pb-4">
+                  <ScrollArea className="flex-grow max-h-48 lg:max-h-none pr-2 lg:pr-4 mb-4 lg:mb-6">
+                    <div className="space-y-4 lg:space-y-6 pb-4">
                       {itinerary.length === 0 && !selectedCatering && (
-                        <div className="text-center py-12 px-4 border border-dashed rounded-2xl">
-                          <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                          <p className="text-xs text-muted-foreground">Add workshops or treatments to begin planning.</p>
+                        <div className="text-center py-8 lg:py-12 px-4 border border-dashed rounded-2xl">
+                          <Calendar className="w-6 lg:w-8 h-6 lg:h-8 text-muted-foreground/30 mx-auto mb-3" />
+                          <p className="text-[10px] lg:text-xs text-muted-foreground">Add workshops or treatments to begin planning.</p>
                         </div>
                       )}
                       
                       {itinerary.map(item => (
-                        <div key={item.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border animate-in fade-in slide-in-from-right-4">
-                          <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                        <div key={item.id} className="flex items-start gap-3 p-2 lg:p-3 bg-white rounded-xl shadow-sm border border-border animate-in fade-in slide-in-from-right-4">
+                          <div className="relative w-10 lg:w-12 h-10 lg:h-12 rounded-lg overflow-hidden shrink-0">
                             <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                           </div>
                           <div className="flex-grow min-w-0">
-                            <div className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
-                            <h5 className="text-xs font-bold text-primary truncate">{item.name}</h5>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
+                            <div className="text-[7px] lg:text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
+                            <h5 className="text-[10px] lg:text-xs font-bold text-primary truncate">{item.name}</h5>
+                            <span className="text-[8px] lg:text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
                           </div>
-                          <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       ))}
 
                       {selectedCatering && (
-                        <div className="pt-4">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Catering</Label>
-                          <div className="text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
+                        <div className="pt-2 lg:pt-4">
+                          <Label className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Catering</Label>
+                          <div className="text-[10px] lg:text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
                             <Utensils className="w-3 h-3 text-accent" /> {CATERING_OPTIONS.find(c => c.id === selectedCatering)?.name}
                           </div>
                         </div>
                       )}
 
                       {selectedAddons.length > 0 && (
-                        <div className="pt-4 space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Services & Add-ons</Label>
+                        <div className="pt-2 lg:pt-4 space-y-2">
+                          <Label className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Services & Add-ons</Label>
                           {selectedAddons.map(id => {
                             return (
-                              <div key={id} className="flex items-center gap-2 text-xs font-medium text-primary/80">
+                              <div key={id} className="flex items-center gap-2 text-[10px] lg:text-xs font-medium text-primary/80">
                                 <CheckCircle2 className="w-3 h-3 text-accent" /> Service Included
                               </div>
                             );
@@ -548,9 +548,9 @@ export default function CorporatePage() {
                       )}
 
                       {selectedHotel && (
-                        <div className="pt-4">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stay</Label>
-                          <div className="text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
+                        <div className="pt-2 lg:pt-4">
+                          <Label className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stay</Label>
+                          <div className="text-[10px] lg:text-xs font-medium text-primary/80 flex items-center gap-2 mt-1">
                             <Hotel className="w-3 h-3 text-accent" /> {HOTEL_PACKAGES.find(h => h.id === selectedHotel)?.name}
                           </div>
                         </div>
@@ -558,15 +558,15 @@ export default function CorporatePage() {
                     </div>
                   </ScrollArea>
 
-                  <div className="pt-8 border-t mt-auto space-y-4 shrink-0">
+                  <div className="pt-4 lg:pt-8 border-t mt-auto space-y-4 shrink-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">Est. Base Total</span>
-                      <span className="text-xl font-bold text-primary font-headline">Custom Quote</span>
+                      <span className="text-xs lg:text-sm font-medium text-muted-foreground">Est. Base Total</span>
+                      <span className="text-lg lg:text-xl font-bold text-primary font-headline">Custom Quote</span>
                     </div>
-                    <Button onClick={handleRequestProposal} disabled={itinerary.length === 0} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3">
+                    <Button onClick={handleRequestProposal} disabled={itinerary.length === 0} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-12 lg:h-14 font-bold text-base lg:text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3">
                       Request Detailed Proposal
                     </Button>
-                    <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">Formal PDF sent within 12h</p>
+                    <p className="text-[9px] lg:text-[10px] text-center text-muted-foreground uppercase tracking-widest">Formal PDF sent within 12h</p>
                   </div>
                 </aside>
               </div>
