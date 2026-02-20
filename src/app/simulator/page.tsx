@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -204,11 +203,6 @@ export default function SimulatorPage() {
                   </h2>
                 </div>
                 <h3 className="text-4xl font-headline font-bold text-accent">Create Your Product</h3>
-              </div>
-              <div className="pt-8 p-6 bg-white/50 rounded-3xl border border-dashed border-primary/20">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Every selection is a statement. Apply the knowledge from your tour to craft a brand that balances Earth care and human prosperity.
-                </p>
               </div>
             </div>
 
