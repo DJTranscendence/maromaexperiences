@@ -38,9 +38,11 @@ import {
   TrendingUp,
   BrainCircuit,
   Trophy,
-  Star
+  Star,
+  X
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { 
   CATEGORIES, 
   INGREDIENT_BASES, 
@@ -430,9 +432,19 @@ export default function SimulatorPage() {
         </div>
       </div>
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
+        <Button 
+          variant="ghost" 
+          asChild 
+          className="absolute top-0 left-4 text-slate-400 hover:text-white hover:bg-white/10 rounded-full h-10 px-4 transition-all"
+        >
+          <Link href="/">
+            <X className="w-4 h-4 mr-2" /> Exit Game
+          </Link>
+        </Button>
+
         {phase === 'intro' && (
-          <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-8">
             <div className="space-y-4">
               <div className="relative h-40 w-full max-w-2xl mx-auto">
                 <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
@@ -484,7 +496,7 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'lab' && (
-          <div className="animate-in fade-in duration-1000">
+          <div className="animate-in fade-in duration-1000 mt-8">
             <div className="col-span-full mb-16 text-center space-y-4">
               <div className="relative w-32 h-32 mx-auto mb-6">
                 <Image src={selectedEmblem} alt="Team Logo" fill className="object-contain" unoptimized />
@@ -655,7 +667,7 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'market' && (
-          <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000">
+          <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8">
             <div className="text-center space-y-4">
               <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Year 1 Trajectory Active</Badge>
               <h2 className="text-5xl font-headline font-bold text-white">Simulation Analysis</h2>
