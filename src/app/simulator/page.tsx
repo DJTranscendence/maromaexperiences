@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -26,7 +27,10 @@ import {
   Package,
   Target,
   IndianRupee,
-  Users
+  Users,
+  Activity,
+  Flame,
+  Globe
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -85,24 +89,43 @@ export default function SimulatorPage() {
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   
-  // Real-time listener for join events
+  // Real-time listener for events
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
       collection(firestore, "simulator_events"),
       orderBy("timestamp", "desc"),
-      limit(5)
+      limit(20)
     );
   }, [firestore]);
 
   const { data: events } = useCollection(eventsQuery);
 
+  // Derived state: Live Active Players
+  const activePlayers = useMemo(() => {
+    if (!events) return [];
+    
+    const playersMap = new Map();
+    // Events are ordered by timestamp desc, so first one we see per team is their latest status
+    events.forEach(event => {
+      if (!playersMap.has(event.teamName)) {
+        playersMap.set(event.teamName, {
+          name: event.teamName,
+          status: event.type,
+          emblem: event.emblem || TEAM_EMBLEMS[0].url,
+          timestamp: event.timestamp?.toDate?.() || new Date()
+        });
+      }
+    });
+    
+    return Array.from(playersMap.values());
+  }, [events]);
+
   useEffect(() => {
     if (events && events.length > 0) {
       const latest = events[0];
-      // Only toast if it's a new event and not the very first one on page load
       if (latest.id !== lastEventId) {
-        if (lastEventId !== null) {
+        if (lastEventId !== null && latest.type === 'join') {
           toast({
             title: "Player Joined",
             description: `${latest.teamName} joined the game`,
@@ -183,6 +206,17 @@ export default function SimulatorPage() {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
+  const broadcastStatus = (status: 'join' | 'lab' | 'market') => {
+    if (firestore && teamName) {
+      addDocumentNonBlocking(collection(firestore, "simulator_events"), {
+        teamName,
+        emblem: selectedEmblem,
+        type: status,
+        timestamp: serverTimestamp()
+      });
+    }
+  };
+
   const handleJoinGame = () => {
     if (!teamName.trim()) {
       toast({
@@ -192,17 +226,10 @@ export default function SimulatorPage() {
       });
       return;
     }
-
-    // Broadcast join event
-    if (firestore) {
-      addDocumentNonBlocking(collection(firestore, "simulator_events"), {
-        teamName,
-        type: 'join',
-        timestamp: serverTimestamp()
-      });
-    }
-
+    broadcastStatus('join');
     setPhase('lab');
+    // Also broadcast initial lab status
+    broadcastStatus('lab');
   };
 
   const launchSimulation = () => {
@@ -219,14 +246,68 @@ export default function SimulatorPage() {
         },
         createdAt: serverTimestamp()
       });
+      broadcastStatus('market');
     }
     setPhase('market');
   };
 
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'join': return 'Entered Lobby';
+      case 'lab': return 'In the Lab';
+      case 'market': return 'Analyzing Results';
+      default: return 'Online';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'join': return 'bg-blue-500';
+      case 'lab': return 'bg-amber-500';
+      case 'market': return 'bg-green-500';
+      default: return 'bg-slate-500';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000">
+    <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
+      {/* Live Player Board Sidebar Overlay */}
+      <div className="fixed top-24 right-4 z-40 w-64 hidden xl:block">
+        <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
+          <CardHeader className="p-5 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-accent animate-pulse" />
+              <CardTitle className="text-sm font-headline font-bold text-white uppercase tracking-widest">Live Player Board</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-[9px] border-white/20 text-slate-400">{activePlayers.length} Active</Badge>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+            {activePlayers.length > 0 ? (
+              activePlayers.map((player, idx) => (
+                <div key={idx} className="flex items-center gap-3 group animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="relative w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1 shrink-0 group-hover:scale-110 transition-transform">
+                    <Image src={player.emblem} alt={player.name} fill className="object-contain p-1" unoptimized />
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{player.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", getStatusColor(player.status))} />
+                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">{getStatusLabel(player.status)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-xs text-slate-500 font-medium">Waiting for teams...</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         {phase === 'intro' && (
           <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
