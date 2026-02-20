@@ -33,6 +33,16 @@
         },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "SimulatorEvent": {
+      "title": "SimulatorEvent",
+      "type": "object",
+      "description": "Real-time game events such as team joins.",
+      "properties": {
+        "teamName": { "type": "string" },
+        "type": { "type": "string", "enum": ["join"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -54,6 +64,14 @@
           "entityName": "SimulatorSession",
           "schema": { "$ref": "#/backend/entities/SimulatorSession" },
           "description": "Stores game results for the leaderboard."
+        }
+      },
+      {
+        "path": "/simulator_events/{eventId}",
+        "definition": {
+          "entityName": "SimulatorEvent",
+          "schema": { "$ref": "#/backend/entities/SimulatorEvent" },
+          "description": "Broadcasts real-time events to all players."
         }
       }
     ]

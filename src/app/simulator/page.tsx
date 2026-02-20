@@ -1,11 +1,10 @@
-
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -13,22 +12,18 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Sprout, 
-  TrendingUp, 
   Heart, 
   ShieldCheck, 
-  Leaf, 
   AlertCircle, 
   CheckCircle2, 
   Dna,
   Zap,
   ChevronRight,
   ArrowRight,
-  History,
   Sparkles,
   Award,
   CircleCheck,
   Package,
-  Factory,
   Target,
   IndianRupee,
   Users
@@ -55,8 +50,8 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { useFirestore, addDocumentNonBlocking } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const TEAM_EMBLEMS = [
@@ -86,7 +81,36 @@ export default function SimulatorPage() {
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
+  const [lastEventId, setLastEventId] = useState<string | null>(null);
   
+  // Real-time listener for join events
+  const eventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, "simulator_events"),
+      orderBy("timestamp", "desc"),
+      limit(5)
+    );
+  }, [firestore]);
+
+  const { data: events } = useCollection(eventsQuery);
+
+  useEffect(() => {
+    if (events && events.length > 0) {
+      const latest = events[0];
+      // Only toast if it's a new event and not the very first one on page load
+      if (latest.id !== lastEventId) {
+        if (lastEventId !== null) {
+          toast({
+            title: "Player Joined",
+            description: `${latest.teamName} joined the game`,
+          });
+        }
+        setLastEventId(latest.id);
+      }
+    }
+  }, [events, lastEventId, toast]);
+
   // Selection State
   const [config, setConfig] = useState({
     category: CATEGORIES[0].id,
@@ -166,6 +190,16 @@ export default function SimulatorPage() {
       });
       return;
     }
+
+    // Broadcast join event
+    if (firestore) {
+      addDocumentNonBlocking(collection(firestore, "simulator_events"), {
+        teamName,
+        type: 'join',
+        timestamp: serverTimestamp()
+      });
+    }
+
     setPhase('lab');
   };
 
