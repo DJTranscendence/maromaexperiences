@@ -129,19 +129,19 @@ export default function SimulatorPage() {
           toast({
             title: "Player Joined",
             description: (
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-6 mt-2">
                 {latest.emblem && (
-                  <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-white/10 shrink-0 border border-border/20">
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white/10 shrink-0 border border-border/20 shadow-lg">
                     <Image 
                       src={latest.emblem} 
                       alt={latest.teamName} 
                       fill 
-                      className="object-contain p-1" 
+                      className="object-contain p-2" 
                       unoptimized 
                     />
                   </div>
                 )}
-                <span className="font-medium">{latest.teamName} joined the game</span>
+                <span className="font-bold text-xl">{latest.teamName} joined the game</span>
               </div>
             ),
           });
