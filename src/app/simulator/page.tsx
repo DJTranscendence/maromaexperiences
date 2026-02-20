@@ -262,8 +262,8 @@ export default function SimulatorPage() {
               <h1 className="text-5xl md:text-7xl font-headline font-bold text-primary tracking-tight">
                 Welcome, {teamName}
               </h1>
-              <p className="text-2xl md:text-3xl font-headline font-bold text-accent italic uppercase tracking-widest">
-                Empower Your Vision. Create Your Product.
+              <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">
+                Let's Create Your Product
               </p>
             </div>
 
