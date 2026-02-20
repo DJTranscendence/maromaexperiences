@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -26,7 +25,7 @@ import {
   Loader2,
   Trophy
 } from "lucide-react";
-import { INGREDIENTS, PRODUCT_TYPES, TOUR_QUESTIONS, Ingredient } from "@/lib/simulator-data";
+import { INGREDIENTS, PRODUCT_TYPES, Ingredient } from "@/lib/simulator-data";
 import { cn } from "@/lib/utils";
 import {
   LineChart,
@@ -40,13 +39,12 @@ import {
 } from "recharts";
 
 export default function SimulatorPage() {
-  const [phase, setPhase] = useState<'intro' | 'tour-check' | 'lab' | 'market'>('intro');
+  const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(PRODUCT_TYPES[0]);
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
   const [message, setMessage] = useState("");
   const [price, setPrice] = useState(500);
-  const [unlockedBonuses, setUnlockedBonuses] = useState<string[]>([]);
   
   // Scoring
   const scores = useMemo(() => {
@@ -55,12 +53,12 @@ export default function SimulatorPage() {
     const cost = selectedIngredients.reduce((acc, curr) => acc + curr.cost, 0);
     
     // Logic: Trust drops if Earth is low. Profit drops if Trust is low.
-    const trust = (earth * 10) + (unlockedBonuses.includes('Bonus Trust (+20)') ? 20 : 0);
+    const trust = (earth * 10);
     const shortTermSales = (appeal * 1.5) - (price / 200);
     const longevity = (trust * 0.7) + (earth * 2);
 
     return { earth, appeal, cost, trust, shortTermSales, longevity };
-  }, [selectedIngredients, price, unlockedBonuses]);
+  }, [selectedIngredients, price]);
 
   // Simulation Data
   const chartData = useMemo(() => {
@@ -80,15 +78,6 @@ export default function SimulatorPage() {
     }
   };
 
-  const handleTourAnswer = (qIdx: number, optIdx: number) => {
-    if (optIdx === TOUR_QUESTIONS[qIdx].correct) {
-      setUnlockedBonuses([...unlockedBonuses, TOUR_QUESTIONS[qIdx].reward]);
-    }
-    if (qIdx === TOUR_QUESTIONS.length - 1) {
-      setPhase('lab');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -99,9 +88,12 @@ export default function SimulatorPage() {
             <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto">
               <Sprout className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Ethical Market Simulator</h1>
-            <p className="text-xl text-muted-foreground font-body">
-              Can you build a brand that cares for the Earth as much as it cares for people? Design your product and see if it survives the test of time.
+            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Create Your Product</h1>
+            <p className="text-xl text-muted-foreground font-body leading-relaxed">
+              Based on what you have learned today about how Maroma makes it's products, you will now create an imaginary product that we will run through a market simulator to see how it performs against the other teams' products.
+            </p>
+            <p className="text-lg text-muted-foreground/80 font-body">
+              Then you'll get a chance to modify all aspects of your product to see if you can improve your score.
             </p>
             <div className="space-y-4 pt-8">
               <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Team Name</Label>
@@ -113,43 +105,11 @@ export default function SimulatorPage() {
               />
               <Button 
                 disabled={!teamName} 
-                onClick={() => setPhase('tour-check')}
-                className="w-full bg-primary rounded-full h-14 text-lg font-bold"
+                onClick={() => setPhase('lab')}
+                className="w-full bg-primary rounded-full h-14 text-lg font-bold shadow-lg"
               >
-                Enter the Workshop <ChevronRight className="ml-2" />
+                Start Creating <ChevronRight className="ml-2" />
               </Button>
-            </div>
-          </div>
-        )}
-
-        {phase === 'tour-check' && (
-          <div className="max-w-3xl mx-auto space-y-12">
-            <div className="text-center">
-              <Badge className="mb-4 bg-accent/20 text-accent border-none px-4 py-1 uppercase tracking-widest font-bold">Tour Knowledge Challenge</Badge>
-              <h2 className="text-3xl font-headline font-bold text-primary">Recall Your Journey</h2>
-              <p className="text-muted-foreground mt-2">Correct answers unlock Fair Trade bonuses for your brand.</p>
-            </div>
-            
-            <div className="space-y-8">
-              {TOUR_QUESTIONS.map((q, qIdx) => (
-                <Card key={qIdx} className="rounded-3xl border-none shadow-xl overflow-hidden">
-                  <CardHeader className="bg-primary/5">
-                    <CardTitle className="text-lg font-headline">{q.question}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 grid grid-cols-1 gap-3">
-                    {q.options.map((opt, optIdx) => (
-                      <Button 
-                        key={optIdx} 
-                        variant="outline" 
-                        onClick={() => handleTourAnswer(qIdx, optIdx)}
-                        className="rounded-xl h-12 justify-start text-left px-6 hover:bg-primary hover:text-white transition-all"
-                      >
-                        {opt}
-                      </Button>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
             </div>
           </div>
         )}
@@ -190,14 +150,6 @@ export default function SimulatorPage() {
                       <Badge className="bg-white/20 border-none">Budget: ₹500</Badge>
                     </div>
                   </div>
-                  {unlockedBonuses.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50">Unlocked Perks</p>
-                      <div className="flex flex-wrap gap-2">
-                        {unlockedBonuses.map((b, i) => <Badge key={i} variant="secondary" className="bg-accent text-white border-none text-[9px]">{b}</Badge>)}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
               
@@ -354,7 +306,6 @@ export default function SimulatorPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {scores.earth > 6 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Your high-integrity ingredients built deep consumer trust.</div>}
-                  {unlockedBonuses.length > 0 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Tour knowledge gave you a competitive edge.</div>}
                   {scores.appeal > 7 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">The product's high appeal ensured a strong market entry.</div>}
                 </CardContent>
               </Card>
