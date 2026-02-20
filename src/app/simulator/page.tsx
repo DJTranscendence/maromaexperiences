@@ -183,44 +183,17 @@ export default function SimulatorPage() {
 
         {phase === 'lab' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Real-time Dashboard */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-primary text-white sticky top-24 overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <Dna className="w-32 h-32" />
-                </div>
-                <CardHeader>
-                  <CardTitle className="font-headline text-2xl">Market Readiness</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                      <span>Earth Score</span>
-                      <span>{Math.round(scores.environmentalScore * 10)}/100</span>
-                    </div>
-                    <Progress value={scores.environmentalScore * 10} className="h-2 bg-white/20" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                      <span>Brand Longevity</span>
-                      <span>{Math.round(scores.longevity * 10)}%</span>
-                    </div>
-                    <Progress value={scores.longevity * 10} className="h-2 bg-white/20" />
-                  </div>
-                  <div className="pt-4 border-t border-white/10 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50">Est. Retail Price</span>
-                      <span className="text-2xl font-bold">₹{Math.round(scores.retailPrice)}</span>
-                    </div>
-                    {scores.consistency < 1 && (
-                      <div className="bg-red-500/20 p-3 rounded-xl flex items-center gap-2 border border-red-500/30">
-                        <AlertCircle className="w-4 h-4 text-red-300" />
-                        <span className="text-[10px] font-bold uppercase text-red-100">Greenwashing Detected</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Inspiring Sidebar Title */}
+            <div className="lg:col-span-1 space-y-6 sticky top-24 h-fit">
+              <h2 className="text-5xl font-headline font-bold text-primary leading-tight">
+                Empower Your <br /> Vision.
+              </h2>
+              <p className="text-2xl font-headline font-bold text-accent">Create Your Product</p>
+              <div className="pt-8 p-6 bg-white/50 rounded-3xl border border-dashed border-primary/20">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Every selection is a statement. Apply the knowledge from your tour to craft a brand that balances Earth care and human prosperity.
+                </p>
+              </div>
             </div>
 
             {/* Step-by-Step Lab */}
@@ -234,7 +207,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
@@ -243,7 +218,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                         </SelectContent>
@@ -260,7 +237,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
                         </SelectContent>
@@ -269,7 +248,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Where do we get our ingredients?</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
@@ -286,7 +267,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -295,7 +278,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -312,7 +297,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Target Audience</Label>
                       <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                         </SelectContent>
@@ -321,7 +308,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price Tier</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -338,7 +327,9 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Core Value Emphasis</Label>
                       <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
                         </SelectContent>
@@ -376,14 +367,58 @@ export default function SimulatorPage() {
               <p className="text-muted-foreground">How your {config.format} performed in the real world.</p>
             </div>
 
+            {/* Final Market Scorecard Card */}
+            <div className="max-w-4xl mx-auto">
+              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-primary text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <Dna className="w-32 h-32" />
+                </div>
+                <CardHeader className="pb-2">
+                  <CardTitle className="font-headline text-3xl">Market Readiness</CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 space-y-10">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/70">Earth Score</span>
+                      <span className="text-3xl font-bold font-headline">{Math.round(scores.environmentalScore * 10)}/100</span>
+                    </div>
+                    <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/20" />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/70">Brand Longevity</span>
+                      <span className="text-3xl font-bold font-headline">{Math.round(scores.longevity * 10)}%</span>
+                    </div>
+                    <Progress value={scores.longevity * 10} className="h-3 bg-white/20" />
+                  </div>
+
+                  <div className="pt-8 border-t border-white/10 flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Est. Retail Price</span>
+                    <span className="text-5xl font-bold font-headline">₹{Math.round(scores.retailPrice)}</span>
+                  </div>
+
+                  {scores.consistency < 1 && (
+                    <div className="bg-red-500/20 p-4 rounded-2xl flex items-center gap-3 border border-red-500/30">
+                      <AlertCircle className="w-6 h-6 text-red-300" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold uppercase text-red-100 tracking-widest">Consistency Warning</span>
+                        <span className="text-xs text-red-100/70">Market feedback suggests your packaging or sourcing contradicts your brand message.</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Metric Cards */}
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Year 1 Revenue", val: Math.round(chartData[11].profit), icon: IndianRupee },
-                  { label: "Public Trust Index", val: Math.round(chartData[11].trust), icon: ShieldCheck, color: "text-green-600" },
-                  { label: "Brand Longevity", val: Math.round(scores.longevity * 10), icon: History },
-                  { label: "Earth Score", val: Math.round(scores.environmentalScore * 10), icon: Leaf, color: "text-emerald-600" }
+                  { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit)}`, icon: IndianRupee },
+                  { label: "Public Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-600" },
+                  { label: "Market Resonance", val: Math.round(scores.shortTermSales * 10), icon: Zap, color: "text-amber-500" },
+                  { label: "Human Impact", val: Math.round(selectedSourcing.humanScore * 10), icon: Users, color: "text-blue-500" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-2xl border-none shadow-lg">
                     <CardContent className="p-6 flex items-center gap-4">
@@ -451,7 +486,7 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            <div className="flex justify-center gap-4 pt-8">
+            <div className="flex justify-center gap-4 pt-8 pb-20">
               <Button variant="outline" onClick={() => setPhase('lab')} className="rounded-full px-12 h-14">Iterate Product</Button>
               <Button onClick={() => window.location.reload()} className="bg-primary rounded-full px-12 h-14 font-bold shadow-xl">Start New Team Session</Button>
             </div>
