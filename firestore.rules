@@ -2,102 +2,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- GLOBAL HELPER FUNCTIONS ---
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-    }
-
-    function isFacilitator() {
-      return exists(/databases/$(database)/documents/roles_facilitator/$(request.auth.uid));
-    }
-
-    function isMember(memberList) {
-      return isSignedIn() && request.auth.uid in memberList;
-    }
-
-    // --- COLLECTION RULES ---
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)); }
 
     match /users/{userId} {
-      allow get, list: if isSignedIn(); // Relaxed for prototype
-      allow create: if isSignedIn(); 
-      allow update: if isSignedIn();
-      allow delete: if false; 
+      allow read, write: if isSignedIn();
     }
-
-    match /proposals/{proposalId} {
-      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isSignedIn(); // Filtered client-side, but rules must allow list
-      allow create: if isSignedIn();
+    match /simulator_sessions/{sessionId} {
+      allow read: if true;
+      allow create: if true; // Open to participants
       allow update, delete: if isAdmin();
     }
-
-    match /roles_admin/{userId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isSignedIn(); // Relaxed for prototype
-    }
-
-    match /roles_facilitator/{userId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isSignedIn(); // Relaxed for prototype
-    }
-
-    match /tourCategories/{categoryId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn(); 
-    }
-
-    match /locations/{locationId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn(); 
-    }
-
-    match /media/{mediaId} {
-      allow get, list: if true;
-      allow create: if isSignedIn(); 
-      allow update, delete: if isSignedIn();
-    }
-
-    match /tours/{tourId} {
-      allow get, list: if true; 
-      allow create: if isSignedIn(); 
-      allow update: if isSignedIn(); 
-      allow delete: if isSignedIn();
-    }
-
-    match /tourSchedules/{scheduleId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
-    }
-
-    match /addOns/{addOnId} {
-      allow get, list: if true;
-      allow create, update, delete: if isSignedIn();
-    }
-
-    match /bookings/{bookingId} {
-      allow get, list: if isSignedIn(); // Relaxed for prototype
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
-    }
-
-    match /users/{userId}/notifications/{notificationId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
-    }
+    match /tours/{tourId} { allow read: if true; allow write: if isAdmin(); }
+    match /proposals/{proposalId} { allow create, read: if isSignedIn(); allow update, delete: if isAdmin(); }
+    match /roles_admin/{userId} { allow read: if isSignedIn(); }
+    match /media/{mediaId} { allow read: if true; }
   }
 }
