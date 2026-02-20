@@ -224,7 +224,7 @@ export default function SimulatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000">
       <Navbar />
       
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
@@ -240,26 +240,26 @@ export default function SimulatorPage() {
                   priority
                 />
               </div>
-              <p className="text-xl text-muted-foreground font-body leading-relaxed max-w-2xl mx-auto">
+              <p className="text-xl text-slate-300 font-body leading-relaxed max-w-2xl mx-auto">
                 Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
               </p>
             </div>
 
-            <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-xl border border-border/50">
+            <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-2xl border border-white/10">
               <div className="space-y-4 text-left">
-                <Label className="text-sm font-bold text-muted-foreground tracking-wide px-2">
+                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">
                   1. Choose Your Team Name (it can be different to your logo name)
                 </Label>
                 <Input 
                   placeholder="e.g. The Eco-Warriors" 
                   value={teamName} 
                   onChange={e => setTeamName(e.target.value)}
-                  className="rounded-2xl h-16 text-center text-2xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner"
+                  className="rounded-2xl h-16 text-center text-2xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner bg-slate-50"
                 />
               </div>
 
               <div className="space-y-6 text-left">
-                <Label className="text-sm font-bold text-muted-foreground tracking-wide px-2">
+                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">
                   2. Choose Your Logo Emblem
                 </Label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
@@ -268,7 +268,7 @@ export default function SimulatorPage() {
                       key={emblem.id}
                       onClick={() => setSelectedEmblem(emblem.url)}
                       className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-muted/20",
+                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-slate-50",
                         selectedEmblem === emblem.url ? "border-primary scale-105 shadow-lg" : "border-transparent hover:border-muted-foreground/30"
                       )}
                     >
@@ -299,7 +299,7 @@ export default function SimulatorPage() {
               <div className="relative w-32 h-32 mx-auto mb-6">
                 <Image src={selectedEmblem} alt="Team Logo" fill className="object-contain" unoptimized />
               </div>
-              <h1 className="text-5xl md:text-7xl font-headline font-bold text-primary tracking-tight">
+              <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">
                 Welcome, {teamName}
               </h1>
               <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">
@@ -310,23 +310,23 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div className="space-y-12 pb-20">
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
                     <Award className="w-6 h-6 text-accent" /> 1. Choose Your Product
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Format</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                         </SelectContent>
@@ -336,23 +336,23 @@ export default function SimulatorPage() {
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
                     <Sparkles className="w-6 h-6 text-accent" /> 2. The Formula
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Ingredient Base</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Where do we get our ingredients?</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Where do we get our ingredients?</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
@@ -362,23 +362,23 @@ export default function SimulatorPage() {
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
                     <Package className="w-6 h-6 text-accent" /> 3. Packaging & Production
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Packaging Type</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Production Method</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -390,23 +390,23 @@ export default function SimulatorPage() {
 
               <div className="space-y-12 pb-20">
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
                     <Target className="w-6 h-6 text-accent" /> 4. Strategy
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Target Audience</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Audience</Label>
                       <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price Tier</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Price Tier</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                         </SelectContent>
@@ -416,27 +416,27 @@ export default function SimulatorPage() {
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
                     <Heart className="w-6 h-6 text-accent" /> 5. Brand Identity
                   </h3>
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Core Value Emphasis</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Core Value Emphasis</Label>
                       <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <p className="text-[10px] text-muted-foreground italic px-1">{selectedValue.description}</p>
+                      <p className="text-[10px] text-slate-400 italic px-1">{selectedValue.description}</p>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Marketing Message</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Marketing Message</Label>
                       <Input 
                         placeholder="e.g., Purely Natural. Purely Maroma." 
                         value={config.message} 
                         onChange={e => handleUpdateConfig('message', e.target.value)} 
-                        className="rounded-xl h-12"
+                        className="rounded-xl h-12 bg-white border-none shadow-lg text-primary font-medium"
                       />
                     </div>
                   </div>
@@ -456,13 +456,13 @@ export default function SimulatorPage() {
         {phase === 'market' && (
           <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000">
             <div className="text-center space-y-4">
-              <Badge className="bg-green-100 text-green-700 px-6 py-2 rounded-full font-bold">Launch Successful: Year 1 trajectory</Badge>
-              <h2 className="text-5xl font-headline font-bold text-primary">Simulation Analysis</h2>
-              <p className="text-muted-foreground">How your {config.format} performed in the real world.</p>
+              <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Launch Successful: Year 1 trajectory</Badge>
+              <h2 className="text-5xl font-headline font-bold text-white">Simulation Analysis</h2>
+              <p className="text-slate-300">How your {config.format} performed in the real world.</p>
             </div>
 
             <div className="max-w-4xl mx-auto">
-              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-primary text-white overflow-hidden relative">
+              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/5 backdrop-blur-sm text-white overflow-hidden relative border border-white/10">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                   <Dna className="w-32 h-32" />
                 </div>
@@ -475,7 +475,7 @@ export default function SimulatorPage() {
                       <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/70">Earth Score</span>
                       <span className="text-3xl font-bold font-headline">{Math.round(scores.environmentalScore * 10)}/100</span>
                     </div>
-                    <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/20" />
+                    <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/10" />
                   </div>
                   
                   <div className="space-y-4">
@@ -483,12 +483,12 @@ export default function SimulatorPage() {
                       <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/70">Brand Longevity</span>
                       <span className="text-3xl font-bold font-headline">{Math.round(scores.longevity * 10)}%</span>
                     </div>
-                    <Progress value={scores.longevity * 10} className="h-3 bg-white/20" />
+                    <Progress value={scores.longevity * 10} className="h-3 bg-white/10" />
                   </div>
 
                   <div className="pt-8 border-t border-white/10 flex justify-between items-center">
                     <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Est. Retail Price</span>
-                    <span className="text-5xl font-bold font-headline">₹{Math.round(scores.retailPrice)}</span>
+                    <span className="text-5xl font-bold font-headline text-accent">₹{Math.round(scores.retailPrice)}</span>
                   </div>
 
                   {scores.consistency < 1 && (
@@ -508,41 +508,41 @@ export default function SimulatorPage() {
               <div className="lg:col-span-1 space-y-4">
                 {[
                   { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit)}`, icon: IndianRupee },
-                  { label: "Public Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-600" },
-                  { label: "Market Resonance", val: Math.round(scores.shortTermSales * 10), icon: Zap, color: "text-amber-500" },
-                  { label: "Human Impact", val: Math.round(selectedSourcing.humanScore * 10), icon: Users, color: "text-blue-500" }
+                  { label: "Public Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
+                  { label: "Market Resonance", val: Math.round(scores.shortTermSales * 10), icon: Zap, color: "text-amber-400" },
+                  { label: "Human Impact", val: Math.round(selectedSourcing.humanScore * 10), icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
-                  <Card key={i} className="rounded-2xl border-none shadow-lg">
+                  <Card key={i} className="rounded-2xl border-none shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm">
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                         <m.icon className={cn("w-5 h-5", m.color)} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{m.label}</p>
-                        <p className="text-2xl font-bold text-primary">{m.val}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{m.label}</p>
+                        <p className="text-2xl font-bold text-white">{m.val}</p>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white p-8">
+              <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-8">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="font-headline">Trajectory: Month 1-12</CardTitle>
+                  <CardTitle className="font-headline text-white">Trajectory: Month 1-12</CardTitle>
                 </CardHeader>
                 <div className="h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" label={{ value: 'Months Active', position: 'insideBottom', offset: -5 }} />
-                      <YAxis />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" label={{ value: 'Months Active', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.5)' }} />
+                      <YAxis stroke="rgba(255,255,255,0.5)" />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', color: '#fff' }}
                       />
                       <Legend verticalAlign="top" height={36}/>
-                      <Line type="monotone" dataKey="profit" stroke="#2563eb" strokeWidth={3} name="Revenue" dot={false} />
-                      <Line type="monotone" dataKey="trust" stroke="#16a34a" strokeWidth={3} name="Trust Index" dot={false} />
-                      <Line type="monotone" dataKey="impact" stroke="#db2777" strokeWidth={3} name="Earth Impact" dot={false} />
+                      <Line type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
+                      <Line type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
+                      <Line type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="Earth Impact" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -550,29 +550,29 @@ export default function SimulatorPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="rounded-3xl border-none shadow-xl bg-muted/20">
+              <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                    <CircleCheck className="w-5 h-5 text-green-600" /> What Helped
+                  <CardTitle className="font-headline flex items-center gap-2 text-white">
+                    <CircleCheck className="w-5 h-5 text-green-400" /> What Helped
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.consistency >= 1 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Your brand integrity is perfect. Customers see your actions match your values.</div>}
-                  {scores.environmentalScore > 7 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">High Earth Score is attracting the growing eco-conscious segment.</div>}
-                  {selectedProduction.id === 'spw' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-green-500">Solar-powered production is a massive trust-builder for your {selectedAudience.name} audience.</div>}
+                  {scores.consistency >= 1 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Your brand integrity is perfect. Customers see your actions match your values.</div>}
+                  {scores.environmentalScore > 7 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">High Earth Score is attracting the growing eco-conscious segment.</div>}
+                  {selectedProduction.id === 'spw' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Solar-powered production is a massive trust-builder for your {selectedAudience.name} audience.</div>}
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-none shadow-xl bg-muted/20">
+              <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600" /> What Hurt
+                  <CardTitle className="font-headline flex items-center gap-2 text-white">
+                    <AlertCircle className="w-5 h-5 text-red-400" /> What Hurt
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.consistency < 1 && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
-                  {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
-                  {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Your pricing is way too high for your target audience (Students).</div>}
+                  {scores.consistency < 1 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
+                  {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
+                  {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Your pricing is way too high for your target audience (Students).</div>}
                 </CardContent>
               </Card>
             </div>
@@ -580,8 +580,8 @@ export default function SimulatorPage() {
             <div className="flex justify-center gap-4 pt-8 pb-20">
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
-                  <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14">Iterate Product</Button>
-                  <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95">Start New Team Session</Button>
+                  <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">Iterate Product</Button>
+                  <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95 text-white">Start New Team Session</Button>
                 </div>
               </div>
             </div>
