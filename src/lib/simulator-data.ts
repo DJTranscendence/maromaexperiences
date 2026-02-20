@@ -107,10 +107,10 @@ export const TARGET_AUDIENCES: TargetAudience[] = [
 ];
 
 export const PRICE_TIERS: PriceTier[] = [
-  { id: 'budget', name: 'Budget', accessibility: 1.0, margin: 0.1, fairness: 0.9 },
-  { id: 'accessible', name: 'Accessible', accessibility: 0.8, margin: 0.3, fairness: 1.0 },
-  { id: 'premium', name: 'Premium', accessibility: 0.4, margin: 0.6, fairness: 0.8 },
-  { id: 'luxury', name: 'Luxury', accessibility: 0.1, margin: 0.8, fairness: 0.6 },
+  { id: 'budget', name: '10% Margin (Budget)', accessibility: 1.0, margin: 0.1, fairness: 0.9 },
+  { id: 'accessible', name: '30% Margin (Accessible)', accessibility: 0.8, margin: 0.3, fairness: 1.0 },
+  { id: 'premium', name: '60% Margin (Premium)', accessibility: 0.4, margin: 0.6, fairness: 0.8 },
+  { id: 'luxury', name: '100% Margin (Luxury)', accessibility: 0.1, margin: 1.0, fairness: 0.6 },
 ];
 
 export const CORE_VALUES: CoreValue[] = [

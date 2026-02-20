@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -176,8 +175,12 @@ export default function SimulatorPage() {
 
   // Scoring Logic
   const scores = useMemo(() => {
+    // Cumulative Production Cost
     const productionCost = selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta;
+    
+    // Calculated Retail Price based on Margin
     const retailPrice = productionCost * (1 + selectedPriceTier.margin);
+    
     const baseEarth = selectedBase.earthScore;
     const environmentalScore = Math.min(10, baseEarth * selectedPackaging.envMultiplier);
 
@@ -500,7 +503,7 @@ export default function SimulatorPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Price Tier</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Profit Margin</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -537,6 +540,17 @@ export default function SimulatorPage() {
                     </div>
                   </div>
                 </section>
+
+                <div className="bg-slate-900/40 p-6 rounded-2xl border border-white/5 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Est. Production Cost</span>
+                    <span className="text-xl font-bold text-white">₹{Math.round(scores.productionCost)}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Est. Retail Price</span>
+                    <span className="text-2xl font-bold text-accent">₹{Math.round(scores.retailPrice)}</span>
+                  </div>
+                </div>
 
                 <Button 
                   onClick={launchSimulation}
