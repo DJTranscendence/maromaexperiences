@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -57,9 +58,19 @@ import {
 
 const MAROMA_LOGO = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
+const TEAM_EMBLEMS = [
+  { id: 'elephant', name: 'Elephant', url: 'https://picsum.photos/seed/maroma-elephant/200/200', hint: 'strength wisdom' },
+  { id: 'tiger', name: 'Tiger', url: 'https://picsum.photos/seed/maroma-tiger/200/200', hint: 'power spirit' },
+  { id: 'deer', name: 'Deer', url: 'https://picsum.photos/seed/maroma-deer/200/200', hint: 'grace nature' },
+  { id: 'owl', name: 'Owl', url: 'https://picsum.photos/seed/maroma-owl/200/200', hint: 'vision wisdom' },
+  { id: 'bee', name: 'Bee', url: 'https://picsum.photos/seed/maroma-bee/200/200', hint: 'community craft' },
+  { id: 'leaf', name: 'Leaf', url: 'https://picsum.photos/seed/maroma-leaf/200/200', hint: 'growth earth' },
+];
+
 export default function SimulatorPage() {
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
+  const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   
   // 9-Step Selection State
   const [config, setConfig] = useState({
@@ -99,15 +110,13 @@ export default function SimulatorPage() {
     // 4. Ethical Consistency Check
     let consistency = 1.0;
     
-    // Greenwashing Penalty: Zero waste / Low carbon value with plastic packaging
+    // Greenwashing Penalty
     if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') {
       consistency -= 0.5;
     }
-    // Fair Trade value with industrial supplier
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') {
       consistency -= 0.5;
     }
-    // "Looks Environmental but is not" is a deliberate consistency failure
     if (config.coreValue === 'len') {
       consistency -= 0.7;
     }
@@ -157,26 +166,62 @@ export default function SimulatorPage() {
       
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         {phase === 'intro' && (
-          <div className="max-w-2xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto">
               <Sprout className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">The Maroma Product Game</h1>
-            <p className="text-xl text-muted-foreground font-body leading-relaxed">
-              Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator to see how it performs against other teams' products.
-            </p>
-            <div className="space-y-4 pt-8">
-              <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Team Name</Label>
-              <Input 
-                placeholder="The Eco-Warriors" 
-                value={teamName} 
-                onChange={e => setTeamName(e.target.value)}
-                className="rounded-xl h-14 text-center text-lg"
-              />
+            
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary tracking-tight uppercase">The Maroma Product Game</h1>
+              <p className="text-xl text-muted-foreground font-body leading-relaxed max-w-2xl mx-auto">
+                Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
+              </p>
+            </div>
+
+            <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-xl border border-border/50">
+              <div className="space-y-4">
+                <Label className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">Team Name</Label>
+                <Input 
+                  placeholder="The Eco-Warriors" 
+                  value={teamName} 
+                  onChange={e => setTeamName(e.target.value)}
+                  className="rounded-2xl h-16 text-center text-2xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner"
+                />
+              </div>
+
+              <div className="space-y-6">
+                <Label className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">Choose Your Emblem</Label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                  {TEAM_EMBLEMS.map((emblem) => (
+                    <button
+                      key={emblem.id}
+                      onClick={() => setSelectedEmblem(emblem.url)}
+                      className={cn(
+                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group",
+                        selectedEmblem === emblem.url ? "border-primary scale-105 shadow-lg" : "border-transparent hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <Image 
+                        src={emblem.url} 
+                        alt={emblem.name} 
+                        fill 
+                        className="object-cover"
+                        data-ai-hint={emblem.hint}
+                      />
+                      {selectedEmblem === emblem.url && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <CheckCircle2 className="text-white w-6 h-6 drop-shadow-md" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <Button 
                 disabled={!teamName} 
                 onClick={() => setPhase('lab')}
-                className="w-full bg-primary rounded-full h-14 text-lg font-bold shadow-lg"
+                className="w-full bg-primary hover:bg-primary/90 rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95"
               >
                 Enter the Workshop <ChevronRight className="ml-2" />
               </Button>
@@ -186,22 +231,41 @@ export default function SimulatorPage() {
 
         {phase === 'lab' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-1 space-y-6 sticky top-24 h-fit">
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative w-12 h-12 shrink-0">
-                    <Image 
-                      src={MAROMA_LOGO}
-                      alt="Maroma Logo"
-                      fill
-                      className="object-contain"
-                    />
+            <div className="lg:col-span-1 space-y-8 sticky top-24 h-fit">
+              <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8">
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-primary/10 shadow-lg">
+                      <Image 
+                        src={selectedEmblem}
+                        alt="Team Emblem"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">Active Team</span>
+                      <h2 className="text-3xl font-headline font-bold text-primary leading-tight">
+                        {teamName}
+                      </h2>
+                    </div>
                   </div>
-                  <h2 className="text-4xl font-headline font-bold text-primary leading-tight">
-                    Welcome <br /> {teamName}
-                  </h2>
+                  <div className="pt-6 border-t border-border flex justify-center">
+                    <div className="relative w-32 h-12">
+                      <Image 
+                        src={MAROMA_LOGO}
+                        alt="Maroma Logo"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-4xl font-headline font-bold text-accent">Create Your Product</h3>
+              </Card>
+              
+              <div className="text-center px-4">
+                <h3 className="text-3xl font-headline font-bold text-accent tracking-tight">Empower Your Vision.</h3>
+                <h4 className="text-xl font-headline font-bold text-primary/70">Create Your Product</h4>
               </div>
             </div>
 
@@ -359,7 +423,7 @@ export default function SimulatorPage() {
 
               <Button 
                 onClick={() => setPhase('market')}
-                className="w-full bg-accent hover:bg-accent/90 rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20"
+                className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
               >
                 Launch Simulation <ArrowRight className="ml-2" />
               </Button>
@@ -381,7 +445,7 @@ export default function SimulatorPage() {
                   <Dna className="w-32 h-32" />
                 </div>
                 <CardHeader className="pb-2">
-                  <CardTitle className="font-headline text-3xl">Market Readiness</CardTitle>
+                  <CardTitle className="font-headline text-3xl">Final Market Scorecard</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-10">
                   <div className="space-y-4">
@@ -495,7 +559,7 @@ export default function SimulatorPage() {
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
                   <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14">Iterate Product</Button>
-                  <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl">Start New Team Session</Button>
+                  <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95">Start New Team Session</Button>
                 </div>
               </div>
             </div>
