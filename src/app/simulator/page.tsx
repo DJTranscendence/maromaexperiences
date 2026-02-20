@@ -166,7 +166,7 @@ export default function SimulatorPage() {
             {/* Main Lab */}
             <div className="lg:col-span-2 space-y-12">
               <section>
-                <h3 className="text-2xl font-headline font-bold text-primary mb-6">1. Choose Your Vessel</h3>
+                <h3 className="text-2xl font-headline font-bold text-primary mb-6">1. Choose Your Product</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {PRODUCT_TYPES.map(p => (
                     <button 
