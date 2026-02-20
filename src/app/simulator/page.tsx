@@ -212,6 +212,16 @@ export default function SimulatorPage() {
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier, selectedValue]);
 
+  const overallScore = useMemo(() => {
+    return Math.round((
+      (scores.environmentalScore * 10) + 
+      scores.trust + 
+      (scores.shortTermSales * 10) + 
+      (scores.socialImpact * 10) + 
+      (scores.longevity * 10)
+    ) / 5);
+  }, [scores]);
+
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: i + 1,
@@ -627,8 +637,8 @@ export default function SimulatorPage() {
                   </div>
 
                   <div className="pt-8 border-t border-white/10 flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Est. Retail Price</span>
-                    <span className="text-5xl font-bold font-headline text-accent">₹{Math.round(scores.retailPrice)}</span>
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Overall Brand Score</span>
+                    <span className="text-5xl font-bold font-headline text-accent">{overallScore}/100</span>
                   </div>
 
                   {scores.consistency < 1 && (
