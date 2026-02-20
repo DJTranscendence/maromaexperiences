@@ -274,7 +274,7 @@ export default function SimulatorPage() {
       <Navbar />
       
       {/* Live Player Board Sidebar Overlay */}
-      <div className="fixed top-24 right-4 z-40 w-64 hidden xl:block">
+      <div className="fixed top-24 right-4 z-40 w-64 hidden lg:block">
         <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
           <CardHeader className="p-5 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
@@ -283,7 +283,7 @@ export default function SimulatorPage() {
             </div>
             <Badge variant="outline" className="text-[9px] border-white/20 text-slate-400">{activePlayers.length} Active</Badge>
           </CardHeader>
-          <CardContent className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          <CardContent className="p-4 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
             {activePlayers.length > 0 ? (
               activePlayers.map((player, idx) => (
                 <div key={idx} className="flex items-center gap-3 group animate-in fade-in slide-in-from-right-4 duration-500">

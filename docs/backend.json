@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -37,10 +38,11 @@
     "SimulatorEvent": {
       "title": "SimulatorEvent",
       "type": "object",
-      "description": "Real-time game events such as team joins.",
+      "description": "Real-time game events such as team joins and phase changes.",
       "properties": {
         "teamName": { "type": "string" },
-        "type": { "type": "string", "enum": ["join"] },
+        "emblem": { "type": "string" },
+        "type": { "type": "string", "enum": ["join", "lab", "market"] },
         "timestamp": { "type": "string", "format": "date-time" }
       }
     }
