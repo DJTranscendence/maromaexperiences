@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Sprout, 
@@ -34,7 +36,9 @@ import {
   Loader2,
   MessageSquareQuote,
   TrendingUp,
-  BrainCircuit
+  BrainCircuit,
+  Trophy,
+  Star
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -73,7 +77,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
   { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
   { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
-  { id: 'brand-main', name: 'Main Logo', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2' },
+  { id: 'brand-main', name: 'Main Logo', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2' },
   { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
   { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
   { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
@@ -99,17 +103,19 @@ export default function SimulatorPage() {
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // Real-time listener for events
+  // Real-time listeners
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-      collection(firestore, "simulator_events"),
-      orderBy("timestamp", "desc"),
-      limit(20)
-    );
+    return query(collection(firestore, "simulator_events"), orderBy("timestamp", "desc"), limit(20));
+  }, [firestore]);
+
+  const sessionsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "simulator_sessions"), orderBy("createdAt", "desc"), limit(50));
   }, [firestore]);
 
   const { data: events } = useCollection(eventsQuery);
+  const { data: sessions } = useCollection(sessionsQuery);
 
   const activePlayers = useMemo(() => {
     if (!events) return [];
@@ -126,6 +132,23 @@ export default function SimulatorPage() {
     });
     return Array.from(playersMap.values());
   }, [events]);
+
+  const metricLeaders = useMemo(() => {
+    if (!sessions || sessions.length === 0) return null;
+    
+    const getBest = (metric: 'earth' | 'trust' | 'resonance' | 'impact' | 'longevity') => {
+      const sorted = [...sessions].sort((a, b) => (b.scores?.[metric] || 0) - (a.scores?.[metric] || 0));
+      return sorted[0];
+    };
+
+    return {
+      earth: { session: getBest('earth'), label: 'Earth Score', color: 'text-emerald-400' },
+      trust: { session: getBest('trust'), label: 'Public Trust', color: 'text-blue-400' },
+      resonance: { session: getBest('resonance'), label: 'Market Resonance', color: 'text-amber-400' },
+      impact: { session: getBest('impact'), label: 'Social Impact', color: 'text-purple-400' },
+      longevity: { session: getBest('longevity'), label: 'Longevity', color: 'text-rose-400' }
+    };
+  }, [sessions]);
 
   useEffect(() => {
     if (events && events.length > 0) {
@@ -180,7 +203,7 @@ export default function SimulatorPage() {
       return acc + (channel?.cost || 0);
     }, 0);
 
-    const productionCost = Math.max(10, selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta + (marketingCost / 5)); // Amortized marketing per unit
+    const productionCost = Math.max(10, selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta + (marketingCost / 5));
     const retailPrice = productionCost * (1 + selectedPriceTier.margin);
     
     const baseEarth = selectedBase.earthScore;
@@ -278,11 +301,14 @@ export default function SimulatorPage() {
     if (firestore) {
       addDocumentNonBlocking(collection(firestore, "simulator_sessions"), {
         teamName,
+        emblem: selectedEmblem,
         productType: config.format,
         ingredients: [selectedBase.name, selectedSourcing.name],
         scores: {
           earth: Math.round(scores.environmentalScore * 10),
           trust: Math.round(scores.trust),
+          resonance: Math.round(scores.shortTermSales * 10),
+          impact: Math.round(scores.socialImpact * 10),
           profit: Math.round(chartData[11].profit),
           longevity: Math.round(scores.longevity * 10)
         },
@@ -333,38 +359,75 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
-      <div className="fixed top-24 right-4 z-40 w-64 hidden lg:block">
-        <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
-          <CardHeader className="p-5 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-accent animate-pulse" />
-              <CardTitle className="text-sm font-headline font-bold text-white uppercase tracking-widest">Live Player Board</CardTitle>
-            </div>
-            <Badge variant="outline" className="text-[9px] border-white/20 text-slate-400">{activePlayers.length} Active</Badge>
-          </CardHeader>
-          <CardContent className="p-4 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
-            {activePlayers.length > 0 ? (
-              activePlayers.map((player, idx) => (
-                <div key={idx} className="flex items-center gap-3 group animate-in fade-in slide-in-from-right-4 duration-500">
-                  <div className="relative w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1 shrink-0 group-hover:scale-110 transition-transform">
-                    <Image src={player.emblem} alt={player.name} fill className="object-contain p-1" unoptimized />
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <p className="text-xs font-bold text-white truncate">{player.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", getStatusColor(player.status))} />
-                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">{getStatusLabel(player.status)}</span>
+      <div className="fixed top-24 right-4 z-40 w-72 hidden lg:block">
+        <div className="space-y-6">
+          {/* Champions Section */}
+          <Card className="bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2rem] shadow-2xl overflow-hidden border-2">
+            <CardHeader className="p-5 border-b border-white/5 bg-accent/10 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <CardTitle className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em]">Metric Champions</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {metricLeaders ? (
+                Object.entries(metricLeaders).map(([key, data]) => (
+                  <div key={key} className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="relative w-8 h-8 rounded-full bg-white/5 border border-white/10 shrink-0 p-1">
+                      {data.session?.emblem && (
+                        <Image src={data.session.emblem} alt="Champion" fill className="object-contain p-1" unoptimized />
+                      )}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <p className="text-[9px] font-bold text-white uppercase tracking-tight opacity-60">{data.label}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-bold text-white truncate max-w-[100px]">{data.session?.teamName || '---'}</p>
+                        <p className={cn("text-xs font-bold", data.color)}>{data.session?.scores?.[key as any] || 0}</p>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest">Awaiting Champions...</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-xs text-slate-500 font-medium">Waiting for teams...</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Active Players Board */}
+          <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-accent animate-pulse" />
+                <CardTitle className="text-xs font-headline font-bold text-white uppercase tracking-widest">Live Feed</CardTitle>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <Badge variant="outline" className="text-[9px] border-white/20 text-slate-400">{activePlayers.length}</Badge>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4 max-h-[40vh] overflow-y-auto scrollbar-hide">
+              {activePlayers.length > 0 ? (
+                activePlayers.map((player, idx) => (
+                  <div key={idx} className="flex items-center gap-3 group animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 p-1 shrink-0">
+                      <Image src={player.emblem} alt={player.name} fill className="object-contain p-1" unoptimized />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{player.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", getStatusColor(player.status))} />
+                        <span className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">{getStatusLabel(player.status)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-xs text-slate-500 font-medium">Waiting for teams...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
@@ -646,7 +709,6 @@ export default function SimulatorPage() {
                 </CardContent>
               </Card>
 
-              {/* AI ANALYST FEEDBACK CARD */}
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-slate-900/60 backdrop-blur-xl text-white overflow-hidden border border-white/10 flex flex-col">
                 <CardHeader className="bg-white/5 border-b border-white/5 py-6">
                   <div className="flex items-center justify-between">

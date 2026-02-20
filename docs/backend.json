@@ -21,6 +21,7 @@
       "properties": {
         "id": { "type": "string" },
         "teamName": { "type": "string" },
+        "emblem": { "type": "string" },
         "productType": { "type": "string" },
         "ingredients": { "type": "array", "items": { "type": "string" } },
         "scores": {
@@ -28,6 +29,8 @@
           "properties": {
             "earth": { "type": "number" },
             "trust": { "type": "number" },
+            "resonance": { "type": "number" },
+            "impact": { "type": "number" },
             "profit": { "type": "number" },
             "longevity": { "type": "number" }
           }
