@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Sprout, 
   Heart, 
-  ShieldCheck, 
   AlertCircle, 
   CheckCircle2, 
   Dna,
@@ -29,9 +28,9 @@ import {
   IndianRupee,
   Users,
   Activity,
-  Flame,
   Globe,
-  Megaphone
+  Megaphone,
+  ShieldCheck
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -103,12 +102,9 @@ export default function SimulatorPage() {
 
   const { data: events } = useCollection(eventsQuery);
 
-  // Derived state: Live Active Players
   const activePlayers = useMemo(() => {
     if (!events) return [];
-    
     const playersMap = new Map();
-    // Events are ordered by timestamp desc, so first one we see per team is their latest status
     events.forEach(event => {
       if (!playersMap.has(event.teamName)) {
         playersMap.set(event.teamName, {
@@ -119,7 +115,6 @@ export default function SimulatorPage() {
         });
       }
     });
-    
     return Array.from(playersMap.values());
   }, [events]);
 
@@ -134,13 +129,7 @@ export default function SimulatorPage() {
               <div className="flex items-center gap-6 mt-2">
                 {latest.emblem && (
                   <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white/10 shrink-0 border border-border/20 shadow-lg">
-                    <Image 
-                      src={latest.emblem} 
-                      alt={latest.teamName} 
-                      fill 
-                      className="object-contain p-2" 
-                      unoptimized 
-                    />
+                    <Image src={latest.emblem} alt={latest.teamName} fill className="object-contain p-2" unoptimized />
                   </div>
                 )}
                 <span className="font-bold text-xl">{latest.teamName} joined the game</span>
@@ -153,7 +142,6 @@ export default function SimulatorPage() {
     }
   }, [events, lastEventId, toast]);
 
-  // Selection State
   const [config, setConfig] = useState({
     category: CATEGORIES[0].id,
     format: CATEGORIES[0].formats[0],
@@ -177,18 +165,13 @@ export default function SimulatorPage() {
   const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier)!, [config.priceTier]);
   const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue)!, [config.coreValue]);
 
-  // Scoring Logic
   const scores = useMemo(() => {
-    // Marketing Cost
     const marketingCost = config.marketingChannels.reduce((acc, channelId) => {
       const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
       return acc + (channel?.cost || 0);
     }, 0);
 
-    // Cumulative Production Cost (including marketing)
-    const productionCost = selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta + marketingCost;
-    
-    // Calculated Retail Price based on Margin
+    const productionCost = Math.max(10, selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta + (marketingCost / 5)); // Amortized marketing per unit
     const retailPrice = productionCost * (1 + selectedPriceTier.margin);
     
     const baseEarth = selectedBase.earthScore;
@@ -199,7 +182,6 @@ export default function SimulatorPage() {
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
-    // Marketing Resonance
     const marketingResonance = config.marketingChannels.length > 0 
       ? config.marketingChannels.reduce((acc, channelId) => {
           const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
@@ -207,16 +189,16 @@ export default function SimulatorPage() {
         }, 0) / config.marketingChannels.length
       : 0.5;
 
-    const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal * marketingResonance;
-    const accessibility = selectedPriceTier.accessibility / selectedAudience.priceSensitivity;
-    const marketingClarity = config.message.length > 5 ? 1.0 : 0.5;
-    const shortTermSales = (appealScore * 0.4) + (accessibility * 0.3 * 10) + (marketingClarity * 0.3 * 10);
+    const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal * (marketingResonance * 1.5);
+    const accessibility = Math.min(1.5, selectedPriceTier.accessibility / selectedAudience.priceSensitivity);
+    const marketingClarity = config.message.length > 5 ? 1.2 : 0.8;
+    const shortTermSales = Math.min(10, (appealScore * 0.4) + (accessibility * 3) + (marketingClarity * 2));
 
-    const trustBase = (environmentalScore * 0.5) + (consistency * 0.3 * 10) + (selectedPriceTier.fairness * 0.2 * 10);
+    const trustBase = (environmentalScore * 0.5) + (consistency * 3) + (selectedPriceTier.fairness * 2);
     const trust = Math.min(100, (trustBase * 10) + selectedSourcing.trustBonus + selectedProduction.trustBonus);
 
     const reinvestmentCapacity = selectedPriceTier.margin * 10;
-    const longevity = (trust * 0.06) + (reinvestmentCapacity * 0.4);
+    const longevity = Math.min(10, (trust * 0.06) + (reinvestmentCapacity * 0.4));
 
     return { 
       environmentalScore, 
@@ -243,9 +225,9 @@ export default function SimulatorPage() {
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: i + 1,
-      profit: Math.max(0, (scores.shortTermSales * 8) + (i * (scores.longevity - 5))),
-      trust: Math.min(100, scores.trust + (i * (scores.environmentalScore > 5 ? 2 : -4))),
-      impact: Math.min(10, scores.environmentalScore + (i * 0.1))
+      profit: Math.max(0, (scores.shortTermSales * 15) + (i * (scores.longevity * 2 - 10))),
+      trust: Math.min(100, scores.trust + (i * (scores.environmentalScore > 6 ? 1.5 : -3))),
+      impact: Math.min(10, scores.environmentalScore + (i * 0.05))
     }));
   }, [scores]);
 
@@ -272,16 +254,11 @@ export default function SimulatorPage() {
 
   const handleJoinGame = () => {
     if (!teamName.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Team Name Required",
-        description: "Please enter a team name to start the workshop."
-      });
+      toast({ variant: "destructive", title: "Team Name Required", description: "Please enter a team name to start." });
       return;
     }
     broadcastStatus('join');
     setPhase('lab');
-    // Also broadcast initial lab status
     broadcastStatus('lab');
   };
 
@@ -326,7 +303,6 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
-      {/* Live Player Board Sidebar Overlay */}
       <div className="fixed top-24 right-4 z-40 w-64 hidden lg:block">
         <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
           <CardHeader className="p-5 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
@@ -366,13 +342,7 @@ export default function SimulatorPage() {
           <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="space-y-4">
               <div className="relative h-40 w-full max-w-2xl mx-auto">
-                <Image 
-                  src={TITLE_IMAGE_URL}
-                  alt="The Maroma Product Game"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+                <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
               </div>
               <p className="text-xl text-slate-300 font-body leading-relaxed max-w-2xl mx-auto">
                 Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
@@ -381,9 +351,7 @@ export default function SimulatorPage() {
 
             <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-2xl border border-white/10">
               <div className="space-y-4 text-left">
-                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">
-                  1. Choose Your Team Name (it can be different to your logo name)
-                </Label>
+                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">1. Choose Your Team Name</Label>
                 <Input 
                   placeholder="e.g. The Eco-Warriors" 
                   value={teamName} 
@@ -393,9 +361,7 @@ export default function SimulatorPage() {
               </div>
 
               <div className="space-y-6 text-left">
-                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">
-                  2. Choose Your Logo Emblem
-                </Label>
+                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">2. Choose Your Logo Emblem</Label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                   {TEAM_EMBLEMS.map((emblem) => (
                     <button
@@ -417,10 +383,7 @@ export default function SimulatorPage() {
                 </div>
               </div>
 
-              <Button 
-                onClick={handleJoinGame}
-                className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2"
-              >
+              <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2">
                 Join the Game <ChevronRight className="w-6 h-6" />
               </Button>
             </div>
@@ -433,12 +396,8 @@ export default function SimulatorPage() {
               <div className="relative w-32 h-32 mx-auto mb-6">
                 <Image src={selectedEmblem} alt="Team Logo" fill className="object-contain" unoptimized />
               </div>
-              <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">
-                Welcome, {teamName}
-              </h1>
-              <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">
-                Let's Create Your Product
-              </p>
+              <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">Let's Create Your Product</h1>
+              <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">Laboratory Phase</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -452,18 +411,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -478,18 +433,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Where do we get our ingredients?</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -504,18 +455,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -532,18 +479,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Audience</Label>
                       <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Profit Margin</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Profit Margin Strategy</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -558,20 +501,13 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Core Value Emphasis</Label>
                       <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <p className="text-[10px] text-slate-400 italic px-1">{selectedValue.description}</p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Marketing Message</Label>
-                      <Input 
-                        placeholder="e.g., Purely Natural. Purely Maroma." 
-                        value={config.message} 
-                        onChange={e => handleUpdateConfig('message', e.target.value)} 
-                        className="rounded-xl h-12 bg-white border-none shadow-lg text-primary font-medium"
-                      />
+                      <Input placeholder="e.g., Purely Natural. Purely Maroma." value={config.message} onChange={e => handleUpdateConfig('message', e.target.value)} className="rounded-xl h-12 bg-white border-none shadow-lg text-primary font-medium" />
                     </div>
                   </div>
                 </section>
@@ -584,19 +520,8 @@ export default function SimulatorPage() {
                     <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 block">Select Channels</Label>
                     <div className="grid grid-cols-2 gap-4">
                       {MARKETING_CHANNELS.map(channel => (
-                        <div 
-                          key={channel.id} 
-                          className={cn(
-                            "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer",
-                            config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent hover:border-white/20"
-                          )}
-                          onClick={() => toggleMarketingChannel(channel.id)}
-                        >
-                          <Checkbox 
-                            checked={config.marketingChannels.includes(channel.id)}
-                            onCheckedChange={() => toggleMarketingChannel(channel.id)}
-                            className="border-white/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                          />
+                        <div key={channel.id} className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer", config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent hover:border-white/20")} onClick={() => toggleMarketingChannel(channel.id)}>
+                          <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent" />
                           <span className="text-sm font-medium text-white">{channel.name}</span>
                         </div>
                       ))}
@@ -604,22 +529,32 @@ export default function SimulatorPage() {
                   </div>
                 </section>
 
-                <div className="bg-slate-900/40 p-6 rounded-2xl border border-white/5 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Est. Production Cost</span>
-                    <span className="text-xl font-bold text-white">₹{Math.round(scores.productionCost)}</span>
+                <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-bold uppercase tracking-widest text-slate-400">Ingredients & Sourcing</span>
+                      <span className="text-white font-mono">₹{selectedBase.cost + selectedSourcing.costDelta}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-bold uppercase tracking-widest text-slate-400">Packaging & Production</span>
+                      <span className="text-white font-mono">₹{selectedPackaging.cost + selectedProduction.costDelta}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Production Cost</span>
+                      <span className="text-xl font-bold text-white">₹{Math.round(scores.productionCost)}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center border-t border-white/5 pt-4">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Est. Retail Price</span>
-                    <span className="text-2xl font-bold text-accent">₹{Math.round(scores.retailPrice)}</span>
+                  <div className="flex justify-between items-center pt-6 border-t-2 border-accent/20">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Calculated Retail Price</span>
+                      <span className="text-[10px] text-slate-500">Includes {Math.round(selectedPriceTier.margin * 100)}% Profit Margin</span>
+                    </div>
+                    <span className="text-4xl font-bold text-white font-headline">₹{Math.round(scores.retailPrice)}</span>
                   </div>
                 </div>
 
-                <Button 
-                  onClick={launchSimulation}
-                  className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-16 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
-                >
-                  Launch Simulation <ArrowRight className="ml-2" />
+                <Button onClick={launchSimulation} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-20 text-xl font-bold shadow-xl shadow-accent/20 transition-all active:scale-95">
+                  Launch to Market <ArrowRight className="ml-2" />
                 </Button>
               </div>
             </div>
@@ -629,21 +564,16 @@ export default function SimulatorPage() {
         {phase === 'market' && (
           <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000">
             <div className="text-center space-y-4">
-              <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Launch Successful: Year 1 trajectory</Badge>
+              <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Year 1 Trajectory Active</Badge>
               <h2 className="text-5xl font-headline font-bold text-white">Simulation Analysis</h2>
-              <p className="text-slate-300">How your {config.format} performed in the real world.</p>
+              <p className="text-slate-300">Market results for {teamName}'s {config.format}.</p>
             </div>
 
             <div className="max-w-4xl mx-auto">
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/5 backdrop-blur-sm text-white overflow-hidden relative border border-white/10">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <Dna className="w-32 h-32" />
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-headline text-3xl">Final Market Scorecard</CardTitle>
-                </CardHeader>
+                <div className="absolute top-0 right-0 p-8 opacity-10"><Dna className="w-32 h-32" /></div>
+                <CardHeader className="pb-2"><CardTitle className="font-headline text-3xl">Final Market Scorecard</CardTitle></CardHeader>
                 <CardContent className="p-8 space-y-8">
-                  {/* Earth Score */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Environmental Friendliness</span>
@@ -651,8 +581,6 @@ export default function SimulatorPage() {
                     </div>
                     <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
                   </div>
-
-                  {/* Public Trust */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Public Trust Index</span>
@@ -660,8 +588,6 @@ export default function SimulatorPage() {
                     </div>
                     <Progress value={scores.trust} className="h-3 bg-white/10 [&>div]:bg-blue-500" />
                   </div>
-
-                  {/* Market Resonance */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">Market Resonance</span>
@@ -669,8 +595,6 @@ export default function SimulatorPage() {
                     </div>
                     <Progress value={scores.shortTermSales * 10} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
                   </div>
-
-                  {/* Social Impact */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Human & Social Impact</span>
@@ -678,8 +602,6 @@ export default function SimulatorPage() {
                     </div>
                     <Progress value={scores.socialImpact * 10} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
                   </div>
-                  
-                  {/* Brand Longevity */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400">Brand Longevity</span>
@@ -687,12 +609,10 @@ export default function SimulatorPage() {
                     </div>
                     <Progress value={scores.longevity * 10} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
                   </div>
-
                   <div className="pt-8 border-t border-white/10 flex justify-between items-center">
                     <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Overall Brand Score</span>
                     <span className="text-5xl font-bold font-headline text-accent">{overallScore}/100</span>
                   </div>
-
                   {scores.consistency < 1 && (
                     <div className="bg-red-500/20 p-4 rounded-2xl flex items-center gap-3 border border-red-500/30">
                       <AlertCircle className="w-6 h-6 text-red-300" />
@@ -709,16 +629,14 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit)}`, icon: IndianRupee },
-                  { label: "Public Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Market Resonance", val: Math.round(scores.shortTermSales * 10), icon: Zap, color: "text-amber-400" },
-                  { label: "Human Impact", val: Math.round(scores.socialImpact * 10), icon: Users, color: "text-blue-400" }
+                  { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit * 100)}`, icon: IndianRupee },
+                  { label: "Final Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
+                  { label: "Final Price Point", val: `₹${Math.round(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
+                  { label: "Total Reach", val: Math.round(scores.shortTermSales * 5000), icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-2xl border-none shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm">
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                        <m.icon className={cn("w-5 h-5", m.color)} />
-                      </div>
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><m.icon className={cn("w-5 h-5", m.color)} /></div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{m.label}</p>
                         <p className="text-2xl font-bold text-white">{m.val}</p>
@@ -729,18 +647,14 @@ export default function SimulatorPage() {
               </div>
 
               <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-8">
-                <CardHeader className="px-0 pt-0">
-                  <CardTitle className="font-headline text-white">Trajectory: Month 1-12</CardTitle>
-                </CardHeader>
+                <CardHeader className="px-0 pt-0"><CardTitle className="font-headline text-white">Trajectory: Month 1-12</CardTitle></CardHeader>
                 <div className="h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                       <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" label={{ value: 'Months Active', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.5)' }} />
                       <YAxis stroke="rgba(255,255,255,0.5)" />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', color: '#fff' }}
-                      />
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', color: '#fff' }} />
                       <Legend verticalAlign="top" height={36}/>
                       <Line type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
                       <Line type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
@@ -753,24 +667,15 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
-                <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2 text-white">
-                    <CircleCheck className="w-5 h-5 text-green-400" /> What Helped
-                  </CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> What Helped</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   {scores.consistency >= 1 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Your brand integrity is perfect. Customers see your actions match your values.</div>}
                   {scores.environmentalScore > 7 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">High Earth Score is attracting the growing eco-conscious segment.</div>}
                   {selectedProduction.id === 'spw' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Solar-powered production is a massive trust-builder for your {selectedAudience.name} audience.</div>}
                 </CardContent>
               </Card>
-
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
-                <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2 text-white">
-                    <AlertCircle className="w-5 h-5 text-red-400" /> What Hurt
-                  </CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> What Hurt</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   {scores.consistency < 1 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
                   {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
@@ -790,7 +695,6 @@ export default function SimulatorPage() {
           </div>
         )}
       </main>
-      
       <Footer />
     </div>
   );
