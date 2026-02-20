@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -32,6 +33,7 @@ import {
   IndianRupee,
   Users
 } from "lucide-react";
+import Image from "next/image";
 import { 
   CATEGORIES, 
   INGREDIENT_BASES, 
@@ -53,6 +55,8 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
+
+const MAROMA_LOGO = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 export default function SimulatorPage() {
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
@@ -185,10 +189,22 @@ export default function SimulatorPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Inspiring Sidebar Title */}
             <div className="lg:col-span-1 space-y-6 sticky top-24 h-fit">
-              <h2 className="text-5xl font-headline font-bold text-primary leading-tight">
-                Empower Your <br /> Vision.
-              </h2>
-              <p className="text-2xl font-headline font-bold text-accent">Create Your Product</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-12 h-12 shrink-0">
+                    <Image 
+                      src={MAROMA_LOGO}
+                      alt="Maroma Logo"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <h2 className="text-4xl font-headline font-bold text-primary leading-tight">
+                    Welcome <br /> {teamName}
+                  </h2>
+                </div>
+                <p className="text-2xl font-headline font-bold text-accent">Create Your Product</p>
+              </div>
               <div className="pt-8 p-6 bg-white/50 rounded-3xl border border-dashed border-primary/20">
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Every selection is a statement. Apply the knowledge from your tour to craft a brand that balances Earth care and human prosperity.
@@ -484,7 +500,6 @@ export default function SimulatorPage() {
                   {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white rounded-2xl text-sm border-l-4 border-red-500">Your pricing is way too high for your target audience (Students).</div>}
                 </CardContent>
               </Card>
-            </div>
 
             <div className="flex justify-center gap-4 pt-8 pb-20">
               <Button variant="outline" onClick={() => setPhase('lab')} className="rounded-full px-12 h-14">Iterate Product</Button>
