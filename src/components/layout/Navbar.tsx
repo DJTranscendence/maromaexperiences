@@ -101,20 +101,20 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3 group">
             <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[4px]">
               <Image 
                 src={LOGO_URL}
                 alt="Maroma Logo"
                 width={32}
                 height={32}
-                className="object-contain"
+                className="object-contain transition-transform group-hover:scale-110"
                 priority
               />
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.64em] hidden sm:block mr-[-0.64em] mt-0.5">Experiences</span>
+              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5 hidden sm:block">Experiences</span>
             </div>
           </Link>
 

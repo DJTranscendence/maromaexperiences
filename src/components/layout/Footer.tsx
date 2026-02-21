@@ -11,19 +11,19 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div className="col-span-1">
-            <Link href="/" className="flex items-center space-x-3 mb-4">
+            <Link href="/" className="flex items-center space-x-3 mb-4 group">
               <div className="relative w-10 h-10 flex-shrink-0 -translate-y-[4px]">
                 <Image 
                   src={LOGO_URL}
                   alt="Maroma Logo"
                   width={40}
                   height={40}
-                  className="object-contain"
+                  className="object-contain transition-transform group-hover:scale-110"
                 />
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-                <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.64em] mt-0.5 mr-[-0.64em]">Experiences</span>
+                <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5">Experiences</span>
               </div>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
