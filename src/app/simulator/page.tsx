@@ -104,7 +104,6 @@ const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-1391
 export default function SimulatorPage() {
   const firestore = useFirestore();
   const { user } = useUser();
-  const router = useRouter();
   const { toast } = useToast();
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
@@ -158,9 +157,12 @@ export default function SimulatorPage() {
   const sortedSessions = useMemo(() => {
     if (!sessions) return [];
     return [...sessions].sort((a, b) => {
-      const scoreA = (a.scores?.earth + a.scores?.trust + a.scores?.resonance + a.scores?.impact + a.scores?.longevity) / 5;
-      const scoreB = (b.scores?.earth + b.scores?.trust + b.scores?.resonance + b.scores?.impact + b.scores?.longevity) / 5;
-      return scoreB - scoreA;
+      const getAvg = (s: any) => {
+        if (!s.scores) return 0;
+        const sum = (s.scores.earth || 0) + (s.scores.trust || 0) + (s.scores.resonance || 0) + (s.scores.impact || 0) + (s.scores.longevity || 0);
+        return sum / 5;
+      };
+      return getAvg(b) - getAvg(a);
     });
   }, [sessions]);
 
@@ -427,7 +429,9 @@ export default function SimulatorPage() {
                       <div className="flex items-center gap-6">
                         <div className="text-right hidden sm:block">
                           <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Overall Score</p>
-                          <p className="text-xl font-black text-accent">{Math.round((s.scores?.earth + s.scores?.trust + s.scores?.resonance + s.scores?.impact + s.scores?.longevity) / 5)}</p>
+                          <p className="text-xl font-black text-accent">
+                            {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 0}
+                          </p>
                         </div>
                         <Button 
                           size="icon" 
@@ -476,7 +480,7 @@ export default function SimulatorPage() {
               <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
                 <Trophy className="w-6 h-6 text-amber-400" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Strategy Records</span>
+                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Team Scores</span>
                   <span className="text-xs text-slate-400 font-medium">Workshop Leaders</span>
                 </div>
               </div>
@@ -561,62 +565,6 @@ export default function SimulatorPage() {
                 </Button>
               </div>
             </div>
-
-            {/* Scoreboard showing all competing teams */}
-            <section className="space-y-8 py-12">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
-                  <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
-                </h2>
-                <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
-                  {sessions?.length || 0} Teams Competing
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedSessions.map((s) => (
-                  <Card key={s.id} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
-                          {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
-                        </div>
-                        <div className="flex-grow min-w-0">
-                          <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                          <p className="text-xs text-slate-400 uppercase tracking-widest truncate">{s.productType}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
-                          <p className="text-3xl font-black text-white font-headline">
-                            {Math.round((s.scores?.earth + s.scores?.trust + s.scores?.resonance + s.scores?.impact + s.scores?.longevity) / 5)}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
-                        <div className="text-center space-y-1">
-                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
-                          <p className="text-sm font-bold text-emerald-400">{s.scores?.earth}</p>
-                        </div>
-                        <div className="text-center space-y-1">
-                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
-                          <p className="text-sm font-bold text-blue-400">{s.scores?.trust}</p>
-                        </div>
-                        <div className="text-center space-y-1">
-                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
-                          <p className="text-sm font-bold text-amber-400">{s.scores?.profit}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {(!sessions || sessions.length === 0) && (
-                  <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
-                    <p className="text-slate-500 font-body italic">Awaiting the first team to launch to market...</p>
-                  </div>
-                )}
-              </div>
-            </section>
           </div>
         )}
 
@@ -968,11 +916,11 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            <div className="flex justify-center gap-4 pt-8 pb-20">
+            <div className="flex justify-center gap-4 pt-8">
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
                   <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">Iterate Product</Button>
-                  <Button onClick={handleExitTeam} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95 text-white">Start New Team Session</Button>
+                  <Button onClick={handleExitTeam} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-[0.98] text-white">Start New Team Session</Button>
                 </div>
                 <Button asChild variant="ghost" className="text-slate-400 hover:text-white rounded-full h-12 gap-2">
                   <Link href="/"><Home className="w-4 h-4" /> Return to Main Dashboard</Link>
@@ -981,6 +929,62 @@ export default function SimulatorPage() {
             </div>
           </div>
         )}
+
+        {/* PERSISTENT FULL SCOREBOARD - Visible at bottom regardless of phase */}
+        <section className="space-y-8 py-20 border-t border-white/5 mt-20">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
+              <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
+            </h2>
+            <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
+              {sessions?.length || 0} Teams Competing
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedSessions.map((s) => (
+              <Card key={s.id} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
+                      {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
+                      <p className="text-xs text-slate-400 uppercase tracking-widest truncate">{s.productType}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
+                      <p className="text-3xl font-black text-white font-headline">
+                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 0}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
+                    <div className="text-center space-y-1">
+                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
+                      <p className="text-sm font-bold text-emerald-400">{s.scores?.earth || 0}</p>
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
+                      <p className="text-sm font-bold text-blue-400">{s.scores?.trust || 0}</p>
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
+                      <p className="text-sm font-bold text-amber-400">{s.scores?.profit || 0}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {(!sessions || sessions.length === 0) && (
+              <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
+                <p className="text-slate-500 font-body italic">Awaiting the first team to launch to market...</p>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
