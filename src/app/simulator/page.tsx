@@ -155,6 +155,15 @@ export default function SimulatorPage() {
     };
   }, [sessions]);
 
+  const sortedSessions = useMemo(() => {
+    if (!sessions) return [];
+    return [...sessions].sort((a, b) => {
+      const scoreA = (a.scores?.earth + a.scores?.trust + a.scores?.resonance + a.scores?.impact + a.scores?.longevity) / 5;
+      const scoreB = (b.scores?.earth + b.scores?.trust + b.scores?.resonance + b.scores?.impact + b.scores?.longevity) / 5;
+      return scoreB - scoreA;
+    });
+  }, [sessions]);
+
   useEffect(() => {
     if (events && events.length > 0) {
       const latest = events[0];
@@ -460,14 +469,14 @@ export default function SimulatorPage() {
           </div>
         )}
 
-        {/* Horizontal Dashboards Bar */}
+        {/* Horizontal Dashboards Bar - Strategy Records */}
         <div className="w-full mb-12">
           <Card className="w-full bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
             <div className="flex flex-col sm:flex-row">
               <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
                 <Trophy className="w-6 h-6 text-amber-400" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Team Scores</span>
+                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Strategy Records</span>
                   <span className="text-xs text-slate-400 font-medium">Workshop Leaders</span>
                 </div>
               </div>
@@ -500,56 +509,114 @@ export default function SimulatorPage() {
         </div>
 
         {phase === 'intro' && (
-          <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-8">
-            <div className="space-y-4">
-              <div className="relative h-40 w-full max-w-2xl mx-auto">
-                <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
-              </div>
-              <p className="text-xl text-slate-300 font-body leading-relaxed max-w-2xl mx-auto">
-                Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
-              </p>
-            </div>
-
-            <div id="join-form" className="scroll-mt-32 space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              
-              <div className="space-y-4 text-left relative z-10">
-                <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Choose Your Team Name</Label>
-                <Input 
-                  placeholder="e.g. The Eco-Warriors" 
-                  value={teamName} 
-                  onChange={e => setTeamName(e.target.value)}
-                  className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner bg-slate-50"
-                />
-              </div>
-
-              <div className="space-y-6 text-left relative z-10">
-                <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Choose Your Logo Emblem</Label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                  {TEAM_EMBLEMS.map((emblem) => (
-                    <button
-                      key={emblem.id}
-                      onClick={() => setSelectedEmblem(emblem.url)}
-                      className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md",
-                        selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30 hover:scale-105"
-                      )}
-                    >
-                      <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-2.5" />
-                      {selectedEmblem === emblem.url && (
-                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                          <CheckCircle2 className="text-primary w-8 h-8 drop-shadow-md" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="max-w-3xl mx-auto text-center space-y-8 mt-8">
+              <div className="space-y-4">
+                <div className="relative h-40 w-full max-w-2xl mx-auto">
+                  <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
                 </div>
+                <p className="text-xl text-slate-300 font-body leading-relaxed max-w-2xl mx-auto">
+                  Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
+                </p>
               </div>
 
-              <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
-                Join the Game <ChevronRight className="w-8 h-8" />
-              </Button>
+              <div id="join-form" className="scroll-mt-32 space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                
+                <div className="space-y-4 text-left relative z-10">
+                  <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Choose Your Team Name</Label>
+                  <Input 
+                    placeholder="e.g. The Eco-Warriors" 
+                    value={teamName} 
+                    onChange={e => setTeamName(e.target.value)}
+                    className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner bg-slate-50"
+                  />
+                </div>
+
+                <div className="space-y-6 text-left relative z-10">
+                  <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Choose Your Logo Emblem</Label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                    {TEAM_EMBLEMS.map((emblem) => (
+                      <button
+                        key={emblem.id}
+                        onClick={() => setSelectedEmblem(emblem.url)}
+                        className={cn(
+                          "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md",
+                          selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30 hover:scale-105"
+                        )}
+                      >
+                        <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-2.5" />
+                        {selectedEmblem === emblem.url && (
+                          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                            <CheckCircle2 className="text-primary w-8 h-8 drop-shadow-md" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
+                  Join the Game <ChevronRight className="w-8 h-8" />
+                </Button>
+              </div>
             </div>
+
+            {/* Scoreboard showing all competing teams */}
+            <section className="space-y-8 py-12">
+              <div className="flex items-center justify-between px-2">
+                <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
+                  <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
+                </h2>
+                <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
+                  {sessions?.length || 0} Teams Competing
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedSessions.map((s) => (
+                  <Card key={s.id} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
+                          {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
+                        </div>
+                        <div className="flex-grow min-w-0">
+                          <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
+                          <p className="text-xs text-slate-400 uppercase tracking-widest truncate">{s.productType}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
+                          <p className="text-3xl font-black text-white font-headline">
+                            {Math.round((s.scores?.earth + s.scores?.trust + s.scores?.resonance + s.scores?.impact + s.scores?.longevity) / 5)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
+                        <div className="text-center space-y-1">
+                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
+                          <p className="text-sm font-bold text-emerald-400">{s.scores?.earth}</p>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
+                          <p className="text-sm font-bold text-blue-400">{s.scores?.trust}</p>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
+                          <p className="text-sm font-bold text-amber-400">{s.scores?.profit}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {(!sessions || sessions.length === 0) && (
+                  <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
+                    <p className="text-slate-500 font-body italic">Awaiting the first team to launch to market...</p>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
 
