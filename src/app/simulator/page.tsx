@@ -111,11 +111,9 @@ export default function SimulatorPage() {
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   
-  // AI Feedback State
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // Auth check for Admin Panel
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, "roles_admin", user.uid);
@@ -123,10 +121,9 @@ export default function SimulatorPage() {
   const { data: adminDoc } = useDoc(adminRef);
   const isAdmin = !!adminDoc;
 
-  // Real-time listeners
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "simulator_events"), orderBy("timestamp", "desc"), limit(20));
+    return query(collection(firestore, "simulator_events"), orderBy("timestamp", "desc"), limit(100));
   }, [firestore]);
 
   const sessionsQuery = useMemoFirebase(() => {
@@ -154,17 +151,44 @@ export default function SimulatorPage() {
     };
   }, [sessions]);
 
-  const sortedSessions = useMemo(() => {
-    if (!sessions) return [];
-    return [...sessions].sort((a, b) => {
+  // Aggregate all teams that have ever joined
+  const allWorkshopTeams = useMemo(() => {
+    const teams = new Map<string, any>();
+    
+    // Add sessions first (these have completed scores)
+    sessions?.forEach(s => {
+      teams.set(s.teamName, {
+        id: s.id,
+        teamName: s.teamName,
+        emblem: s.emblem,
+        productType: s.productType,
+        scores: s.scores,
+        status: 'complete'
+      });
+    });
+    
+    // Add joined teams that haven't finished yet from events
+    events?.filter(e => e.type === 'join').forEach(e => {
+      if (!teams.has(e.teamName)) {
+        teams.set(e.teamName, {
+          id: e.id,
+          teamName: e.teamName,
+          emblem: e.emblem,
+          status: 'playing',
+          scores: null
+        });
+      }
+    });
+    
+    return Array.from(teams.values()).sort((a, b) => {
       const getAvg = (s: any) => {
-        if (!s.scores) return 0;
+        if (!s.scores) return -1; // Put active teams at the bottom of the scoreboard
         const sum = (s.scores.earth || 0) + (s.scores.trust || 0) + (s.scores.resonance || 0) + (s.scores.impact || 0) + (s.scores.longevity || 0);
         return sum / 5;
       };
       return getAvg(b) - getAvg(a);
     });
-  }, [sessions]);
+  }, [sessions, events]);
 
   useEffect(() => {
     if (events && events.length > 0) {
@@ -415,7 +439,7 @@ export default function SimulatorPage() {
               
               <ScrollArea className="max-h-[60vh] mt-6 pr-4">
                 <div className="space-y-4">
-                  {sessions?.map(s => (
+                  {allWorkshopTeams?.map(s => (
                     <div key={s.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
@@ -423,14 +447,14 @@ export default function SimulatorPage() {
                         </div>
                         <div>
                           <p className="font-bold text-lg leading-none mb-1">{s.teamName}</p>
-                          <p className="text-xs text-slate-400 uppercase tracking-widest">{s.productType}</p>
+                          <p className="text-xs text-slate-400 uppercase tracking-widest">{s.status === 'playing' ? 'In Laboratory' : s.productType}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-6">
                         <div className="text-right hidden sm:block">
-                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Overall Score</p>
-                          <p className="text-xl font-black text-accent">
-                            {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 0}
+                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Status</p>
+                          <p className={cn("text-xl font-black", s.status === 'playing' ? 'text-blue-400' : 'text-accent')}>
+                            {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
                           </p>
                         </div>
                         <Button 
@@ -444,7 +468,7 @@ export default function SimulatorPage() {
                       </div>
                     </div>
                   ))}
-                  {(!sessions || sessions.length === 0) && (
+                  {(!allWorkshopTeams || allWorkshopTeams.length === 0) && (
                     <div className="text-center py-12 text-slate-500 italic font-body">
                       No team sessions recorded in the database yet.
                     </div>
@@ -937,12 +961,12 @@ export default function SimulatorPage() {
               <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
             </h2>
             <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
-              {sessions?.length || 0} Teams Competing
+              {allWorkshopTeams?.length || 0} Teams Competing
             </Badge>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedSessions.map((s) => (
+            {allWorkshopTeams.map((s) => (
               <Card key={s.id} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
@@ -951,36 +975,51 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest truncate">{s.productType}</p>
+                      <p className="text-xs text-slate-400 uppercase tracking-widest truncate">
+                        {s.status === 'playing' ? 'In Laboratory' : s.productType}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
-                      <p className="text-3xl font-black text-white font-headline">
-                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 0}
+                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">
+                        {s.status === 'playing' ? 'Status' : 'Score'}
+                      </p>
+                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400 text-xl' : 'text-white')}>
+                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
-                    <div className="text-center space-y-1">
-                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
-                      <p className="text-sm font-bold text-emerald-400">{s.scores?.earth || 0}</p>
+                  {s.scores && (
+                    <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
+                      <div className="text-center space-y-1">
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
+                        <p className="text-sm font-bold text-emerald-400">{s.scores.earth}</p>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
+                        <p className="text-sm font-bold text-blue-400">{s.scores.trust}</p>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
+                        <p className="text-sm font-bold text-amber-400">{s.scores.profit}</p>
+                      </div>
                     </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
-                      <p className="text-sm font-bold text-blue-400">{s.scores?.trust || 0}</p>
+                  )}
+                  
+                  {s.status === 'playing' && (
+                    <div className="mt-6 pt-6 border-t border-white/5">
+                      <div className="flex items-center gap-2 text-blue-400/60 animate-pulse">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Developing Prototype...</span>
+                      </div>
                     </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
-                      <p className="text-sm font-bold text-amber-400">{s.scores?.profit || 0}</p>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
-            {(!sessions || sessions.length === 0) && (
+            {(!allWorkshopTeams || allWorkshopTeams.length === 0) && (
               <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
-                <p className="text-slate-500 font-body italic">Awaiting the first team to launch to market...</p>
+                <p className="text-slate-500 font-body italic">Awaiting the first team to join the game...</p>
               </div>
             )}
           </div>
