@@ -29,17 +29,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-const HIGHLIGHT_OPTIONS = [
-  "Tour",
-  "Workshop",
-  "Q&A",
-  "Refreshments",
-  "Take-home gift",
-  "Certificate"
-];
 
 interface UserProfile {
   id: string;
@@ -73,6 +62,15 @@ interface CorporateProposal {
   adminNotes?: string;
   createdAt: any;
 }
+
+const HIGHLIGHT_OPTIONS = [
+  "Tour",
+  "Workshop",
+  "Q&A",
+  "Refreshments",
+  "Take-home gift",
+  "Certificate"
+];
 
 const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -211,13 +209,6 @@ export default function AdminPage() {
     });
   }, [media, mediaSearchQuery]);
 
-  // --- GAME STATE & QUERIES ---
-  const sessionsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, "simulator_sessions"), orderBy("createdAt", "desc"));
-  }, [firestore, isAdmin]);
-  const { data: simulatorSessions, isLoading: isSessionsLoading } = useCollection<any>(sessionsQuery);
-
   // --- HANDLERS ---
 
   const resetTourForm = () => {
@@ -327,12 +318,6 @@ export default function AdminPage() {
     setIsMediaUploading(false);
   };
 
-  const handleDeleteSession = (sessionId: string) => {
-    if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "simulator_sessions", sessionId));
-    toast({ title: "Team Removed", description: "The team session has been removed from the game leaderboard." });
-  };
-
   if (isUserLoading || isAdminDocLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
@@ -383,9 +368,6 @@ export default function AdminPage() {
             </div>
             
             <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50">
-              <TabsTrigger value="game" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Trophy className="w-5 h-5" /> Game
-              </TabsTrigger>
               <TabsTrigger value="proposals" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <FileText className="w-5 h-5" /> Proposals
               </TabsTrigger>
@@ -400,68 +382,6 @@ export default function AdminPage() {
               </TabsTrigger>
             </TabsList>
           </div>
-
-          {/* GAME TAB */}
-          <TabsContent value="game" className="m-0 focus-visible:ring-0">
-            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b px-8 py-6">
-                <CardTitle className="font-headline text-2xl text-primary flex items-center gap-3">
-                  <Activity className="w-6 h-6 text-accent" /> Live Simulator Sessions
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Manage teams and leaderboard results for the live workshop game.</p>
-              </CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/30">
-                  <TableHead className="pl-8">Team</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Scores (Earth / Trust / Impact)</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right pr-8">Action</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {simulatorSessions?.map(s => (
-                    <TableRow key={s.id} className="h-20 group">
-                      <TableCell className="pl-8">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-muted/20 p-1 flex items-center justify-center shrink-0 border">
-                            {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
-                          </div>
-                          <span className="font-bold text-primary">{s.teamName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none px-3">{s.productType}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3 text-xs font-mono">
-                          <span className="text-emerald-600 font-bold">{s.scores?.earth || 0}</span>
-                          <span className="text-muted-foreground">/</span>
-                          <span className="text-blue-600 font-bold">{s.scores?.trust || 0}</span>
-                          <span className="text-muted-foreground">/</span>
-                          <span className="text-purple-600 font-bold">{s.scores?.impact || 0}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {s.createdAt?.toDate?.()?.toLocaleString() || "Recent"}
-                      </TableCell>
-                      <TableCell className="text-right pr-8">
-                        <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive rounded-full" onClick={() => handleDeleteSession(s.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!simulatorSessions || simulatorSessions.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">
-                        No team sessions recorded yet.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
 
           {/* PROPOSALS TAB */}
           <TabsContent value="proposals" className="m-0 focus-visible:ring-0">
@@ -637,7 +557,7 @@ export default function AdminPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Capacity</Label>
-                        <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
+                        <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
                       </div>
                     </div>
 

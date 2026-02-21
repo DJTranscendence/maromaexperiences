@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -41,7 +40,9 @@ import {
   Star,
   X,
   Home,
-  RotateCcw
+  RotateCcw,
+  Settings,
+  Trash2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -68,10 +69,12 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
+import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TEAM_EMBLEMS = [
   { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
@@ -98,16 +101,26 @@ const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-1391
 
 export default function SimulatorPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   
   // AI Feedback State
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // Auth check for Admin Panel
+  const adminRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "roles_admin", user.uid);
+  }, [firestore, user]);
+  const { data: adminDoc } = useDoc(adminRef);
+  const isAdmin = !!adminDoc;
 
   // Real-time listeners
   const eventsQuery = useMemoFirebase(() => {
@@ -295,6 +308,12 @@ export default function SimulatorPage() {
     });
   };
 
+  const handleDeleteSession = (sessionId: string) => {
+    if (!firestore) return;
+    deleteDocumentNonBlocking(doc(firestore, "simulator_sessions", sessionId));
+    toast({ title: "Team Session Removed", description: "The team has been removed from the leaderboard." });
+  };
+
   const launchSimulation = async () => {
     setPhase('market');
     setIsAiLoading(true);
@@ -342,18 +361,78 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
-      {/* Persistent Exit Button */}
-      {phase !== 'intro' && (
-        <div className="fixed top-20 left-4 z-[100] group">
+      {/* Persistent Controls Area */}
+      <div className="fixed top-20 left-4 z-[100] flex flex-col gap-3">
+        {phase !== 'intro' && (
           <Button 
             variant="outline" 
             onClick={handleExitTeam}
-            className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl"
+            className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl group"
           >
             <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Team
           </Button>
-        </div>
-      )}
+        )}
+
+        {isAdmin && (
+          <Dialog open={isAdminPanelOpen} onOpenChange={setIsAdminPanelOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="bg-accent/20 backdrop-blur-xl border-accent/20 text-accent hover:text-white hover:bg-accent/40 rounded-full h-12 px-6 transition-all shadow-2xl"
+              >
+                <Settings className="w-4 h-4 mr-2" /> Admin Tools
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl rounded-[2.5rem] bg-slate-900 border-white/10 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-headline flex items-center gap-2">
+                  <Activity className="w-6 h-6 text-accent" /> Game Management
+                </DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Manage live team sessions and current leaderboard entries.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <ScrollArea className="max-h-[60vh] mt-6 pr-4">
+                <div className="space-y-4">
+                  {sessions?.map(s => (
+                    <div key={s.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
+                          {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg leading-none mb-1">{s.teamName}</p>
+                          <p className="text-xs text-slate-400 uppercase tracking-widest">{s.productType}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right hidden sm:block">
+                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Overall Score</p>
+                          <p className="text-xl font-black text-accent">{Math.round((s.scores?.earth + s.scores?.trust + s.scores?.resonance + s.scores?.impact + s.scores?.longevity) / 5)}</p>
+                        </div>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-full"
+                          onClick={() => handleDeleteSession(s.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {(!sessions || sessions.length === 0) && (
+                    <div className="text-center py-12 text-slate-500 italic font-body">
+                      No team sessions recorded in the database yet.
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         {/* Horizontal Dashboards Bar */}
@@ -470,14 +549,14 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -492,14 +571,14 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Where do we get our ingredients?</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -514,14 +593,14 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -538,14 +617,14 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Audience</Label>
                       <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Profit Margin Strategy</Label>
                       <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -560,7 +639,7 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Core Value Emphasis</Label>
                       <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <p className="text-[10px] text-slate-400 italic px-1">{selectedValue.description}</p>
