@@ -374,78 +374,75 @@ export default function SimulatorPage() {
         </Button>
       </div>
 
-      <div className="fixed top-24 right-4 z-40 w-72 hidden lg:block">
-        <div className="space-y-6">
-          {/* Champions Section */}
-          <Card className="bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2rem] shadow-2xl overflow-hidden border-2">
-            <CardHeader className="p-5 border-b border-white/5 bg-accent/10 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-400" />
-                <CardTitle className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em]">Metric Champions</CardTitle>
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
+        {/* Horizontal Dashboards Bar */}
+        <div className="w-full flex flex-col lg:flex-row gap-6 mb-12">
+          {/* Champions Horizontal */}
+          <Card className="flex-grow bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
+            <div className="flex flex-col sm:flex-row">
+              <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
+                <Trophy className="w-6 h-6 text-amber-400" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Champions</span>
+                  <span className="text-xs text-slate-400 font-medium">Record Holders</span>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              {metricLeaders ? (
-                Object.entries(metricLeaders).map(([key, data]) => (
-                  <div key={key} className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-500">
-                    <div className="relative w-8 h-8 rounded-full bg-white/5 border border-white/10 shrink-0 p-1">
-                      {data.session?.emblem && (
-                        <Image src={data.session.emblem} alt="Champion" fill className="object-contain p-1" unoptimized />
-                      )}
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <p className="text-[9px] font-bold text-white uppercase tracking-tight opacity-60">{data.label}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-bold text-white truncate max-w-[100px]">{data.session?.teamName || '---'}</p>
-                        <p className={cn("text-xs font-bold", data.color)}>{data.session?.scores?.[key as any] || 0}</p>
+              <div className="p-4 flex-grow grid grid-cols-2 md:grid-cols-5 gap-4">
+                {metricLeaders ? (
+                  Object.entries(metricLeaders).map(([key, data]) => (
+                    <div key={key} className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-500">
+                      <div className="relative w-10 h-10 rounded-full bg-white/5 border border-white/10 shrink-0 p-1 shadow-inner">
+                        {data.session?.emblem && (
+                          <Image src={data.session.emblem} alt="Champion" fill className="object-contain p-1.5" unoptimized />
+                        )}
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <p className="text-[9px] font-bold text-white uppercase tracking-tight opacity-60 truncate">{data.label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[11px] font-bold text-white truncate">{data.session?.teamName || '---'}</p>
+                          <p className={cn("text-xs font-black", data.color)}>{data.session?.scores?.[key as any] || 0}</p>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="col-span-full flex items-center justify-center py-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-[0.2em] font-medium animate-pulse">Awaiting Simulation Results...</p>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest">Awaiting Champions...</p>
-                </div>
-              )}
-            </CardContent>
+                )}
+              </div>
+            </div>
           </Card>
 
-          {/* Active Players Board */}
-          <Card className="bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-2xl overflow-hidden">
-            <CardHeader className="p-5 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-accent animate-pulse" />
-                <CardTitle className="text-xs font-headline font-bold text-white uppercase tracking-widest">Live Feed</CardTitle>
+          {/* Active Players Bar */}
+          <Card className="lg:w-96 bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <Activity className="w-5 h-5 text-accent animate-pulse" />
+                <span className="text-xs font-headline font-bold text-white uppercase tracking-widest">Live Feed</span>
               </div>
-              <Badge variant="outline" className="text-[9px] border-white/20 text-slate-400">{activePlayers.length}</Badge>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4 max-h-[40vh] overflow-y-auto scrollbar-hide">
+              <Badge className="bg-accent/20 text-accent border-accent/30 rounded-full h-6">{activePlayers.length}</Badge>
+            </div>
+            <div className="flex-grow p-4 flex gap-4 overflow-x-auto scrollbar-hide">
               {activePlayers.length > 0 ? (
                 activePlayers.map((player, idx) => (
-                  <div key={idx} className="flex items-center gap-3 group animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 p-1 shrink-0">
-                      <Image src={player.emblem} alt={player.name} fill className="object-contain p-1" unoptimized />
+                  <div key={idx} className="flex flex-col items-center gap-2 shrink-0 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="relative w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 shadow-lg group">
+                      <Image src={player.emblem} alt={player.name} fill className="object-contain p-1.5" unoptimized />
+                      <div className={cn("absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-900 animate-pulse", getStatusColor(player.status))} title={getStatusLabel(player.status)} />
                     </div>
-                    <div className="flex-grow min-w-0">
-                      <p className="text-xs font-bold text-white truncate">{player.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", getStatusColor(player.status))} />
-                        <span className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">{getStatusLabel(player.status)}</span>
-                      </div>
-                    </div>
+                    <span className="text-[10px] font-bold text-white truncate max-w-[60px]">{player.name}</span>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-xs text-slate-500 font-medium">Waiting for teams...</p>
+                <div className="flex items-center justify-center w-full">
+                  <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Waiting for teams</p>
                 </div>
               )}
-            </CardContent>
+            </div>
           </Card>
         </div>
-      </div>
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         {phase === 'intro' && (
           <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-8">
             <div className="space-y-4">
@@ -457,33 +454,35 @@ export default function SimulatorPage() {
               </p>
             </div>
 
-            <div className="space-y-10 py-8 px-8 bg-white rounded-[3rem] shadow-2xl border border-white/10">
-              <div className="space-y-4 text-left">
-                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">1. Choose Your Team Name</Label>
+            <div className="space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              
+              <div className="space-y-4 text-left relative z-10">
+                <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Choose Your Team Name</Label>
                 <Input 
                   placeholder="e.g. The Eco-Warriors" 
                   value={teamName} 
                   onChange={e => setTeamName(e.target.value)}
-                  className="rounded-2xl h-16 text-center text-2xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner bg-slate-50"
+                  className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner bg-slate-50"
                 />
               </div>
 
-              <div className="space-y-6 text-left">
-                <Label className="text-sm font-bold text-slate-500 tracking-wide px-2">2. Choose Your Logo Emblem</Label>
+              <div className="space-y-6 text-left relative z-10">
+                <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Choose Your Logo Emblem</Label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                   {TEAM_EMBLEMS.map((emblem) => (
                     <button
                       key={emblem.id}
                       onClick={() => setSelectedEmblem(emblem.url)}
                       className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-slate-50",
-                        selectedEmblem === emblem.url ? "border-primary scale-105 shadow-lg" : "border-transparent hover:border-muted-foreground/30"
+                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-slate-50 shadow-md",
+                        selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30 hover:scale-105"
                       )}
                     >
-                      <Image src={emblem.url} alt={emblem.name} fill className="object-contain p-2" unoptimized />
+                      <Image src={emblem.url} alt={emblem.name} fill className="object-contain p-2.5" unoptimized />
                       {selectedEmblem === emblem.url && (
                         <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                          <CheckCircle2 className="text-primary w-6 h-6 drop-shadow-md" />
+                          <CheckCircle2 className="text-primary w-8 h-8 drop-shadow-md" />
                         </div>
                       )}
                     </button>
@@ -491,8 +490,8 @@ export default function SimulatorPage() {
                 </div>
               </div>
 
-              <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-16 text-xl font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2">
-                Join the Game <ChevronRight className="w-6 h-6" />
+              <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
+                Join the Game <ChevronRight className="w-8 h-8" />
               </Button>
             </div>
           </div>
