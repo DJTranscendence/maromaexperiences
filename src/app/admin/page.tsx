@@ -637,7 +637,7 @@ export default function AdminPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Capacity</Label>
-                        <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
+                        <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
                       </div>
                     </div>
 

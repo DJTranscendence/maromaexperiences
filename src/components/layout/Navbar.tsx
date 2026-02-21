@@ -113,7 +113,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.42em] mr-[-0.42em] mt-0.5 hidden sm:block">Experiences</span>
+              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5 hidden sm:block">Experiences</span>
             </div>
           </Link>
 

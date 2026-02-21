@@ -42,7 +42,7 @@ export default function AuthProvider({
       <div className="flex flex-col items-center justify-center h-screen bg-background text-primary">
         <div className="flex flex-col items-center mb-10 text-center">
           <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-          <span className="text-[10px] font-body font-medium text-accent uppercase tracking-[0.65em] mt-1 mr-[-0.65em]">Experiences</span>
+          <span className="text-[10px] font-body font-medium text-accent uppercase tracking-[1.05em] mt-1 mr-[-1.05em]">Experiences</span>
         </div>
         
         <div className="flex items-center gap-3">
