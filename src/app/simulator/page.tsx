@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -38,7 +39,8 @@ import {
   BrainCircuit,
   Trophy,
   Star,
-  X
+  X,
+  Home
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -328,14 +330,15 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
-      <div className="fixed top-20 left-4 z-[100]">
+      {/* Persistent Exit Button */}
+      <div className="fixed top-20 left-4 z-[100] group">
         <Button 
           asChild
-          variant="ghost" 
-          className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full h-10 px-4 transition-all shadow-xl bg-slate-900/40 backdrop-blur-md border border-white/5"
+          variant="outline" 
+          className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl"
         >
           <Link href="/">
-            <X className="w-4 h-4 mr-2" /> Exit Game
+            <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Game
           </Link>
         </Button>
       </div>
@@ -789,6 +792,9 @@ export default function SimulatorPage() {
                   <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">Iterate Product</Button>
                   <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95 text-white">Start New Team Session</Button>
                 </div>
+                <Button asChild variant="ghost" className="text-slate-400 hover:text-white rounded-full h-12 gap-2">
+                  <Link href="/"><Home className="w-4 h-4" /> Return to Main Dashboard</Link>
+                </Button>
               </div>
             </div>
           </div>

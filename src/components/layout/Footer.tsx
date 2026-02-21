@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import Image from "next/image";
@@ -22,7 +23,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-                <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.58em] mt-0.5 mr-[-0.58em]">Experiences</span>
+                <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.64em] mt-0.5 mr-[-0.64em]">Experiences</span>
               </div>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
