@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -42,7 +43,8 @@ import {
   Home,
   RotateCcw,
   Settings,
-  Trash2
+  Trash2,
+  PlayCircle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -357,6 +359,13 @@ export default function SimulatorPage() {
     }
   };
 
+  const scrollToJoinForm = () => {
+    const element = document.getElementById('join-form');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
@@ -435,6 +444,22 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
+        {/* Top Join CTA - Only visible when in intro phase */}
+        {phase === 'intro' && (
+          <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+            <Button 
+              onClick={scrollToJoinForm}
+              className="w-full bg-accent text-white hover:bg-accent/90 rounded-[2rem] h-24 shadow-2xl shadow-accent/20 flex flex-col items-center justify-center gap-1 group transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                <span className="text-3xl font-headline font-bold uppercase tracking-widest">Join the Game Now</span>
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Enter your team name and emblem below</p>
+            </Button>
+          </div>
+        )}
+
         {/* Horizontal Dashboards Bar */}
         <div className="w-full mb-12">
           {/* Champions Horizontal */}
@@ -486,7 +511,7 @@ export default function SimulatorPage() {
               </p>
             </div>
 
-            <div className="space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
+            <div id="join-form" className="scroll-mt-32 space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               
               <div className="space-y-4 text-left relative z-10">
