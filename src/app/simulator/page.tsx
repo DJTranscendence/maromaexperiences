@@ -141,17 +141,17 @@ export default function SimulatorPage() {
   const metricLeaders = useMemo(() => {
     if (!sessions || sessions.length === 0) return null;
     
-    const getBest = (metric: 'earth' | 'trust' | 'resonance' | 'impact' | 'longevity') => {
+    const getBest = (metric: 'earth' | 'trust' | 'profit' | 'impact' | 'longevity') => {
       const sorted = [...sessions].sort((a, b) => (b.scores?.[metric] || 0) - (a.scores?.[metric] || 0));
       return sorted[0];
     };
 
     return {
-      earth: { session: getBest('earth'), label: 'Earth Score', color: 'text-emerald-400' },
-      trust: { session: getBest('trust'), label: 'Public Trust', color: 'text-blue-400' },
-      resonance: { session: getBest('resonance'), label: 'Market Resonance', color: 'text-amber-400' },
-      impact: { session: getBest('impact'), label: 'Social Impact', color: 'text-purple-400' },
-      longevity: { session: getBest('longevity'), label: 'Longevity', color: 'text-rose-400' }
+      earth: { session: getBest('earth'), label: 'Environment Record', color: 'text-emerald-400' },
+      trust: { session: getBest('trust'), label: 'Public Trust Record', color: 'text-blue-400' },
+      profit: { session: getBest('profit'), label: 'Revenue Record', color: 'text-amber-400' },
+      impact: { session: getBest('impact'), label: 'Social Impact Record', color: 'text-purple-400' },
+      longevity: { session: getBest('longevity'), label: 'Long-term Survival', color: 'text-rose-400' }
     };
   }, [sessions]);
 
@@ -462,7 +462,6 @@ export default function SimulatorPage() {
 
         {/* Horizontal Dashboards Bar */}
         <div className="w-full mb-12">
-          {/* Champions Horizontal */}
           <Card className="w-full bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
             <div className="flex flex-col sm:flex-row">
               <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
