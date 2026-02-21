@@ -40,7 +40,8 @@ import {
   Trophy,
   Star,
   X,
-  Home
+  Home,
+  RotateCcw
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -283,6 +284,17 @@ export default function SimulatorPage() {
     broadcastStatus('lab');
   };
 
+  const handleExitTeam = () => {
+    setPhase('intro');
+    setTeamName("");
+    setAiFeedback(null);
+    setLastEventId(null);
+    toast({
+      title: "Team Session Ended",
+      description: "You have been removed from the session. A new team can now join.",
+    });
+  };
+
   const launchSimulation = async () => {
     setPhase('market');
     setIsAiLoading(true);
@@ -331,17 +343,17 @@ export default function SimulatorPage() {
       <Navbar />
       
       {/* Persistent Exit Button */}
-      <div className="fixed top-20 left-4 z-[100] group">
-        <Button 
-          asChild
-          variant="outline" 
-          className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl"
-        >
-          <Link href="/">
-            <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Game
-          </Link>
-        </Button>
-      </div>
+      {phase !== 'intro' && (
+        <div className="fixed top-20 left-4 z-[100] group">
+          <Button 
+            variant="outline" 
+            onClick={handleExitTeam}
+            className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl"
+          >
+            <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Team
+          </Button>
+        </div>
+      )}
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         {/* Horizontal Dashboards Bar */}
@@ -790,7 +802,7 @@ export default function SimulatorPage() {
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
                   <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">Iterate Product</Button>
-                  <Button onClick={() => window.location.reload()} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95 text-white">Start New Team Session</Button>
+                  <Button onClick={handleExitTeam} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-95 text-white">Start New Team Session</Button>
                 </div>
                 <Button asChild variant="ghost" className="text-slate-400 hover:text-white rounded-full h-12 gap-2">
                   <Link href="/"><Home className="w-4 h-4" /> Return to Main Dashboard</Link>
