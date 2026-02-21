@@ -73,7 +73,7 @@ import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/ma
 const TEAM_EMBLEMS = [
   { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
   { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e' },
+  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2Ffa6aee12-86a5-4cf2-bd0c-2b18f822d65e?alt=media' },
   { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
   { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
   { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
@@ -393,7 +393,7 @@ export default function SimulatorPage() {
                     <div key={key} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 animate-in fade-in zoom-in-95 duration-500">
                       <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1 truncate w-full text-center">{data.label}</p>
                       <div className="flex items-center gap-3">
-                        <div className="relative w-8 h-8 rounded-full bg-white/10 p-1 shrink-0 overflow-hidden shadow-inner">
+                        <div className="relative w-12 h-12 rounded-full bg-white p-1.5 shrink-0 overflow-hidden shadow-xl border-2 border-white/20">
                           {data.session?.emblem && (
                             <Image src={data.session.emblem} alt="Icon" fill className="object-contain" unoptimized />
                           )}
