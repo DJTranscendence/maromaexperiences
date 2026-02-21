@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   CATEGORIES, 
   INGREDIENT_BASES, 
@@ -95,6 +96,7 @@ const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-1391
 
 export default function SimulatorPage() {
   const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [teamName, setTeamName] = useState("");
@@ -361,6 +363,14 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
+      <Button 
+        variant="ghost" 
+        onClick={() => router.push('/')}
+        className="fixed top-20 left-4 z-[60] text-slate-400 hover:text-white hover:bg-white/10 rounded-full h-10 px-4 transition-all"
+      >
+        <X className="w-4 h-4 mr-2" /> Exit Game
+      </Button>
+
       <div className="fixed top-24 right-4 z-40 w-72 hidden lg:block">
         <div className="space-y-6">
           {/* Champions Section */}
@@ -433,16 +443,6 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
-        <Button 
-          variant="ghost" 
-          asChild 
-          className="absolute top-0 left-4 text-slate-400 hover:text-white hover:bg-white/10 rounded-full h-10 px-4 transition-all"
-        >
-          <Link href="/">
-            <X className="w-4 h-4 mr-2" /> Exit Game
-          </Link>
-        </Button>
-
         {phase === 'intro' && (
           <div className="max-w-3xl mx-auto text-center space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-8">
             <div className="space-y-4">
