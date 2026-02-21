@@ -349,8 +349,8 @@ export default function SimulatorPage() {
               <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
                 <Trophy className="w-6 h-6 text-amber-400" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Champions</span>
-                  <span className="text-xs text-slate-400 font-medium">Record Holders</span>
+                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Team Scores</span>
+                  <span className="text-xs text-slate-400 font-medium">Workshop Leaders</span>
                 </div>
               </div>
               <div className="p-4 flex-grow grid grid-cols-2 md:grid-cols-5 gap-4">
