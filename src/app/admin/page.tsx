@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -18,10 +17,10 @@ import {
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, Grid, FileText, CheckCircle, Clock,
-  Trophy, Activity
+  Trophy, Activity, AlertCircle, LogIn
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, serverTimestamp, doc, query, orderBy } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
@@ -113,14 +112,22 @@ const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<str
 export default function AdminPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // --- AUTH GUARD ---
+  const adminRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "roles_admin", user.uid);
+  }, [firestore, user]);
+  const { data: adminDoc, isLoading: isAdminDocLoading } = useDoc(adminRef);
+  const isAdmin = !!adminDoc;
 
   // --- TOUR STATE & QUERIES ---
   const toursQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return collection(firestore, "tours");
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   const { data: tours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -144,26 +151,26 @@ export default function AdminPage() {
 
   // --- PROPOSAL STATE & QUERIES ---
   const proposalsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   const { data: proposals, isLoading: isProposalsLoading } = useCollection<CorporateProposal>(proposalsQuery);
   const [viewingProposal, setViewingProposal] = useState<CorporateProposal | null>(null);
 
   // --- USER STATE & QUERIES ---
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || !isAdmin) return null;
     return collection(firestore, "users");
-  }, [firestore, user]);
+  }, [firestore, user, isAdmin]);
   const adminsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || !isAdmin) return null;
     return collection(firestore, "roles_admin");
-  }, [firestore, user]);
+  }, [firestore, user, isAdmin]);
   const facilitatorsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || !isAdmin) return null;
     return collection(firestore, "roles_facilitator");
-  }, [firestore, user]);
+  }, [firestore, user, isAdmin]);
 
   const { data: users, isLoading: isUsersLoading } = useCollection<UserProfile>(usersQuery);
   const { data: admins } = useCollection(adminsQuery);
@@ -186,9 +193,9 @@ export default function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const mediaQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return collection(firestore, 'media');
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   const { data: media, isLoading: isMediaLoading } = useCollection<MediaItem>(mediaQuery);
 
   const filteredMedia = useMemo(() => {
@@ -206,9 +213,9 @@ export default function AdminPage() {
 
   // --- GAME STATE & QUERIES ---
   const sessionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "simulator_sessions"), orderBy("createdAt", "desc"));
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   const { data: simulatorSessions, isLoading: isSessionsLoading } = useCollection<any>(sessionsQuery);
 
   // --- HANDLERS ---
@@ -325,6 +332,43 @@ export default function AdminPage() {
     deleteDocumentNonBlocking(doc(firestore, "simulator_sessions", sessionId));
     toast({ title: "Team Removed", description: "The team session has been removed from the game leaderboard." });
   };
+
+  if (isUserLoading || isAdminDocLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-accent" />
+        <p className="mt-4 text-muted-foreground font-medium uppercase tracking-widest text-xs">Verifying Access...</p>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center p-4">
+          <Card className="max-w-md w-full p-10 text-center rounded-[2.5rem] border-none shadow-2xl bg-white">
+            <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-destructive" />
+            </div>
+            <h2 className="text-3xl font-headline font-bold text-primary mb-2">Access Restricted</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              This area is reserved for administrators only. Please sign in with an authorized account to continue.
+            </p>
+            <div className="mt-8 space-y-3">
+              <Button asChild className="w-full bg-primary rounded-full h-12 font-bold shadow-lg">
+                <Link href="/login">Sign In</Link>
+              </Button>
+              <Button asChild variant="ghost" className="w-full rounded-full h-12">
+                <Link href="/">Return Home</Link>
+              </Button>
+            </div>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

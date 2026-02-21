@@ -16,8 +16,26 @@ service cloud.firestore {
       allow read, create: if true; // Open to participants for real-time join alerts
     }
     match /tours/{tourId} { allow read: if true; allow write: if isAdmin(); }
-    match /proposals/{proposalId} { allow create, read: if isSignedIn(); allow update, delete: if isAdmin(); }
-    match /roles_admin/{userId} { allow read: if isSignedIn(); }
-    match /media/{mediaId} { allow read: if true; }
+    match /proposals/{proposalId} { 
+      allow create: if isSignedIn(); 
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+    match /roles_admin/{userId} { 
+      allow read: if isSignedIn(); 
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+    match /roles_facilitator/{userId} { 
+      allow read: if isSignedIn(); 
+      allow write: if isAdmin(); 
+    }
+    match /bookings/{bookingId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+    match /media/{mediaId} { allow read: if true; allow write: if isAdmin(); }
+    match /roles_admin { allow list: if isAdmin(); }
+    match /roles_facilitator { allow list: if isAdmin(); }
   }
 }
