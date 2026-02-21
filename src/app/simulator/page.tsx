@@ -362,15 +362,17 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
-      <Button 
-        asChild
-        variant="ghost" 
-        className="fixed top-20 left-4 z-[60] text-slate-400 hover:text-white hover:bg-white/10 rounded-full h-10 px-4 transition-all"
-      >
-        <Link href="/">
-          <X className="w-4 h-4 mr-2" /> Exit Game
-        </Link>
-      </Button>
+      <div className="fixed top-20 left-4 z-[100]">
+        <Button 
+          asChild
+          variant="ghost" 
+          className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full h-10 px-4 transition-all shadow-xl bg-slate-900/40 backdrop-blur-md border border-white/5"
+        >
+          <Link href="/">
+            <X className="w-4 h-4 mr-2" /> Exit Game
+          </Link>
+        </Button>
+      </div>
 
       <div className="fixed top-24 right-4 z-40 w-72 hidden lg:block">
         <div className="space-y-6">
