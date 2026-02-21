@@ -120,22 +120,6 @@ export default function SimulatorPage() {
   const { data: events } = useCollection(eventsQuery);
   const { data: sessions } = useCollection(sessionsQuery);
 
-  const activePlayers = useMemo(() => {
-    if (!events) return [];
-    const playersMap = new Map();
-    events.forEach(event => {
-      if (!playersMap.has(event.teamName)) {
-        playersMap.set(event.teamName, {
-          name: event.teamName,
-          status: event.type,
-          emblem: event.emblem || TEAM_EMBLEMS[0].url,
-          timestamp: event.timestamp?.toDate?.() || new Date()
-        });
-      }
-    });
-    return Array.from(playersMap.values());
-  }, [events]);
-
   const metricLeaders = useMemo(() => {
     if (!sessions || sessions.length === 0) return null;
     
@@ -340,24 +324,6 @@ export default function SimulatorPage() {
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch(status) {
-      case 'join': return 'Entered Lobby';
-      case 'lab': return 'In the Lab';
-      case 'market': return 'Analyzing Results';
-      default: return 'Online';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'join': return 'bg-blue-500';
-      case 'lab': return 'bg-amber-500';
-      case 'market': return 'bg-green-500';
-      default: return 'bg-slate-500';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
@@ -376,9 +342,9 @@ export default function SimulatorPage() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         {/* Horizontal Dashboards Bar */}
-        <div className="w-full flex flex-col lg:flex-row gap-6 mb-12">
+        <div className="w-full mb-12">
           {/* Champions Horizontal */}
-          <Card className="flex-grow bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
+          <Card className="w-full bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
             <div className="flex flex-col sm:flex-row">
               <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
                 <Trophy className="w-6 h-6 text-amber-400" />
@@ -411,34 +377,6 @@ export default function SimulatorPage() {
                   </div>
                 )}
               </div>
-            </div>
-          </Card>
-
-          {/* Active Players Bar */}
-          <Card className="lg:w-96 bg-slate-900/60 backdrop-blur-xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <Activity className="w-5 h-5 text-accent animate-pulse" />
-                <span className="text-xs font-headline font-bold text-white uppercase tracking-widest">Live Feed</span>
-              </div>
-              <Badge className="bg-accent/20 text-accent border-accent/30 rounded-full h-6">{activePlayers.length}</Badge>
-            </div>
-            <div className="flex-grow p-4 flex gap-4 overflow-x-auto scrollbar-hide">
-              {activePlayers.length > 0 ? (
-                activePlayers.map((player, idx) => (
-                  <div key={idx} className="flex flex-col items-center gap-2 shrink-0 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="relative w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 shadow-lg group">
-                      <Image src={player.emblem} alt={player.name} fill className="object-contain p-1.5" unoptimized />
-                      <div className={cn("absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-900 animate-pulse", getStatusColor(player.status))} title={getStatusLabel(player.status)} />
-                    </div>
-                    <span className="text-[10px] font-bold text-white truncate max-w-[60px]">{player.name}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="flex items-center justify-center w-full">
-                  <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Waiting for teams</p>
-                </div>
-              )}
             </div>
           </Card>
         </div>
