@@ -390,19 +390,19 @@ export default function SimulatorPage() {
               <div className="p-4 flex-grow grid grid-cols-2 md:grid-cols-5 gap-4">
                 {metricLeaders ? (
                   Object.entries(metricLeaders).map(([key, data]) => (
-                    <div key={key} className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-500">
-                      <div className="relative w-10 h-10 rounded-full bg-white/5 border border-white/10 shrink-0 p-1 shadow-inner">
-                        {data.session?.emblem && (
-                          <Image src={data.session.emblem} alt="Champion" fill className="object-contain p-1.5" unoptimized />
-                        )}
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="text-[9px] font-bold text-white uppercase tracking-tight opacity-60 truncate">{data.label}</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[11px] font-bold text-white truncate">{data.session?.teamName || '---'}</p>
-                          <p className={cn("text-xs font-black", data.color)}>{data.session?.scores?.[key as any] || 0}</p>
+                    <div key={key} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 animate-in fade-in zoom-in-95 duration-500">
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1 truncate w-full text-center">{data.label}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-8 h-8 rounded-full bg-white/10 p-1 shrink-0 overflow-hidden shadow-inner">
+                          {data.session?.emblem && (
+                            <Image src={data.session.emblem} alt="Icon" fill className="object-contain" unoptimized />
+                          )}
                         </div>
+                        <span className={cn("text-3xl font-black font-headline tracking-tighter", data.color)}>
+                          {data.session?.scores?.[key as any] || 0}
+                        </span>
                       </div>
+                      <p className="text-[9px] font-bold text-white/50 truncate max-w-[80px] mt-1.5">{data.session?.teamName || '---'}</p>
                     </div>
                   ))
                 ) : (
