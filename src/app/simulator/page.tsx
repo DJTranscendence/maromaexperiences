@@ -147,8 +147,8 @@ export default function SimulatorPage() {
             description: (
               <div className="flex items-center gap-6 mt-2">
                 {latest.emblem && (
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white/10 shrink-0 border border-border/20 shadow-lg">
-                    <Image src={latest.emblem} alt={latest.teamName} fill className="object-contain p-2" unoptimized />
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white shrink-0 border border-border/20 shadow-lg">
+                    <img src={latest.emblem} alt={latest.teamName} className="w-full h-full object-contain p-2" />
                   </div>
                 )}
                 <span className="font-bold text-xl">{latest.teamName} joined the game</span>
@@ -359,9 +359,9 @@ export default function SimulatorPage() {
                     <div key={key} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 animate-in fade-in zoom-in-95 duration-500">
                       <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1 truncate w-full text-center">{data.label}</p>
                       <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-12 rounded-full bg-white p-1.5 shrink-0 overflow-hidden shadow-xl border-2 border-white/20">
+                        <div className="relative w-14 h-14 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-xl border-2 border-white/20">
                           {data.session?.emblem && (
-                            <Image src={data.session.emblem} alt="Icon" fill className="object-contain" unoptimized />
+                            <img src={data.session.emblem} alt="Icon" className="w-10 h-10 object-contain" />
                           )}
                         </div>
                         <span className={cn("text-3xl font-black font-headline tracking-tighter", data.color)}>
@@ -413,11 +413,11 @@ export default function SimulatorPage() {
                       key={emblem.id}
                       onClick={() => setSelectedEmblem(emblem.url)}
                       className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-slate-50 shadow-md",
+                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md",
                         selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30 hover:scale-105"
                       )}
                     >
-                      <Image src={emblem.url} alt={emblem.name} fill className="object-contain p-2.5" unoptimized />
+                      <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-2.5" />
                       {selectedEmblem === emblem.url && (
                         <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                           <CheckCircle2 className="text-primary w-8 h-8 drop-shadow-md" />
@@ -438,8 +438,8 @@ export default function SimulatorPage() {
         {phase === 'lab' && (
           <div className="animate-in fade-in duration-1000 mt-8">
             <div className="col-span-full mb-16 text-center space-y-4">
-              <div className="relative w-32 h-32 mx-auto mb-6">
-                <Image src={selectedEmblem} alt="Team Logo" fill className="object-contain" unoptimized />
+              <div className="relative w-32 h-32 mx-auto mb-6 bg-white rounded-2xl p-4 shadow-xl">
+                <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
               </div>
               <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">Let's Create Your Product</h1>
               <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">Laboratory Phase</p>
