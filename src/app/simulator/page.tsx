@@ -74,7 +74,7 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { useFirebase, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirebase, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
@@ -113,6 +113,7 @@ export default function SimulatorPage() {
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [viewingSessionId, setViewingSessionId] = useState<string | null>(null);
   
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -222,11 +223,11 @@ export default function SimulatorPage() {
       return acc + (channel?.cost || 0);
     }, 0);
 
-    const productionCost = Math.max(10, selectedBase.cost + selectedSourcing.costDelta + selectedPackaging.cost + selectedProduction.costDelta + (marketingCost / 5));
-    const retailPrice = productionCost * (1 + selectedPriceTier.margin);
+    const productionCost = Math.max(10, (selectedBase?.cost || 0) + (selectedSourcing?.costDelta || 0) + (selectedPackaging?.cost || 0) + (selectedProduction?.costDelta || 0) + (marketingCost / 5));
+    const retailPrice = productionCost * (1 + (selectedPriceTier?.margin || 0));
     
-    const baseEarth = selectedBase.earthScore;
-    const environmentalScore = Math.min(10, baseEarth * selectedPackaging.envMultiplier);
+    const baseEarth = selectedBase?.earthScore || 0;
+    const environmentalScore = Math.min(10, baseEarth * (selectedPackaging?.envMultiplier || 1));
 
     let consistency = 1.0;
     if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') consistency -= 0.5;
@@ -240,15 +241,15 @@ export default function SimulatorPage() {
         }, 0) / config.marketingChannels.length
       : 0.5;
 
-    const appealScore = selectedBase.appeal * selectedProduction.authenticity * selectedAudience.baseAppeal * (marketingResonance * 1.5);
-    const accessibility = Math.min(1.5, selectedPriceTier.accessibility / selectedAudience.priceSensitivity);
+    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * (marketingResonance * 1.5);
+    const accessibility = Math.min(1.5, (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1));
     const marketingClarity = config.message.length > 5 ? 1.2 : 0.8;
     const shortTermSales = Math.min(10, (appealScore * 0.4) + (accessibility * 3) + (marketingClarity * 2));
 
-    const trustBase = (environmentalScore * 0.5) + (consistency * 3) + (selectedPriceTier.fairness * 2);
-    const trust = Math.min(100, (trustBase * 10) + selectedSourcing.trustBonus + selectedProduction.trustBonus);
+    const trustBase = (environmentalScore * 0.5) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
+    const trust = Math.min(100, (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0));
 
-    const longevity = Math.min(10, (trust * 0.06) + (selectedPriceTier.margin * 4));
+    const longevity = Math.min(10, (trust * 0.06) + ((selectedPriceTier?.margin || 0) * 4));
 
     return { 
       environmentalScore, 
@@ -258,9 +259,9 @@ export default function SimulatorPage() {
       productionCost, 
       retailPrice,
       consistency,
-      socialImpact: selectedSourcing.humanScore
+      socialImpact: selectedSourcing?.humanScore || 5
     };
-  }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier, selectedValue]);
+  }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier]);
 
   const overallScore = useMemo(() => {
     return Math.round((
@@ -280,6 +281,45 @@ export default function SimulatorPage() {
       impact: Math.min(10, scores.environmentalScore + (i * 0.05))
     }));
   }, [scores]);
+
+  /**
+   * BACKGROUND SYNC EFFECT
+   * Fixes the "never completes" issue by triggering analysis if missing in market phase.
+   */
+  useEffect(() => {
+    if (phase === 'market' && !aiFeedback && !isAiLoading && teamName && config.format) {
+      const syncFeedback = async () => {
+        setIsAiLoading(true);
+        try {
+          const feedback = await generateMarketFeedback({
+            teamName,
+            productName: config.format,
+            ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
+            earthScore: Math.round(scores.environmentalScore * 10),
+            trustScore: Math.round(scores.trust),
+            pricePoint: Math.round(scores.retailPrice),
+            message: config.message,
+            targetAudience: selectedAudience.name,
+            coreValue: selectedValue.name
+          });
+          setAiFeedback(feedback);
+          
+          // Repair the historical record in Firestore
+          if (viewingSessionId && firestore) {
+            updateDocumentNonBlocking(doc(firestore, "simulator_sessions", viewingSessionId), {
+              aiFeedback: feedback,
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (err) {
+          console.error("Feedback synchronization failed:", err);
+        } finally {
+          setIsAiLoading(false);
+        }
+      };
+      syncFeedback();
+    }
+  }, [phase, aiFeedback, isAiLoading, teamName, config, selectedBase, selectedSourcing, selectedPackaging, scores, selectedAudience, selectedValue, viewingSessionId, firestore]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -317,6 +357,7 @@ export default function SimulatorPage() {
     setTeamName("");
     setAiFeedback(null);
     setLastEventId(null);
+    setViewingSessionId(null);
     toast({
       title: "Team Session Ended",
       description: "You have been removed from the session. A new team can now join.",
@@ -324,6 +365,7 @@ export default function SimulatorPage() {
   };
 
   const handleViewHistoricalSession = (session: any) => {
+    setViewingSessionId(session.id);
     setTeamName(session.teamName);
     setSelectedEmblem(session.emblem);
     if (session.config) {
@@ -745,7 +787,7 @@ export default function SimulatorPage() {
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
                       </Select>
-                      <p className="text-[10px] text-slate-400 italic px-1">{selectedValue.description}</p>
+                      <p className="text-[10px] text-slate-400 italic px-1">{selectedValue?.description || ''}</p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Marketing Message</Label>
@@ -775,11 +817,11 @@ export default function SimulatorPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-bold uppercase tracking-widest text-slate-400">Ingredients & Sourcing</span>
-                      <span className="text-white font-mono">₹{selectedBase.cost + selectedSourcing.costDelta}</span>
+                      <span className="text-white font-mono">₹{(selectedBase?.cost || 0) + (selectedSourcing?.costDelta || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-bold uppercase tracking-widest text-slate-400">Packaging & Production</span>
-                      <span className="text-white font-mono">₹{selectedPackaging.cost + selectedProduction.costDelta}</span>
+                      <span className="text-white font-mono">₹{(selectedPackaging?.cost || 0) + (selectedProduction?.costDelta || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-4 border-t border-white/5">
                       <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Production Cost</span>
@@ -789,7 +831,7 @@ export default function SimulatorPage() {
                   <div className="flex justify-between items-center pt-6 border-t-2 border-accent/20">
                     <div className="flex flex-col">
                       <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Calculated Retail Price</span>
-                      <span className="text-[10px] text-slate-500">Includes {Math.round(selectedPriceTier.margin * 100)}% Profit Margin</span>
+                      <span className="text-[10px] text-slate-500">Includes {Math.round((selectedPriceTier?.margin || 0) * 100)}% Profit Margin</span>
                     </div>
                     <span className="text-4xl font-bold text-white font-headline">₹{Math.round(scores.retailPrice)}</span>
                   </div>
@@ -926,7 +968,7 @@ export default function SimulatorPage() {
               <div className="lg:col-span-1 space-y-4">
                 {[
                   { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit * 100)}`, icon: IndianRupee },
-                  { label: "Year 1 Profit", val: `₹${Math.round((chartData[11].profit * 100) * selectedPriceTier.margin)}`, icon: TrendingUp, color: "text-emerald-400" },
+                  { label: "Year 1 Profit", val: `₹${Math.round((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
                   { label: "Final Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Final Price Point", val: `₹${Math.round(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
                   { label: "Total Reach", val: Math.round(scores.shortTermSales * 5000), icon: Users, color: "text-blue-400" }
@@ -974,21 +1016,21 @@ export default function SimulatorPage() {
                         "Your genuine commitment to Zero Waste is verified by your plastic-free packaging, securing high trust among eco-advocates."
                       ) : config.coreValue === 'fts' && config.sourcingModel === 'lsf' ? (
                         "Directly sourcing from local farmers perfectly aligns with your Fair Trade promise, creating a powerful story of community impact."
-                      ) : config.coreValue === 'vp' && selectedBase.earthScore > 7 ? (
+                      ) : config.coreValue === 'vp' && selectedBase?.earthScore > 7 ? (
                         "Your use of high-quality plant-based ingredients confirms your Vegan Purity values to even the most discerning customers."
                       ) : (
-                        `Strong brand alignment: Your production choices and material sourcing directly support your claim of ${selectedValue.name.toLowerCase()}.`
+                        `Strong brand alignment: Your production choices and material sourcing directly support your claim of ${selectedValue?.name.toLowerCase()}.`
                       )}
                     </div>
                   )}
                   {scores.environmentalScore > 7 && (
                     <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      High Earth Score is attracting the growing eco-conscious segment of the {selectedAudience.name} market.
+                      High Earth Score is attracting the growing eco-conscious segment of the {selectedAudience?.name} market.
                     </div>
                   )}
-                  {selectedProduction.id === 'spw' && (
+                  {selectedProduction?.id === 'spw' && (
                     <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      Solar-powered production is a massive trust-builder, specifically validating your ethical claims for {selectedAudience.name}.
+                      Solar-powered production is a massive trust-builder, specifically validating your ethical claims for {selectedAudience?.name}.
                     </div>
                   )}
                 </CardContent>
@@ -1007,8 +1049,8 @@ export default function SimulatorPage() {
                       )}
                     </div>
                   )}
-                  {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
-                  {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Your pricing is way too high for your target audience (Students).</div>}
+                  {selectedPackaging?.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
+                  {selectedPriceTier?.id === 'luxury' && selectedAudience?.id === 'stu' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Your pricing is way too high for your target audience (Students).</div>}
                 </CardContent>
               </Card>
             </div>
