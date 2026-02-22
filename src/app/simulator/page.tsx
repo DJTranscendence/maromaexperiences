@@ -219,9 +219,9 @@ export default function SimulatorPage() {
       const animate = () => {
         const now = Date.now();
         const progress = Math.min(1, (now - start) / duration);
-        const easedProgress = 1 - Math.pow(2, -10 * progress);
         
-        setAnimationProgress(easedProgress);
+        // Use linear progress for perfect synchronization with month thresholds
+        setAnimationProgress(progress);
 
         if (progress < 1) {
           requestAnimationFrame(animate);
@@ -275,7 +275,6 @@ export default function SimulatorPage() {
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
-    // --- REFINED MARKETING FAILURE DETECTION ---
     const marketingResonanceRaw = config.marketingChannels.length > 0 
       ? config.marketingChannels.reduce((acc, channelId) => {
           const channel = MARKETING_CHANNELS.find(c => channelId === c.id);
@@ -283,22 +282,17 @@ export default function SimulatorPage() {
         }, 0) / config.marketingChannels.length
       : 0.05;
 
-    // Harsh penalty for zero marketing channels (e.g., obscure testing strategy)
     const marketingMultiplier = config.marketingChannels.length > 0 ? 1.5 : 0.05; 
-    
-    // Clarity requirement: Empty or short messages are now a massive penalty
     const marketingClarity = config.message.length > 15 ? 1.2 : (config.message.length > 0 ? 0.4 : 0.01);
     
     const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * marketingResonanceRaw;
     const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
     
-    // Multiplicative model ensures failure gates are effective
     let resonance = ((appealScore * 0.5) + (accessibility * 2.5)) * marketingClarity * marketingMultiplier * 10;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
-    // low trust kills sales logic
     if (trust < 40) resonance *= 0.3; 
     if (trust < 30) resonance *= 0.1; 
 
@@ -405,11 +399,9 @@ export default function SimulatorPage() {
     });
   }, [scores, config.category, config.sourcingModel, selectedBase.earthScore]);
 
-  // SEQUENTIAL DRAWING ENGINE
   const animatedChartData = useMemo(() => {
     if (phase !== 'market') return chartData.map(d => ({ month: d.month }));
     
-    // Force blank state during pre-animation pause
     if (!isAnimating && animationProgress === 0) {
       return chartData.map(d => ({ month: d.month }));
     }
@@ -419,7 +411,6 @@ export default function SimulatorPage() {
       if (animationProgress >= threshold) {
         return d;
       }
-      // Return point with no values to prevent Recharts from drawing line to it
       return { month: d.month };
     });
   }, [chartData, animationProgress, phase, isAnimating]);
