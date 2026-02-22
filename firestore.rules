@@ -1,9 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions
     function isSignedIn() { return request.auth != null; }
     function isAdmin() { return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)); }
 
+    // User profiles
     match /users/{userId} {
       allow read, write: if isSignedIn();
     }
@@ -11,6 +13,7 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
     
+    // Simulator Game Sessions (Completed Results)
     match /simulator_sessions/{sessionId} {
       allow read: if true;
       allow create: if true;
@@ -20,19 +23,22 @@ service cloud.firestore {
       allow list: if true;
     }
     
+    // Simulator Game Events (Real-time Joins/Phase Changes)
     match /simulator_events/{eventId} {
       allow read, create: if true;
-      allow delete: if isAdmin();
+      allow update, delete: if isAdmin();
     }
     match /simulator_events {
       allow list: if true;
     }
     
+    // Experience Catalog
     match /tours/{tourId} { 
       allow read: if true; 
       allow write: if isAdmin(); 
     }
     
+    // Corporate Proposals
     match /proposals/{proposalId} { 
       allow create: if isSignedIn(); 
       allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
@@ -42,6 +48,7 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
     
+    // Bookings
     match /bookings/{bookingId} {
       allow create: if isSignedIn();
       allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
@@ -51,6 +58,7 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
     
+    // Role Management
     match /roles_admin/{userId} { 
       allow read: if isSignedIn(); 
       allow write: if isSignedIn() && request.auth.uid == userId;
@@ -67,6 +75,7 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
     
+    // Media Assets
     match /media/{mediaId} { 
       allow read: if true; 
       allow write: if isAdmin(); 
@@ -74,5 +83,7 @@ service cloud.firestore {
     match /media {
       allow list: if true;
     }
+    
+    // Deployment trigger comment: v1.0.2 - Fixed Admin Deletion Permissions
   }
 }
