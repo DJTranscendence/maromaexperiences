@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Sprout, 
@@ -252,7 +253,8 @@ export default function SimulatorPage() {
     priceTier: PRICE_TIERS[0].id,
     coreValue: CORE_VALUES[0].id,
     marketingChannels: [] as string[],
-    message: ""
+    message: "",
+    customDetails: ""
   });
 
   const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category) || CATEGORIES[0], [config.category]);
@@ -1004,6 +1006,21 @@ export default function SimulatorPage() {
                   </div>
                 </section>
 
+                <section className="space-y-6">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
+                    <MessageSquare className="w-6 h-6 text-accent" /> 7. Custom Specifications
+                  </h3>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Can't find the options you want?</Label>
+                    <Textarea 
+                      placeholder="Type in details to your product here (product type, marketing ideas, anything...)" 
+                      value={config.customDetails} 
+                      onChange={e => handleUpdateConfig('customDetails', e.target.value)}
+                      className="min-h-[100px] rounded-2xl bg-white border-none shadow-lg text-primary font-medium"
+                    />
+                  </div>
+                </section>
+
                 <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
@@ -1080,7 +1097,7 @@ export default function SimulatorPage() {
                           </div>
                           <div className="flex flex-col">
                             <h3 className="text-sm font-headline font-bold text-white leading-tight">Stage {year} Complete!</h3>
-                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold mt-0.5">Growth Cycle Simulated</p>
+                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold mt-0.5">GROWTH CYCLE SIMULATED</p>
                           </div>
                         </div>
                         <Button 
@@ -1088,7 +1105,7 @@ export default function SimulatorPage() {
                           onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
                           className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 h-9 text-xs font-bold transition-all active:scale-95 gap-2 shrink-0"
                         >
-                          Ready to improve?
+                          Ready to improve for your second year?
                           <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
