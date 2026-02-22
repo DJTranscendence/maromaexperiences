@@ -291,22 +291,38 @@ export default function SimulatorPage() {
     return Array.from({ length: 12 }).map((_, i) => {
       const month = i + 1;
       let seasonalMultiplier = 1.0;
+      let marketNote = "Standard Market Demand";
       
       // Summer (Months 3-6)
       if (month >= 3 && month <= 6) {
-        if (config.category === 'bc') seasonalMultiplier = 1.25; // Body Care boost in Summer
-        if (config.category === 'hf') seasonalMultiplier = 0.85; // Candles/Incense lower in Summer
+        if (config.category === 'bc') {
+          seasonalMultiplier = 1.25; // Body Care boost in Summer
+          marketNote = "Summer heat surges Body Care demand";
+        }
+        if (config.category === 'hf') {
+          seasonalMultiplier = 0.85; // Candles/Incense lower in Summer
+          marketNote = "Heat reduces indoor candle demand";
+        }
       }
       
       // Monsoon (Months 7-9)
       if (month >= 7 && month <= 9) {
-        if (config.category === 'hf') seasonalMultiplier = 0.7; // Humidity affects Incense/Fragrance
-        if (config.sourcingModel === 'lsf') seasonalMultiplier *= 0.9; // Supply risk for local farmers
+        if (config.category === 'hf') {
+          seasonalMultiplier = 0.7; // Humidity affects Incense/Fragrance
+          marketNote = "Monsoon humidity slows incense interest";
+        }
+        if (config.sourcingModel === 'lsf') {
+          seasonalMultiplier *= 0.9; // Supply risk for local farmers
+          marketNote = "Rain impacts local small farmer supply";
+        } else {
+          marketNote = "Monsoon rains affect general footfall";
+        }
       }
       
       // Festive (Months 10-12)
       if (month >= 10 && month <= 12) {
         seasonalMultiplier = 1.45; // Massive boost for all gifting/home fragrance
+        marketNote = "Diwali & Wedding season demand peak";
       }
 
       const revenue = Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.25 - 1.5))) * seasonalMultiplier;
@@ -317,7 +333,8 @@ export default function SimulatorPage() {
         month,
         profit: Math.round(revenue),
         trust: Math.round(trust),
-        impact: Math.round(impact)
+        impact: Math.round(impact),
+        marketNote
       };
     });
   }, [scores, config.category, config.sourcingModel]);
@@ -1067,8 +1084,31 @@ export default function SimulatorPage() {
                       <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" label={{ value: 'Months Active', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.5)' }} />
                       <YAxis stroke="rgba(255,255,255,0.5)" />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', color: '#fff' }} 
-                        formatter={(value: any) => [Math.round(value), ""]}
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-2xl min-w-[200px] backdrop-blur-xl">
+                                <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Month {label}</p>
+                                {data.marketNote && (
+                                  <div className="text-xs font-bold text-accent mb-4 flex items-start gap-2 bg-accent/5 p-2 rounded-xl border border-accent/10">
+                                    <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                    <span>{data.marketNote}</span>
+                                  </div>
+                                )}
+                                <div className="space-y-2">
+                                  {payload.map((entry: any) => (
+                                    <div key={entry.name} className="flex justify-between gap-8 items-center">
+                                      <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ color: entry.color }}>{entry.name}</span>
+                                      <span className="text-sm font-black text-white">{Math.round(entry.value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
                       />
                       <Legend verticalAlign="top" height={36}/>
                       <Line type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
