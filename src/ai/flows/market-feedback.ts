@@ -50,16 +50,20 @@ Provide a "Year 1" simulation summary.
 - If they were ethical but very expensive for a budget audience, explain the slow growth.
 - If they hit the sweet spot of ethics and resonance, be 'enthusiastic'.
 
-Also generate exactly 4 positive and 4 negative customer reviews. 
+Also generate EXACTLY 4 positive and 4 negative customer reviews. 
 Reviews should be 1 sentence long, sounding like real social media comments or website feedback.
-Base the reviews on the specific choices made: if they chose 'handcrafted', reviews should mention the artisan feel. If they chose 'plastic', reviews might mention environmental concerns.
-
-Your response must be structured as JSON.`,
+Base the reviews on the specific choices made: if they chose 'handcrafted', reviews should mention the artisan feel. If they chose 'plastic', reviews might mention environmental concerns.`,
 });
 
 export async function generateMarketFeedback(input: MarketFeedbackInput): Promise<MarketFeedbackOutput> {
-  const { output } = await marketFeedbackPrompt(input);
-  if (!output) {
+  try {
+    const { output } = await marketFeedbackPrompt(input);
+    if (!output || !output.positiveReviews || output.positiveReviews.length === 0) {
+      throw new Error("Invalid model output");
+    }
+    return output;
+  } catch (err) {
+    console.warn("Market Feedback Generation failed, using robust fallback:", err);
     return {
       analystTone: 'concerned',
       feedbackText: 'The market response was mixed. While the concept shows promise, the alignment between your values and production methods needs refinement.',
@@ -79,5 +83,4 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
       ],
     };
   }
-  return output;
 }

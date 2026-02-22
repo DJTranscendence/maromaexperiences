@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -118,6 +117,7 @@ export default function SimulatorPage() {
   
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const syncAttemptedRef = useRef<string | null>(null);
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -285,8 +285,13 @@ export default function SimulatorPage() {
 
   useEffect(() => {
     if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4) && !isAiLoading && teamName && config.format) {
+      // Prevent sync loops if we just attempted a sync for this session
+      if (viewingSessionId && syncAttemptedRef.current === viewingSessionId) return;
+      
       const syncFeedback = async () => {
         setIsAiLoading(true);
+        if (viewingSessionId) syncAttemptedRef.current = viewingSessionId;
+        
         try {
           const feedback = await generateMarketFeedback({
             teamName,
@@ -354,6 +359,7 @@ export default function SimulatorPage() {
     setAiFeedback(null);
     setLastEventId(null);
     setViewingSessionId(null);
+    syncAttemptedRef.current = null;
     toast({
       title: "Team Session Ended",
       description: "You have been removed from the session. A new team can now join.",
