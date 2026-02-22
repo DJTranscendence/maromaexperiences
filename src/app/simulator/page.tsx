@@ -48,7 +48,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   User,
-  FlaskConical
+  FlaskConical,
+  CloudRain,
+  Sun,
+  Gift
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -257,10 +260,8 @@ export default function SimulatorPage() {
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
     // Re-align Trust and Resonance
-    // Trust cannot be vastly higher than Resonance if growth is slow, 
-    // and Resonance is hindered by very low Trust (rejection).
-    if (trust > 80 && resonance < 40) trust -= 15; // Slow growth cap on trust
-    if (trust < 30) resonance *= 0.7; // Rejection due to poor ethics
+    if (trust > 80 && resonance < 40) trust -= 15; 
+    if (trust < 30) resonance *= 0.7; 
 
     const longevity = (trust * 0.6) + ((selectedPriceTier?.margin || 0) * 40);
 
@@ -287,13 +288,39 @@ export default function SimulatorPage() {
   }, [scores]);
 
   const chartData = useMemo(() => {
-    return Array.from({ length: 12 }).map((_, i) => ({
-      month: i + 1,
-      profit: Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.2 - 1))),
-      trust: Math.min(98, scores.trust + (i * (scores.environmentalScore > 60 ? 0.5 : -1))),
-      impact: Math.min(98, scores.environmentalScore + (i * 0.1))
-    }));
-  }, [scores]);
+    return Array.from({ length: 12 }).map((_, i) => {
+      const month = i + 1;
+      let seasonalMultiplier = 1.0;
+      
+      // Summer (Months 3-6)
+      if (month >= 3 && month <= 6) {
+        if (config.category === 'bc') seasonalMultiplier = 1.25; // Body Care boost in Summer
+        if (config.category === 'hf') seasonalMultiplier = 0.85; // Candles/Incense lower in Summer
+      }
+      
+      // Monsoon (Months 7-9)
+      if (month >= 7 && month <= 9) {
+        if (config.category === 'hf') seasonalMultiplier = 0.7; // Humidity affects Incense/Fragrance
+        if (config.sourcingModel === 'lsf') seasonalMultiplier *= 0.9; // Supply risk for local farmers
+      }
+      
+      // Festive (Months 10-12)
+      if (month >= 10 && month <= 12) {
+        seasonalMultiplier = 1.45; // Massive boost for all gifting/home fragrance
+      }
+
+      const revenue = Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.25 - 1.5))) * seasonalMultiplier;
+      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)));
+      const impact = Math.min(98, scores.environmentalScore + (i * 0.1));
+
+      return {
+        month,
+        profit: Math.round(revenue),
+        trust: Math.round(trust),
+        impact: Math.round(impact)
+      };
+    });
+  }, [scores, config.category, config.sourcingModel]);
 
   useEffect(() => {
     if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4) && !isAiLoading && teamName && config.format) {
@@ -623,7 +650,7 @@ export default function SimulatorPage() {
                       </div>
                       <div className="flex justify-between items-center group/metric">
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Revenue</p>
-                        <p className="text-lg font-bold text-amber-400">₹{s.scores.profit * 100}</p>
+                        <p className="text-lg font-bold text-amber-400">₹{Math.round(s.scores.profit * 100)}</p>
                       </div>
                     </div>
                   )}
@@ -1039,7 +1066,10 @@ export default function SimulatorPage() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                       <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" label={{ value: 'Months Active', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.5)' }} />
                       <YAxis stroke="rgba(255,255,255,0.5)" />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', color: '#fff' }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', color: '#fff' }} 
+                        formatter={(value: any) => [Math.round(value), ""]}
+                      />
                       <Legend verticalAlign="top" height={36}/>
                       <Line type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
                       <Line type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
@@ -1052,51 +1082,47 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
-                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> What Helped</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> Market Opportunities</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
+                  {config.category === 'hf' && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
+                      <Gift className="w-5 h-5 text-amber-500 shrink-0" />
+                      <span>The Festive Season (Months 10-12) is projected to boost your Home Fragrance revenue by 40% due to Diwali and wedding demand.</span>
+                    </div>
+                  )}
+                  {config.category === 'bc' && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
+                      <Sun className="w-5 h-5 text-amber-500 shrink-0" />
+                      <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand as consumers look for refreshing solutions.</span>
+                    </div>
+                  )}
                   {scores.consistency >= 0.8 && (
                     <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      {config.coreValue === 'euc' || config.coreValue === 'len' ? (
-                        "Despite your poor environmental values and greenwashing, you have brand integrity: at least your actions match your values. This will appeal to customers who care more about appearance and price, than true quality and sustainability."
-                      ) : config.coreValue === 'zw' && config.packagingType !== 'plastic' ? (
-                        "Your genuine commitment to Zero Waste is verified by your plastic-free packaging, securing high trust among eco-advocates."
-                      ) : config.coreValue === 'fts' && config.sourcingModel === 'lsf' ? (
-                        "Directly sourcing from local farmers perfectly aligns with your Fair Trade promise, creating a powerful story of community impact."
-                      ) : config.coreValue === 'vp' && selectedBase?.earthScore > 7 ? (
-                        "Your use of high-quality plant-based ingredients confirms your Vegan Purity values to even the most discerning customers."
-                      ) : (
-                        `Strong brand alignment: Your production choices and material sourcing directly support your claim of ${selectedValue?.name.toLowerCase()}.`
-                      )}
-                    </div>
-                  )}
-                  {scores.environmentalScore > 70 && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      High Earth Score is attracting the growing eco-conscious segment of the {selectedAudience?.name} market.
-                    </div>
-                  )}
-                  {selectedProduction?.id === 'spw' && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      Solar-powered production is a massive trust-builder, specifically validating your ethical claims for {selectedAudience?.name}.
+                      Strong brand alignment: Your production choices and material sourcing directly support your claim of {selectedValue?.name.toLowerCase()}.
                     </div>
                   )}
                 </CardContent>
               </Card>
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
-                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> What Hurt</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> Market Risks</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.consistency < 0.8 && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">
-                      {config.coreValue === 'zw' && config.packagingType === 'plastic' ? (
-                        "Claiming 'Zero Waste' while using plastic packaging is seen as a major integrity breach by your audience."
-                      ) : config.coreValue === 'fts' && config.sourcingModel === 'is' ? (
-                        "Your 'Fair Trade' marketing message is undermined by your reliance on anonymous industrial suppliers."
-                      ) : (
-                        "A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality."
-                      )}
+                  {config.sourcingModel === 'lsf' && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 flex gap-3">
+                      <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
+                      <span>Monsoon Risk (Months 7-9): Relying on local small farmers makes you vulnerable to supply chain delays during heavy rain.</span>
                     </div>
                   )}
-                  {selectedPackaging?.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
-                  {selectedPriceTier?.id === 'luxury' && selectedAudience?.id === 'stu' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Your pricing is way too high for your target audience (Students).</div>}
+                  {config.category === 'hf' && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 flex gap-3">
+                      <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
+                      <span>Incense & Resin demand typically drops by 30% during the Monsoon due to high humidity and shipping challenges.</span>
+                    </div>
+                  )}
+                  {scores.consistency < 0.8 && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">
+                      A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality.
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
