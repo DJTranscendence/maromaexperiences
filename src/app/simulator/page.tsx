@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -53,7 +54,8 @@ import {
   Gift,
   Newspaper,
   Wrench,
-  Lightbulb
+  Lightbulb,
+  ChevronDown
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -127,6 +129,9 @@ export default function SimulatorPage() {
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const syncAttemptedRef = useRef<string | null>(null);
+
+  // Animation state for ticking numbers
+  const [animationProgress, setAnimationProgress] = useState(0);
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -203,6 +208,32 @@ export default function SimulatorPage() {
       }
     }
   }, [events, lastEventId, toast]);
+
+  // Handle number ticking animation
+  useEffect(() => {
+    if (phase === 'market') {
+      setAnimationProgress(0);
+      const start = Date.now();
+      const duration = 2000; // 2 seconds animation
+
+      const animate = () => {
+        const now = Date.now();
+        const progress = Math.min(1, (now - start) / duration);
+        // Using easeOutExpo-ish easing
+        const easedProgress = 1 - Math.pow(2, -10 * progress);
+        
+        setAnimationProgress(easedProgress);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setAnimationProgress(1);
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [phase]);
 
   const [config, setConfig] = useState({
     category: CATEGORIES[0].id,
@@ -444,6 +475,7 @@ export default function SimulatorPage() {
     setLastEventId(null);
     setViewingSessionId(null);
     syncAttemptedRef.current = null;
+    setAnimationProgress(0);
     toast({
       title: "Team Session Ended",
       description: "You have been removed from the session. A new team can now join.",
@@ -534,6 +566,9 @@ export default function SimulatorPage() {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // Helper for ticking numbers
+  const displayVal = (val: number) => Math.round(val * animationProgress);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
@@ -1009,41 +1044,41 @@ export default function SimulatorPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Environmental Friendliness</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.environmentalScore)}%</span>
+                      <span className="text-2xl font-bold font-headline">{displayVal(scores.environmentalScore)}%</span>
                     </div>
-                    <Progress value={scores.environmentalScore} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
+                    <Progress value={scores.environmentalScore * animationProgress} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Public Trust Index</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.trust)}%</span>
+                      <span className="text-2xl font-bold font-headline">{displayVal(scores.trust)}%</span>
                     </div>
-                    <Progress value={scores.trust} className="h-3 bg-white/10 [&>div]:bg-blue-500" />
+                    <Progress value={scores.trust * animationProgress} className="h-3 bg-white/10 [&>div]:bg-blue-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">Market Resonance</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.shortTermSales)}%</span>
+                      <span className="text-2xl font-bold font-headline">{displayVal(scores.shortTermSales)}%</span>
                     </div>
-                    <Progress value={scores.shortTermSales} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
+                    <Progress value={scores.shortTermSales * animationProgress} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Human & Social Impact</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.socialImpact)}%</span>
+                      <span className="text-2xl font-bold font-headline">{displayVal(scores.socialImpact)}%</span>
                     </div>
-                    <Progress value={scores.socialImpact} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
+                    <Progress value={scores.socialImpact * animationProgress} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400">Brand Longevity</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.longevity)}%</span>
+                      <span className="text-2xl font-bold font-headline">{displayVal(scores.longevity)}%</span>
                     </div>
-                    <Progress value={scores.longevity} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
+                    <Progress value={scores.longevity * animationProgress} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
                   </div>
                   <div className="pt-8 border-t border-white/10 flex justify-between items-center">
                     <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Overall Brand Score</span>
-                    <span className="text-5xl font-bold font-headline text-accent">{overallScore}%</span>
+                    <span className="text-5xl font-bold font-headline text-accent">{displayVal(overallScore)}%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -1115,11 +1150,11 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: `Year ${year} Revenue`, val: `₹${Math.round(chartData[11].profit * 100)}`, icon: IndianRupee },
-                  { label: `Year ${year} Profit`, val: `₹${Math.round((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
-                  { label: "Final Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Final Price Point", val: `₹${Math.round(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
-                  { label: "Total Reach", val: Math.round(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
+                  { label: `Year ${year} Revenue`, val: `₹${displayVal(chartData[11].profit * 100)}`, icon: IndianRupee },
+                  { label: `Year ${year} Profit`, val: `₹${displayVal((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
+                  { label: "Final Trust Index", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
+                  { label: "Final Price Point", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
+                  { label: "Total Reach", val: displayVal(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-2xl border-none shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm">
                     <CardContent className="p-6 flex items-center gap-4">
@@ -1172,9 +1207,9 @@ export default function SimulatorPage() {
                         }}
                       />
                       <Legend verticalAlign="top" height={36}/>
-                      <Line type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
-                      <Line type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
-                      <Line type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="Earth Impact" dot={false} />
+                      <Line isAnimationActive={true} animationDuration={2000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
+                      <Line isAnimationActive={true} animationDuration={2000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
+                      <Line isAnimationActive={true} animationDuration={2000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="Earth Impact" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
