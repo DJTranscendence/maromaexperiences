@@ -555,7 +555,7 @@ export default function SimulatorPage() {
                 <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
                 <span className="text-3xl font-headline font-bold uppercase tracking-widest">Join Game</span>
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Enter your team name and emblem below</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Enter your team name and company logo below</p>
             </Button>
           </div>
         )}
