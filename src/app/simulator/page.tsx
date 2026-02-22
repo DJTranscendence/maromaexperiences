@@ -462,7 +462,7 @@ export default function SimulatorPage() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         
-        {/* Workshop Leaderboard (Score + Ratings) at Top */}
+        {/* Workshop Leaderboard at the Top */}
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
@@ -498,18 +498,18 @@ export default function SimulatorPage() {
                   </div>
                   
                   {s.scores && (
-                    <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
-                        <p className="text-sm font-bold text-emerald-400">{s.scores.earth}</p>
+                    <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
+                      <div className="flex justify-between items-center group/metric">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
+                        <p className="text-lg font-bold text-emerald-400">{s.scores.earth}</p>
                       </div>
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
-                        <p className="text-sm font-bold text-blue-400">{s.scores.trust}</p>
+                      <div className="flex justify-between items-center group/metric">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
+                        <p className="text-lg font-bold text-blue-400">{s.scores.trust}</p>
                       </div>
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
-                        <p className="text-sm font-bold text-amber-400">{s.scores.profit}</p>
+                      <div className="flex justify-between items-center group/metric">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
+                        <p className="text-lg font-bold text-amber-400">{s.scores.profit}</p>
                       </div>
                     </div>
                   )}
