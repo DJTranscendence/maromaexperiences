@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -237,25 +238,8 @@ export default function SimulatorPage() {
       };
 
       requestAnimationFrame(animate);
-
-      if (aiFeedback) {
-        const allReviews = [...(aiFeedback.positiveReviews || []), ...(aiFeedback.negativeReviews || [])];
-        allReviews.forEach((review, idx) => {
-          setTimeout(() => {
-            toast({
-              title: "New Customer Feedback",
-              description: (
-                <div className="flex items-start gap-3 mt-1">
-                  <MessageSquare className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                  <p className="italic font-body leading-tight text-sm">"{review}"</p>
-                </div>
-              ),
-            });
-          }, 1000 + (idx * 600));
-        });
-      }
     }
-  }, [phase, isAnimating, aiFeedback, toast]);
+  }, [phase, isAnimating]);
 
   const [config, setConfig] = useState({
     category: CATEGORIES[0].id,
@@ -540,6 +524,7 @@ export default function SimulatorPage() {
     setPhase('market');
     setIsAnimating(false);
     setIsAiLoading(true);
+    setAnimationProgress(0); // Reset progress to ensure blank start
     
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
@@ -1113,7 +1098,7 @@ export default function SimulatorPage() {
                 
                 <div className="h-[500px] w-full mt-4 relative">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} key={isAnimating ? 'animating' : 'paused'} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                    <LineChart data={isAnimating ? chartData : []} key={isAnimating ? 'animating' : 'paused'} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                       <XAxis 
                         dataKey="month" 
@@ -1153,9 +1138,13 @@ export default function SimulatorPage() {
                         }}
                       />
                       <Legend verticalAlign="top" align="center" height={60} iconType="circle" formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>} />
-                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} />
-                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} />
-                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} />
+                      {isAnimating && (
+                        <>
+                          <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} />
+                          <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} />
+                          <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} />
+                        </>
+                      )}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
