@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -943,21 +944,45 @@ export default function SimulatorPage() {
                 <CardContent className="space-y-4">
                   {scores.consistency >= 0.8 && (
                     <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      {(config.coreValue === 'euc' || config.coreValue === 'len') ? (
+                      {config.coreValue === 'euc' || config.coreValue === 'len' ? (
                         "Despite your poor environmental values and greenwashing, you have brand integrity: at least your actions match your values. This will appeal to customers who care more about appearance and price, than true quality and sustainability."
+                      ) : config.coreValue === 'zw' && config.packagingType !== 'plastic' ? (
+                        "Your genuine commitment to Zero Waste is verified by your plastic-free packaging, securing high trust among eco-advocates."
+                      ) : config.coreValue === 'fts' && config.sourcingModel === 'lsf' ? (
+                        "Directly sourcing from local farmers perfectly aligns with your Fair Trade promise, creating a powerful story of community impact."
+                      ) : config.coreValue === 'vp' && selectedBase.earthScore > 7 ? (
+                        "Your use of high-quality plant-based ingredients confirms your Vegan Purity values to even the most discerning customers."
                       ) : (
-                        "Your brand integrity is perfect. Customers see your actions match your values."
+                        `Strong brand alignment: Your production choices and material sourcing directly support your claim of ${selectedValue.name.toLowerCase()}.`
                       )}
                     </div>
                   )}
-                  {scores.environmentalScore > 7 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">High Earth Score is attracting the growing eco-conscious segment.</div>}
-                  {selectedProduction.id === 'spw' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Solar-powered production is a massive trust-builder for your {selectedAudience.name} audience.</div>}
+                  {scores.environmentalScore > 7 && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
+                      High Earth Score is attracting the growing eco-conscious segment of the {selectedAudience.name} market.
+                    </div>
+                  )}
+                  {selectedProduction.id === 'spw' && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
+                      Solar-powered production is a massive trust-builder, specifically validating your ethical claims for {selectedAudience.name}.
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> What Hurt</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.consistency < 0.8 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
+                  {scores.consistency < 0.8 && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">
+                      {config.coreValue === 'zw' && config.packagingType === 'plastic' ? (
+                        "Claiming 'Zero Waste' while using plastic packaging is seen as a major integrity breach by your audience."
+                      ) : config.coreValue === 'fts' && config.sourcingModel === 'is' ? (
+                        "Your 'Fair Trade' marketing message is undermined by your reliance on anonymous industrial suppliers."
+                      ) : (
+                        "A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality."
+                      )}
+                    </div>
+                  )}
                   {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
                   {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Your pricing is way too high for your target audience (Students).</div>}
                 </CardContent>
