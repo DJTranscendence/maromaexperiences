@@ -396,6 +396,26 @@ export default function SimulatorPage() {
     });
   }, [scores, config.category, config.sourcingModel, selectedBase.earthScore]);
 
+  // Derived data for sequential drawing animation
+  const animatedChartData = useMemo(() => {
+    if (phase !== 'market') return [];
+    
+    // If animation hasn't started yet (during the 1.5s pause), return an empty masked dataset
+    if (!isAnimating && animationProgress === 0) {
+      return chartData.map(d => ({ month: d.month }));
+    }
+    
+    return chartData.map((d, index) => {
+      // Threshold for each month point appearing (1/12 increments)
+      const threshold = (index + 1) / chartData.length;
+      if (animationProgress >= threshold) {
+        return d;
+      }
+      // Return point with no values to cut the line
+      return { month: d.month };
+    });
+  }, [chartData, animationProgress, phase, isAnimating]);
+
   useEffect(() => {
     if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4 || !aiFeedback.negativeReviewFixes) && !isAiLoading && teamName && config.format) {
       if (viewingSessionId && syncAttemptedRef.current === viewingSessionId) return;
@@ -1115,7 +1135,7 @@ export default function SimulatorPage() {
                 
                 <div className="h-[500px] w-full mt-4 relative">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={isAnimating ? chartData : []} key={isAnimating ? 'animating' : 'paused'} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                    <LineChart data={animatedChartData} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                       <XAxis 
                         dataKey="month" 
@@ -1155,13 +1175,9 @@ export default function SimulatorPage() {
                         }}
                       />
                       <Legend verticalAlign="top" align="center" height={60} iconType="circle" formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>} />
-                      {isAnimating && (
-                        <>
-                          <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} />
-                          <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} />
-                          <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} />
-                        </>
-                      )}
+                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} connectNulls={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} connectNulls={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} connectNulls={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
