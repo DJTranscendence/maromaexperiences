@@ -10,11 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Sprout, 
   Heart, 
   AlertCircle, 
   CheckCircle2, 
@@ -27,21 +25,15 @@ import {
   CircleCheck,
   Package,
   Target,
-  IndianRupee,
   Users,
   Activity,
-  Globe,
   Megaphone,
   ShieldCheck,
   Loader2,
   MessageSquareQuote,
   TrendingUp,
   BrainCircuit,
-  Trophy,
-  Star,
   X,
-  Home,
-  RotateCcw,
   Settings,
   Trash2,
   PlayCircle,
@@ -55,7 +47,6 @@ import {
   Newspaper,
   Wrench,
   Lightbulb,
-  ChevronDown,
   Edit2,
   MessageSquare,
   Clock,
@@ -63,7 +54,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { 
   CATEGORIES, 
   INGREDIENT_BASES, 
@@ -86,7 +76,7 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { useFirebase, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
@@ -454,11 +444,13 @@ export default function SimulatorPage() {
     handleUpdateConfig('marketingChannels', next);
   };
 
-  const broadcastStatus = (status: 'join' | 'lab' | 'market') => {
-    if (firestore && teamName) {
+  const broadcastStatus = (status: 'join' | 'lab' | 'market', overrideName?: string, overrideEmblem?: string) => {
+    const nameToUse = overrideName || teamName;
+    const emblemToUse = overrideEmblem || selectedEmblem;
+    if (firestore && nameToUse) {
       addDocumentNonBlocking(collection(firestore, "simulator_events"), {
-        teamName,
-        emblem: selectedEmblem,
+        teamName: nameToUse,
+        emblem: emblemToUse,
         type: status,
         timestamp: serverTimestamp()
       });
@@ -526,7 +518,7 @@ export default function SimulatorPage() {
     setPhase('market');
     setIsAnimating(false);
     setIsAiLoading(true);
-    setAnimationProgress(0); // Reset progress to ensure blank start
+    setAnimationProgress(0);
     
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
@@ -769,9 +761,16 @@ export default function SimulatorPage() {
                         size="sm" 
                         className="w-full text-white border-white/20 hover:bg-white/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px] transition-all py-6 h-auto flex flex-col items-center group/btn"
                         onClick={() => {
-                          setTeamName(s.teamName);
-                          setSelectedEmblem(s.emblem);
+                          const currentName = s.teamName;
+                          const currentEmblem = s.emblem;
+                          setTeamName(currentName);
+                          setSelectedEmblem(currentEmblem);
                           setPhase('lab');
+                          broadcastStatus('lab', currentName, currentEmblem);
+                          setTimeout(() => {
+                            const header = document.getElementById('lab-header');
+                            if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }, 150);
                         }}
                       >
                         <span className="opacity-60">Click here to</span>
@@ -867,7 +866,7 @@ export default function SimulatorPage() {
 
         {phase === 'lab' && (
           <div className="animate-in fade-in duration-1000 mt-8">
-            <div className="col-span-full mb-16 text-center space-y-4">
+            <div className="col-span-full mb-16 text-center space-y-4" id="lab-header">
               <div className="relative w-40 h-40 mx-auto mb-6 bg-white rounded-[2.5rem] p-2 shadow-xl">
                 <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
               </div>
