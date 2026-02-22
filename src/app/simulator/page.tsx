@@ -415,7 +415,7 @@ export default function SimulatorPage() {
                   <Activity className="w-6 h-6 text-accent" /> Game Management
                 </DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Manage live team sessions and current leaderboard entries.
+                  Manage live team sessions and current game metrics.
                 </DialogDescription>
               </DialogHeader>
               
@@ -474,11 +474,11 @@ export default function SimulatorPage() {
           </p>
         </section>
 
-        {/* Workshop Leaderboard Header */}
+        {/* Team Scores Section */}
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
-              <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
+              <Activity className="w-8 h-8 text-accent" /> Team Scores
             </h2>
             <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
               {allWorkshopTeams?.length || 0} Teams Competing
