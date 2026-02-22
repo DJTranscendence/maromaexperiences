@@ -51,7 +51,8 @@ import {
   FlaskConical,
   CloudRain,
   Sun,
-  Gift
+  Gift,
+  Newspaper
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -294,8 +295,9 @@ export default function SimulatorPage() {
       let marketNote = "Standard Market Demand";
       let trustVolatilty = 0;
       let impactDrift = 0;
+      let newsNote = "";
       
-      // Summer (Months 3-6)
+      // Seasonal Logic
       if (month >= 3 && month <= 6) {
         if (config.category === 'bc') {
           seasonalMultiplier = 1.25;
@@ -307,7 +309,6 @@ export default function SimulatorPage() {
         }
       }
       
-      // Monsoon (Months 7-9)
       if (month >= 7 && month <= 9) {
         if (config.category === 'hf') {
           seasonalMultiplier = 0.7;
@@ -315,37 +316,59 @@ export default function SimulatorPage() {
         }
         if (config.sourcingModel === 'lsf') {
           seasonalMultiplier *= 0.9;
-          trustVolatilty = -8; // Supply chain doubt during rains
+          trustVolatilty = -8;
           marketNote = "Rain impacts local small farmer supply";
         } else {
           marketNote = "Monsoon rains affect general footfall";
         }
       }
       
-      // Festive (Months 10-12)
       if (month >= 10 && month <= 12) {
         seasonalMultiplier = 1.45;
-        impactDrift = -5; // Scaling up production impacts environment
+        impactDrift = -5;
         marketNote = "Diwali & Wedding season demand peak";
       }
 
+      // NEWS CYCLE FLUCTUATIONS
+      if (month === 2) {
+        const jitter = selectedBase.earthScore > 6 ? 6 : -10;
+        trustVolatilty += jitter;
+        newsNote = selectedBase.earthScore > 6 
+          ? "REPORT: Viral social post praises your ingredient transparency!" 
+          : "REPORT: Blog post questions your ingredient purity.";
+      }
+      if (month === 5) {
+        const jitter = scores.consistency > 0.8 ? 5 : -12;
+        impactDrift += (jitter / 2);
+        newsNote = scores.consistency > 0.8 
+          ? "HEADLINE: Local NGO commends your low-waste production ethics." 
+          : "HEADLINE: Report highlights excessive waste in your packaging chain.";
+      }
+      if (month === 8) {
+        const jitter = scores.trust > 60 ? 4 : -8;
+        trustVolatilty += jitter;
+        newsNote = scores.trust > 60 
+          ? "NEWS: Consumer survey ranks your brand as 'Most Trusted' in category." 
+          : "NEWS: Competitor launch challenges your brand's market position.";
+      }
+
+      // Small organic noise jitter (±1.5%)
+      const noise = (Math.sin(i * 1.5) * 1.5);
+
       const revenue = Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.25 - 1.5))) * seasonalMultiplier;
-      
-      // Fluctuating Trust: Trends upward if ethical, but dips in risky seasons
-      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty);
-      
-      // Fluctuating Impact: Generally stable but drifts during festive stress
-      const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift);
+      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty + noise);
+      const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift + noise);
 
       return {
         month,
         profit: Math.round(revenue),
         trust: Math.round(trust),
         impact: Math.round(impact),
-        marketNote
+        marketNote: newsNote ? `${newsNote} | ${marketNote}` : marketNote,
+        isNewsEvent: !!newsNote
       };
     });
-  }, [scores, config.category, config.sourcingModel]);
+  }, [scores, config.category, config.sourcingModel, selectedBase.earthScore]);
 
   useEffect(() => {
     if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4) && !isAiLoading && teamName && config.format) {
@@ -1099,8 +1122,11 @@ export default function SimulatorPage() {
                               <div className="bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-2xl min-w-[200px] backdrop-blur-xl">
                                 <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Month {label}</p>
                                 {data.marketNote && (
-                                  <div className="text-xs font-bold text-accent mb-4 flex items-start gap-2 bg-accent/5 p-2 rounded-xl border border-accent/10">
-                                    <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                  <div className={cn(
+                                    "text-xs font-bold mb-4 flex items-start gap-2 p-2 rounded-xl border",
+                                    data.isNewsEvent ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-accent/5 border-accent/10 text-accent"
+                                  )}>
+                                    {data.isNewsEvent ? <Newspaper className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
                                     <span>{data.marketNote}</span>
                                   </div>
                                 )}
