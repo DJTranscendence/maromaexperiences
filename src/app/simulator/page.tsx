@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -274,24 +275,31 @@ export default function SimulatorPage() {
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
+    // --- REFINED MARKETING FAILURE DETECTION ---
     const marketingResonanceRaw = config.marketingChannels.length > 0 
       ? config.marketingChannels.reduce((acc, channelId) => {
           const channel = MARKETING_CHANNELS.find(c => channelId === c.id);
           return acc + (channel?.resonance[config.targetAudience] || 1);
         }, 0) / config.marketingChannels.length
-      : 0.5;
+      : 0.05; // Was 0.5, now 0.05 (failure mode)
 
-    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * (marketingResonanceRaw * 1.5);
-    const accessibility = Math.min(1.5, (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1));
-    const marketingClarity = config.message.length > 5 ? 1.2 : 0.8;
+    const marketingMultiplier = config.marketingChannels.length > 0 ? 1.5 : 0.2; 
+    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * (marketingResonanceRaw * marketingMultiplier);
     
-    let resonance = ((appealScore * 0.4) + (accessibility * 3) + (marketingClarity * 2)) * 10;
+    // Accessibility vs Price Sensitivity: if price is way too high for audience, resonance crashes
+    const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
+    
+    // Clarity requirement: Empty or short messages are now a massive penalty
+    const marketingClarity = config.message.length > 15 ? 1.2 : (config.message.length > 0 ? 0.4 : 0.01);
+    
+    let resonance = ((appealScore * 0.5) + (accessibility * 2.5) + (marketingClarity * 3)) * 10;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
-    if (trust > 80 && resonance < 40) trust -= 15; 
-    if (trust < 30) resonance *= 0.7; 
+    // low trust kills sales logic
+    if (trust < 40) resonance *= 0.3; 
+    if (trust < 30) resonance *= 0.1; 
 
     const longevity = (trust * 0.6) + ((selectedPriceTier?.margin || 0) * 40);
 
@@ -396,22 +404,21 @@ export default function SimulatorPage() {
     });
   }, [scores, config.category, config.sourcingModel, selectedBase.earthScore]);
 
-  // Derived data for sequential drawing animation
+  // SEQUENTIAL DRAWING ENGINE
   const animatedChartData = useMemo(() => {
-    if (phase !== 'market') return [];
+    if (phase !== 'market') return chartData.map(d => ({ month: d.month }));
     
-    // If animation hasn't started yet (during the 1.5s pause), return an empty masked dataset
+    // Force blank state during pre-animation pause
     if (!isAnimating && animationProgress === 0) {
       return chartData.map(d => ({ month: d.month }));
     }
     
     return chartData.map((d, index) => {
-      // Threshold for each month point appearing (1/12 increments)
       const threshold = (index + 1) / chartData.length;
       if (animationProgress >= threshold) {
         return d;
       }
-      // Return point with no values to cut the line
+      // Return point with no values to prevent Recharts from drawing line to it
       return { month: d.month };
     });
   }, [chartData, animationProgress, phase, isAnimating]);
