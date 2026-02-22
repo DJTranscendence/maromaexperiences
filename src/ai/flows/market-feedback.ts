@@ -24,6 +24,8 @@ const MarketFeedbackOutputSchema = z.object({
   feedbackText: z.string().describe('A 2-3 sentence analysis of the product performance.'),
   customerQuote: z.string().describe('A "voice of the customer" snippet.'),
   suggestion: z.string().describe('A specific suggestion for Year 2 improvement.'),
+  positiveReviews: z.array(z.string()).describe('2-3 short positive customer reviews (one sentence each).'),
+  negativeReviews: z.array(z.string()).describe('2-3 short negative customer reviews (one sentence each).'),
 });
 export type MarketFeedbackOutput = z.infer<typeof MarketFeedbackOutputSchema>;
 
@@ -48,6 +50,8 @@ Provide a "Year 1" simulation summary.
 - If they were ethical but very expensive for a budget audience, explain the slow growth.
 - If they hit the sweet spot of ethics and resonance, be 'enthusiastic'.
 
+Also generate 2-3 positive and 2-3 negative customer reviews. Reviews should be 1 sentence long and sound like real social media or website comments.
+
 Your response must be structured as JSON.`,
 });
 
@@ -59,6 +63,8 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
       feedbackText: 'The market response was mixed. While the concept shows promise, the alignment between your values and production methods needs refinement.',
       customerQuote: "I like the idea, but I'm not sure if I can trust the ingredients.",
       suggestion: 'Review your sourcing model to ensure it matches your brand promise.',
+      positiveReviews: ["The scent is unique and feels very natural.", "I love the mission of this brand."],
+      negativeReviews: ["It is a bit expensive for my daily routine.", "The packaging doesn't feel as premium as the price suggests."],
     };
   }
   return output;

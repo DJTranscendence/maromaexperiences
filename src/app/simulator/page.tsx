@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -44,7 +43,10 @@ import {
   RotateCcw,
   Settings,
   Trash2,
-  PlayCircle
+  PlayCircle,
+  ThumbsUp,
+  ThumbsDown,
+  User
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -960,6 +962,58 @@ export default function SimulatorPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Customer Reviews Section */}
+            <section className="space-y-8 max-w-6xl mx-auto">
+              <div className="flex items-center gap-3">
+                <Users className="w-6 h-6 text-accent" />
+                <h3 className="text-3xl font-headline font-bold text-white uppercase tracking-wider">Customer Feedback</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Positive Reviews */}
+                <div className="space-y-4">
+                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 px-2 flex items-center gap-2">
+                    <ThumbsUp className="w-3 h-3" /> Positive Voices
+                  </Label>
+                  <div className="grid gap-4">
+                    {isAiLoading ? (
+                      Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
+                      ))
+                    ) : aiFeedback?.positiveReviews?.map((review, i) => (
+                      <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4 group hover:bg-emerald-500/10 transition-all">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                          <User className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Negative Reviews */}
+                <div className="space-y-4">
+                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400 px-2 flex items-center gap-2">
+                    <ThumbsDown className="w-3 h-3" /> Critical Voices
+                  </Label>
+                  <div className="grid gap-4">
+                    {isAiLoading ? (
+                      Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
+                      ))
+                    ) : aiFeedback?.negativeReviews?.map((review, i) => (
+                      <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex gap-4 group hover:bg-rose-500/10 transition-all">
+                        <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+                          <User className="w-5 h-5 text-rose-400" />
+                        </div>
+                        <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
 
             <div className="flex justify-center gap-4 pt-8">
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
