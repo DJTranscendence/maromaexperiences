@@ -464,8 +464,18 @@ export default function SimulatorPage() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         
-        {/* Workshop Leaderboard at the Top */}
-        <section className="space-y-8 mb-16 animate-in fade-in duration-1000">
+        {/* Game Title & Intro Section (Top of Page) */}
+        <section className="mb-16 text-center space-y-8 animate-in fade-in duration-1000">
+          <div className="relative h-48 w-full max-w-2xl mx-auto">
+            <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
+          </div>
+          <p className="text-xl text-slate-300 font-body leading-relaxed max-w-3xl mx-auto px-4">
+            Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
+          </p>
+        </section>
+
+        {/* Workshop Leaderboard Header */}
+        <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
               <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
@@ -553,15 +563,6 @@ export default function SimulatorPage() {
         {phase === 'intro' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="max-w-3xl mx-auto text-center space-y-8 mt-8">
-              <div className="space-y-4">
-                <div className="relative h-40 w-full max-w-2xl mx-auto">
-                  <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
-                </div>
-                <p className="text-xl text-slate-300 font-body leading-relaxed max-w-2xl mx-auto">
-                  Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
-                </p>
-              </div>
-
               <div id="join-form" className="scroll-mt-32 space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 
