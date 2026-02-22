@@ -46,7 +46,8 @@ import {
   PlayCircle,
   ThumbsUp,
   ThumbsDown,
-  User
+  User,
+  FlaskConical
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -535,9 +536,22 @@ export default function SimulatorPage() {
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
               <Activity className="w-8 h-8 text-accent" /> Team Scores
             </h2>
-            <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
-              {allWorkshopTeams?.length || 0} Teams Competing
-            </Badge>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="hidden sm:flex border-accent/30 text-accent hover:bg-accent/10 rounded-full h-9 px-4 font-bold uppercase tracking-widest text-[10px] gap-2 transition-all active:scale-95"
+                onClick={() => {
+                  if (!teamName) setTeamName("Simulator Guest");
+                  setPhase('lab');
+                }}
+              >
+                <FlaskConical className="w-3 h-3" /> Simulator
+              </Button>
+              <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
+                {allWorkshopTeams?.length || 0} Teams Competing
+              </Badge>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
