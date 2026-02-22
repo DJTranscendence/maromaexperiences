@@ -1166,7 +1166,7 @@ export default function SimulatorPage() {
                         <span>The Festive Season (Months 10-12) is projected to boost your Home Fragrance revenue by 40% due to Diwali and wedding demand.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Prep premium gift sets and special Diwali packaging by Month 9.
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Change 'Category' to 'Gifting Item' or upgrade 'Price Tier' to 'Luxury' to capture premium festive value.
                       </div>
                     </div>
                   )}
@@ -1177,7 +1177,7 @@ export default function SimulatorPage() {
                         <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand as consumers look for refreshing solutions.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Increase production of mists and light lotions starting in Month 2.
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Select 'Body Mist' format and add 'Influencer' to 'Marketing Channels' to boost summer resonance.
                       </div>
                     </div>
                   )}
@@ -1188,7 +1188,7 @@ export default function SimulatorPage() {
                         <span>Strong brand alignment: Your production choices and material sourcing directly support your claim of {selectedValue?.name.toLowerCase()}.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Use 'Sustainable Sourcing' as your primary hook in Month 5 marketing campaigns.
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Add 'Instagram' or 'Facebook' channels to broadcast your {selectedValue?.name} alignment.
                       </div>
                     </div>
                   )}
@@ -1204,7 +1204,7 @@ export default function SimulatorPage() {
                         <span>Monsoon Risk (Months 7-9): Relying on local small farmers makes you vulnerable to supply chain delays during heavy rain.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Diversify suppliers or build Month 6 buffer stock to avoid disruptions.
+                        <Wrench className="w-3 h-3" /> Suggested Action: Change 'Sourcing Model' to 'Fair Trade Cooperative' or 'Imported Bulk Distributor' to ensure year-round stability.
                       </div>
                     </div>
                   )}
@@ -1215,7 +1215,7 @@ export default function SimulatorPage() {
                         <span>Incense & Resin demand typically drops by 30% during the Monsoon due to high humidity and shipping challenges.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Focus on 'Indoor Wellness' mists or R&D for the Festive Season during this dip.
+                        <Wrench className="w-3 h-3" /> Suggested Action: Pivot 'Format' to 'Oil diffuser blend' or 'Room mist' which are less affected by humidity.
                       </div>
                     </div>
                   )}
@@ -1226,7 +1226,7 @@ export default function SimulatorPage() {
                         <span>A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-red-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Change Packaging to 'Glass' or 'Metal' to restore your {selectedValue?.name} claim.
+                        <Wrench className="w-3 h-3" /> Suggested Action: Change 'Packaging Type' to 'Glass' or 'Refillable Metal' to restore your sustainability integrity.
                       </div>
                     </div>
                   )}
@@ -1289,7 +1289,7 @@ export default function SimulatorPage() {
                                 <Wrench className="w-3 h-3 text-rose-400" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Suggested Pivot</span>
+                                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Suggested Setting Adjustment</span>
                                 <span className="text-xs text-slate-400">{aiFeedback.negativeReviewFixes[i]}</span>
                               </div>
                             </div>

@@ -26,7 +26,7 @@ const MarketFeedbackOutputSchema = z.object({
   suggestion: z.string().describe('A specific suggestion for Year 2 improvement.'),
   positiveReviews: z.array(z.string()).describe('Exactly 4 short positive customer reviews (one sentence each).'),
   negativeReviews: z.array(z.string()).describe('Exactly 4 short negative customer reviews (one sentence each).'),
-  negativeReviewFixes: z.array(z.string()).describe('Exactly 4 short, actionable suggestions matching each negative review (e.g., "Switch to glass packaging").'),
+  negativeReviewFixes: z.array(z.string()).describe('Exactly 4 short, actionable suggestions matching each negative review that MUST be a specific change to the Laboratory settings (e.g., "Change Packaging to Glass", "Change Price Tier to Accessible", "Change Sourcing to Local Small Farmers").'),
 });
 export type MarketFeedbackOutput = z.infer<typeof MarketFeedbackOutputSchema>;
 
@@ -53,7 +53,14 @@ Provide a "Year 1" simulation summary.
 
 Also generate EXACTLY 4 positive and 4 negative customer reviews. 
 Reviews should be 1 sentence long, sounding like real social media comments or website feedback.
-For EACH negative review, provide a matching "Suggested Action" (one short sentence) that the team should take in the next iteration to fix that specific issue.
+
+CRITICAL: For EACH negative review, provide a matching "Suggested Action" (one short sentence) that MUST BE a specific setting change available in the laboratory.
+Example fix phrases:
+- "Change 'Packaging Type' to 'Glass' or 'Metal'"
+- "Change 'Price Tier' to 'Accessible' or 'Budget'"
+- "Change 'Sourcing Model' to 'Fair Trade Cooperative'"
+- "Change 'Ingredient Base' to 'Essential Oils (Ethical)'"
+- "Add 'Influencer' or 'Instagram' to 'Marketing Channels'"
 
 Base the reviews on the specific choices made: if they chose 'handcrafted', reviews should mention the artisan feel. If they chose 'plastic', reviews might mention environmental concerns.`,
 });
@@ -85,10 +92,10 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
         "Shipping took longer than expected and there was too much waste in the box."
       ],
       negativeReviewFixes: [
-        "Switch to a 'Budget' or 'Accessible' profit margin strategy.",
-        "Change packaging to 'Glass' or 'Metal' for a more premium feel.",
-        "Simplify your marketing message to focus on one core value.",
-        "Review your 'Packaging Type' to reduce waste and shipping weight."
+        "Change 'Price Tier' to 'Accessible' or 'Budget' strategy.",
+        "Change 'Packaging Type' to 'Glass' or 'Metal' for a more premium feel.",
+        "Simplify 'Marketing Message' or change 'Core Value Emphasis'.",
+        "Change 'Packaging Type' to 'No Packaging' or 'Compostable Pouch' to reduce waste."
       ]
     };
   }
