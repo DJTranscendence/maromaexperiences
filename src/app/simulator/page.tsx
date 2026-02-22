@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -538,9 +539,25 @@ export default function SimulatorPage() {
             </h2>
             <div className="flex items-center gap-4">
               <Button 
+                variant="default" 
+                size="sm" 
+                className="hidden sm:flex bg-accent text-white hover:bg-accent/90 rounded-full h-9 px-6 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-accent/20 transition-all active:scale-95"
+                onClick={() => {
+                  if (phase !== 'intro') {
+                    setPhase('intro');
+                    setTeamName("");
+                    setAiFeedback(null);
+                    setViewingSessionId(null);
+                  }
+                  setTimeout(scrollToJoinForm, 100);
+                }}
+              >
+                Join Game
+              </Button>
+              <Button 
                 variant="outline" 
                 size="sm" 
-                className="hidden sm:flex border-accent/30 text-accent hover:bg-accent/10 rounded-full h-9 px-4 font-bold uppercase tracking-widest text-[10px] gap-2 transition-all active:scale-95"
+                className="hidden sm:flex bg-white text-accent hover:bg-white/90 rounded-full h-9 px-6 font-bold uppercase tracking-widest text-[10px] gap-2 transition-all active:scale-95 shadow-lg shadow-white/5"
                 onClick={() => {
                   if (!teamName) setTeamName("Simulator Guest");
                   setPhase('lab');
