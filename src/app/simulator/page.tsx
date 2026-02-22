@@ -546,10 +546,10 @@ export default function SimulatorPage() {
         </section>
 
         {phase === 'intro' && (
-          <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+          <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000 flex justify-center">
             <Button 
               onClick={scrollToJoinForm}
-              className="w-full bg-accent text-white hover:bg-accent/90 rounded-[2rem] h-24 shadow-2xl shadow-accent/20 flex flex-col items-center justify-center gap-1 group transition-all active:scale-[0.98]"
+              className="w-fit px-16 bg-accent text-white hover:bg-accent/90 rounded-[2rem] h-24 shadow-2xl shadow-accent/20 flex flex-col items-center justify-center gap-1 group transition-all active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
                 <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
