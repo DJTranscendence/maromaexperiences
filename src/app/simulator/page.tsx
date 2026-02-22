@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -52,7 +51,9 @@ import {
   CloudRain,
   Sun,
   Gift,
-  Newspaper
+  Newspaper,
+  Wrench,
+  Lightbulb
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -1157,44 +1158,76 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> Market Opportunities</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {config.category === 'hf' && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
-                      <Gift className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span>The Festive Season (Months 10-12) is projected to boost your Home Fragrance revenue by 40% due to Diwali and wedding demand.</span>
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <Gift className="w-5 h-5 text-amber-500 shrink-0" />
+                        <span>The Festive Season (Months 10-12) is projected to boost your Home Fragrance revenue by 40% due to Diwali and wedding demand.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Prep premium gift sets and special Diwali packaging by Month 9.
+                      </div>
                     </div>
                   )}
                   {config.category === 'bc' && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
-                      <Sun className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand as consumers look for refreshing solutions.</span>
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <Sun className="w-5 h-5 text-amber-500 shrink-0" />
+                        <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand as consumers look for refreshing solutions.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Increase production of mists and light lotions starting in Month 2.
+                      </div>
                     </div>
                   )}
                   {scores.consistency >= 0.8 && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
-                      Strong brand alignment: Your production choices and material sourcing directly support your claim of {selectedValue?.name.toLowerCase()}.
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <Star className="w-5 h-5 text-green-500 shrink-0" />
+                        <span>Strong brand alignment: Your production choices and material sourcing directly support your claim of {selectedValue?.name.toLowerCase()}.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Use 'Sustainable Sourcing' as your primary hook in Month 5 marketing campaigns.
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> Market Risks</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {config.sourcingModel === 'lsf' && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 flex gap-3">
-                      <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
-                      <span>Monsoon Risk (Months 7-9): Relying on local small farmers makes you vulnerable to supply chain delays during heavy rain.</span>
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
+                        <span>Monsoon Risk (Months 7-9): Relying on local small farmers makes you vulnerable to supply chain delays during heavy rain.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Wrench className="w-3 h-3" /> Suggested Action: Diversify suppliers or build Month 6 buffer stock to avoid disruptions.
+                      </div>
                     </div>
                   )}
                   {config.category === 'hf' && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 flex gap-3">
-                      <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
-                      <span>Incense & Resin demand typically drops by 30% during the Monsoon due to high humidity and shipping challenges.</span>
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
+                        <span>Incense & Resin demand typically drops by 30% during the Monsoon due to high humidity and shipping challenges.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Wrench className="w-3 h-3" /> Suggested Action: Focus on 'Indoor Wellness' mists or R&D for the Festive Season during this dip.
+                      </div>
                     </div>
                   )}
                   {scores.consistency < 0.8 && (
-                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">
-                      A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality.
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <Trash2 className="w-5 h-5 text-red-500 shrink-0" />
+                        <span>A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-red-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Wrench className="w-3 h-3" /> Suggested Action: Change Packaging to 'Glass' or 'Metal' to restore your {selectedValue?.name} claim.
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -1243,11 +1276,24 @@ export default function SimulatorPage() {
                       ))
                     ) : aiFeedback?.negativeReviews && aiFeedback.negativeReviews.length > 0 ? (
                       aiFeedback.negativeReviews.map((review, i) => (
-                        <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex gap-4 group hover:bg-rose-500/10 transition-all">
-                          <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
-                            <User className="w-5 h-5 text-rose-400" />
+                        <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex flex-col gap-4 group hover:bg-rose-500/10 transition-all">
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+                              <User className="w-5 h-5 text-rose-400" />
+                            </div>
+                            <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
                           </div>
-                          <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
+                          {aiFeedback.negativeReviewFixes?.[i] && (
+                            <div className="ml-14 mt-1 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
+                              <div className="p-1.5 bg-rose-500/20 rounded-lg">
+                                <Wrench className="w-3 h-3 text-rose-400" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Suggested Pivot</span>
+                                <span className="text-xs text-slate-400">{aiFeedback.negativeReviewFixes[i]}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))
                     ) : (
