@@ -56,7 +56,8 @@ import {
   Lightbulb,
   ChevronDown,
   Edit2,
-  MessageSquare
+  MessageSquare,
+  Clock
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -1060,23 +1061,23 @@ export default function SimulatorPage() {
         {phase === 'market' && (
           <div id="analysis-dashboard" className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
             
-            {year === 1 && !viewingSessionId && animationProgress === 1 && (
+            {animationProgress === 1 && (
               <Card className="max-w-4xl mx-auto bg-accent/10 border-accent/20 rounded-[3rem] p-8 md:p-12 text-center mb-16 animate-in slide-in-from-top-10 duration-1000 shadow-2xl">
                 <div className="flex justify-center mb-6">
                   <div className="bg-accent text-white px-8 py-2 rounded-full font-bold uppercase tracking-widest text-sm shadow-lg shadow-accent/20">
-                    Stage Clear: Year 1
+                    Stage Clear: Year {year}
                   </div>
                 </div>
                 <h2 className="text-4xl md:text-7xl font-headline font-bold text-white mb-6 leading-tight">
-                  Congratulations on your <br className="hidden md:block" /> first year of sales!
+                  Congratulations on your <br className="hidden md:block" /> {year === 1 ? 'first' : 'second'} year of sales!
                 </h2>
                 <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto font-body leading-relaxed mb-10">
-                  Now it's time to learn from your mistakes and improve your score for your second year.
+                  Now it's time to learn from your mistakes and improve your score for your {year === 1 ? 'second' : 'third'} year.
                 </p>
                 
                 <div className="flex flex-col items-center gap-8">
                   <Button 
-                    onClick={() => { setPhase('lab'); setYear(2); setIsAnimating(false); }}
+                    onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
                     className="bg-primary hover:bg-primary/90 text-white rounded-full px-12 h-16 text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 group"
                   >
                     Click here to: Improve Your product and increase your score
@@ -1097,10 +1098,100 @@ export default function SimulatorPage() {
               <p className="text-slate-300">Market results for {teamName}'s {config.format}.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto items-start">
+              {/* Summary Cards Column */}
+              <div className="lg:col-span-1 space-y-4">
+                {[
+                  { label: `Year ${year} Revenue`, val: `₹${displayVal(chartData[11].profit * 100)}`, icon: Clock },
+                  { label: `Year ${year} Profit`, val: `₹${displayVal((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
+                  { label: "Final Trust Index", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
+                  { label: "Final Price Point", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
+                  { label: "Total Reach", val: displayVal(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
+                ].map((m, i) => (
+                  <Card key={i} className="rounded-[1.5rem] border-none shadow-lg bg-slate-900/40 border border-white/5 backdrop-blur-md">
+                    <CardContent className="p-6 flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
+                        <m.icon className={cn("w-6 h-6", m.color || "text-slate-400")} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-0.5">{m.label}</p>
+                        <p className="text-3xl font-bold text-white font-headline leading-none">{m.val}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Chart Card */}
+              <Card className="lg:col-span-3 rounded-[2.5rem] border-none shadow-2xl bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 h-full flex flex-col justify-between">
+                <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between">
+                  <CardTitle className="font-headline text-3xl text-white">Trajectory: Year {year} Performance</CardTitle>
+                </CardHeader>
+                <div className="h-[500px] w-full mt-8 relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} key={isAnimating ? 'animating' : 'paused'} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="rgba(255,255,255,0.3)" 
+                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }}
+                        label={{ value: 'Months Active', position: 'insideBottom', offset: -10, fill: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' }} 
+                      />
+                      <YAxis 
+                        stroke="rgba(255,255,255,0.3)" 
+                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-slate-950 border border-white/10 p-5 rounded-3xl shadow-2xl min-w-[240px] backdrop-blur-2xl">
+                                <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {label} Status</p>
+                                {data.marketNote && (
+                                  <div className={cn(
+                                    "text-xs font-bold mb-5 flex items-start gap-3 p-3 rounded-2xl border",
+                                    data.isNewsEvent ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-accent/10 border-accent/20 text-accent"
+                                  )}>
+                                    {data.isNewsEvent ? <Newspaper className="w-4 h-4 shrink-0 mt-0.5" /> : <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />}
+                                    <span className="leading-snug">{data.marketNote}</span>
+                                  </div>
+                                )}
+                                <div className="space-y-3">
+                                  {payload.map((entry: any) => (
+                                    <div key={entry.name} className="flex justify-between gap-8 items-center">
+                                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: entry.color }}>{entry.name}</span>
+                                      <span className="text-base font-black text-white">{Math.round(entry.value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="top" 
+                        align="center"
+                        height={60}
+                        iconType="circle"
+                        formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>}
+                      />
+                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} />
+                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} />
+                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            </div>
+
+            {/* Performance Scorecard & AI Analyst Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/5 backdrop-blur-sm text-white overflow-hidden relative border border-white/10">
                 <div className="absolute top-0 right-0 p-8 opacity-10"><Dna className="w-32 h-32" /></div>
-                <CardHeader className="pb-2"><CardTitle className="font-headline text-3xl">Performance Scorecard</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="font-headline text-3xl">Scorecard Integrity</CardTitle></CardHeader>
                 <CardContent className="p-8 space-y-8">
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
@@ -1208,76 +1299,7 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <div className="lg:col-span-1 space-y-4">
-                {[
-                  { label: `Year ${year} Revenue`, val: `₹${displayVal(chartData[11].profit * 100)}`, icon: IndianRupee },
-                  { label: `Year ${year} Profit`, val: `₹${displayVal((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
-                  { label: "Final Trust Index", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Final Price Point", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
-                  { label: "Total Reach", val: displayVal(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
-                ].map((m, i) => (
-                  <Card key={i} className="rounded-2xl border-none shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><m.icon className={cn("w-5 h-5", m.color)} /></div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{m.label}</p>
-                        <p className="text-2xl font-bold text-white">{m.val}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-8">
-                <CardHeader className="px-0 pt-0"><CardTitle className="font-headline text-white">Trajectory: Year {year} Performance</CardTitle></CardHeader>
-                <div className="h-[400px] w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} key={isAnimating ? 'animating' : 'paused'}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" label={{ value: 'Months Active', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.5)' }} />
-                      <YAxis stroke="rgba(255,255,255,0.5)" />
-                      <Tooltip 
-                        content={({ active, payload, label }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                              <div className="bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-2xl min-w-[200px] backdrop-blur-xl">
-                                <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Month {label}</p>
-                                {data.marketNote && (
-                                  <div className={cn(
-                                    "text-xs font-bold mb-4 flex items-start gap-2 p-2 rounded-xl border",
-                                    data.isNewsEvent ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-accent/5 border-accent/10 text-accent"
-                                  )}>
-                                    {data.isNewsEvent ? <Newspaper className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
-                                    <span>{data.marketNote}</span>
-                                  </div>
-                                )}
-                                <div className="space-y-2">
-                                  {payload.map((entry: any) => (
-                                    <div key={entry.name} className="flex justify-between gap-8 items-center">
-                                      <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ color: entry.color }}>{entry.name}</span>
-                                      <span className="text-sm font-black text-white">{Math.round(entry.value)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Legend verticalAlign="top" height={36}/>
-                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
-                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
-                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="Earth Impact" dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> Market Opportunities</CardTitle></CardHeader>
                 <CardContent className="space-y-6">
@@ -1356,7 +1378,7 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            <section className="space-y-8 max-w-6xl mx-auto">
+            <section className="space-y-8 max-w-7xl mx-auto">
               <div className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-accent" />
                 <h3 className="text-3xl font-headline font-bold text-white uppercase tracking-wider">Customer Feedback</h3>
@@ -1426,7 +1448,7 @@ export default function SimulatorPage() {
               </div>
             </section>
 
-            <div className="flex justify-center gap-4 pt-8">
+            <div className="flex justify-center gap-4 pt-8 pb-20">
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
                   <Button variant="outline" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">
