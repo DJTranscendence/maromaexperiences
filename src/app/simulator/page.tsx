@@ -55,7 +55,8 @@ import {
   Newspaper,
   Wrench,
   Lightbulb,
-  ChevronDown
+  ChevronDown,
+  Edit2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -717,8 +718,8 @@ export default function SimulatorPage() {
                       <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">
                         {s.status === 'playing' ? 'Status' : 'Score'}
                       </p>
-                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400 text-xl' : 'text-white')}>
-                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
+                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400 text-sm' : 'text-white')}>
+                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'IN LAB'}
                       </p>
                     </div>
                   </div>
@@ -741,11 +742,26 @@ export default function SimulatorPage() {
                   )}
                   
                   {s.status === 'playing' && (
-                    <div className="mt-6 pt-6 border-t border-white/5">
-                      <div className="flex items-center gap-2 text-blue-400/60 animate-pulse">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Developing Prototype...</span>
+                    <div className="mt-6 pt-6 border-t border-white/5 space-y-4">
+                      <div className="flex items-center gap-2 text-amber-400/80">
+                        <AlertCircle className="w-3 h-3" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Product Not Launched</span>
                       </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full text-white border-white/20 hover:bg-white/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px] transition-all py-6 h-auto flex flex-col items-center group/btn"
+                        onClick={() => {
+                          setTeamName(s.teamName);
+                          setSelectedEmblem(s.emblem);
+                          setPhase('lab');
+                        }}
+                      >
+                        <span className="opacity-60">Click here to</span>
+                        <span className="text-accent group-hover/btn:scale-105 transition-transform flex items-center gap-2">
+                          <Edit2 className="w-3 h-3" /> Edit / Launch Product
+                        </span>
+                      </Button>
                     </div>
                   )}
 
