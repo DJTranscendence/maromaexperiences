@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -282,12 +281,8 @@ export default function SimulatorPage() {
     }));
   }, [scores]);
 
-  /**
-   * BACKGROUND SYNC EFFECT
-   * Fixes the "never completes" issue by triggering analysis if missing in market phase.
-   */
   useEffect(() => {
-    if (phase === 'market' && !aiFeedback && !isAiLoading && teamName && config.format) {
+    if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4) && !isAiLoading && teamName && config.format) {
       const syncFeedback = async () => {
         setIsAiLoading(true);
         try {
@@ -304,7 +299,6 @@ export default function SimulatorPage() {
           });
           setAiFeedback(feedback);
           
-          // Repair the historical record in Firestore
           if (viewingSessionId && firestore) {
             updateDocumentNonBlocking(doc(firestore, "simulator_sessions", viewingSessionId), {
               aiFeedback: feedback,
@@ -520,7 +514,6 @@ export default function SimulatorPage() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
         
-        {/* Game Title & Intro Section (Top of Page) */}
         <section className="mb-16 text-center space-y-8 animate-in fade-in duration-1000">
           <div className="relative h-48 w-full max-w-2xl mx-auto">
             <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
@@ -530,7 +523,6 @@ export default function SimulatorPage() {
           </p>
         </section>
 
-        {/* Team Scores Section */}
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
@@ -1055,7 +1047,6 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            {/* Customer Reviews Section */}
             <section className="space-y-8 max-w-6xl mx-auto">
               <div className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-accent" />
@@ -1063,17 +1054,16 @@ export default function SimulatorPage() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Positive Reviews */}
                 <div className="space-y-4">
                   <Label className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 px-2 flex items-center gap-2">
                     <ThumbsUp className="w-3 h-3" /> Positive Voices
                   </Label>
                   <div className="grid gap-4">
                     {isAiLoading ? (
-                      Array.from({ length: 2 }).map((_, i) => (
+                      Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
                       ))
-                    ) : aiFeedback?.positiveReviews ? (
+                    ) : aiFeedback?.positiveReviews && aiFeedback.positiveReviews.length > 0 ? (
                       aiFeedback.positiveReviews.map((review, i) => (
                         <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4 group hover:bg-emerald-500/10 transition-all">
                           <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
@@ -1088,17 +1078,16 @@ export default function SimulatorPage() {
                   </div>
                 </div>
 
-                {/* Negative Reviews */}
                 <div className="space-y-4">
                   <Label className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400 px-2 flex items-center gap-2">
                     <ThumbsDown className="w-3 h-3" /> Critical Voices
                   </Label>
                   <div className="grid gap-4">
                     {isAiLoading ? (
-                      Array.from({ length: 2 }).map((_, i) => (
+                      Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
                       ))
-                    ) : aiFeedback?.negativeReviews ? (
+                    ) : aiFeedback?.negativeReviews && aiFeedback.negativeReviews.length > 0 ? (
                       aiFeedback.negativeReviews.map((review, i) => (
                         <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex gap-4 group hover:bg-rose-500/10 transition-all">
                           <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
