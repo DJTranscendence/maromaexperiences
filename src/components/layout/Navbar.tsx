@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -113,8 +112,8 @@ export default function Navbar() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none">MAROMA</span>
-              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5">Experiences</span>
+              <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5 leading-none">Experiences</span>
             </div>
           </Link>
 
