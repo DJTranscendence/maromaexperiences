@@ -151,11 +151,9 @@ export default function SimulatorPage() {
     };
   }, [sessions]);
 
-  // Aggregate all teams that have ever joined
   const allWorkshopTeams = useMemo(() => {
     const teams = new Map<string, any>();
     
-    // Add sessions first (these have completed scores)
     sessions?.forEach(s => {
       teams.set(s.teamName, {
         id: s.id,
@@ -168,7 +166,6 @@ export default function SimulatorPage() {
       });
     });
     
-    // Add joined teams that haven't finished yet from events
     events?.filter(e => e.type === 'join').forEach(e => {
       if (!teams.has(e.teamName)) {
         teams.set(e.teamName, {
@@ -184,7 +181,7 @@ export default function SimulatorPage() {
     
     return Array.from(teams.values()).sort((a, b) => {
       const getAvg = (s: any) => {
-        if (!s.scores) return -1; // Put active teams at the bottom of the scoreboard
+        if (!s.scores) return -1;
         const sum = (s.scores.earth || 0) + (s.scores.trust || 0) + (s.scores.resonance || 0) + (s.scores.impact || 0) + (s.scores.longevity || 0);
         return sum / 5;
       };
@@ -271,8 +268,7 @@ export default function SimulatorPage() {
     const trustBase = (environmentalScore * 0.5) + (consistency * 3) + (selectedPriceTier.fairness * 2);
     const trust = Math.min(100, (trustBase * 10) + selectedSourcing.trustBonus + selectedProduction.trustBonus);
 
-    const reinvestmentCapacity = selectedPriceTier.margin * 10;
-    const longevity = Math.min(10, (trust * 0.06) + (reinvestmentCapacity * 0.4));
+    const longevity = Math.min(10, (trust * 0.06) + (selectedPriceTier.margin * 4));
 
     return { 
       environmentalScore, 
@@ -407,7 +403,6 @@ export default function SimulatorPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
       
-      {/* Persistent Controls Area */}
       <div className="fixed top-20 left-4 z-[100] flex flex-col gap-3">
         {phase !== 'intro' && (
           <Button 
@@ -483,7 +478,6 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
-        {/* Top Join CTA - Only visible when in intro phase */}
         {phase === 'intro' && (
           <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
             <Button 
@@ -499,7 +493,6 @@ export default function SimulatorPage() {
           </div>
         )}
 
-        {/* Horizontal Dashboards Bar - Strategy Records */}
         <div className="w-full mb-12">
           <Card className="w-full bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
             <div className="flex flex-col sm:flex-row">
@@ -927,7 +920,15 @@ export default function SimulatorPage() {
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> What Helped</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.consistency >= 1 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Your brand integrity is perfect. Customers see your actions match your values.</div>}
+                  {scores.consistency >= 0.8 && (
+                    <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
+                      {(config.coreValue === 'euc' || config.coreValue === 'len') ? (
+                        "Despite your poor environmental values and greenwashing, you have brand integrity: at least your actions match your values. This will appeal to customers who care more about appearance and price, than true quality and sustainability."
+                      ) : (
+                        "Your brand integrity is perfect. Customers see your actions match your values."
+                      )}
+                    </div>
+                  )}
                   {scores.environmentalScore > 7 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">High Earth Score is attracting the growing eco-conscious segment.</div>}
                   {selectedProduction.id === 'spw' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">Solar-powered production is a massive trust-builder for your {selectedAudience.name} audience.</div>}
                 </CardContent>
@@ -935,7 +936,7 @@ export default function SimulatorPage() {
               <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
                 <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> What Hurt</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  {scores.consistency < 1 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
+                  {scores.consistency < 0.8 && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">The market detected a mismatch between your values and your actions (Greenwashing).</div>}
                   {selectedPackaging.id === 'plastic' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Plastic packaging is causing a significant decline in trust and Earth Score.</div>}
                   {selectedPriceTier.id === 'luxury' && selectedAudience.id === 'stu' && <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200">Your pricing is way too high for your target audience (Students).</div>}
                 </CardContent>
@@ -956,7 +957,6 @@ export default function SimulatorPage() {
           </div>
         )}
 
-        {/* PERSISTENT FULL SCOREBOARD - Visible at bottom regardless of phase */}
         <section className="space-y-8 py-20 border-t border-white/5 mt-20">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
