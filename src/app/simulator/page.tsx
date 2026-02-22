@@ -73,7 +73,7 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirebase, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
@@ -98,7 +98,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
   { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
   { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
+  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
 ];
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
@@ -184,8 +184,8 @@ export default function SimulatorPage() {
             description: (
               <div className="flex items-center gap-6 mt-2">
                 {latest.emblem && (
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white shrink-0 border border-border/20 shadow-lg">
-                    <img src={latest.emblem} alt={latest.teamName} className="w-full h-full object-contain p-2" />
+                  <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-white shrink-0 border border-border/20 shadow-lg">
+                    <img src={latest.emblem} alt={latest.teamName} className="w-full h-full object-contain p-1" />
                   </div>
                 )}
                 <span className="font-bold text-xl">{latest.teamName} joined the game</span>
@@ -424,7 +424,7 @@ export default function SimulatorPage() {
                   {allWorkshopTeams?.map(s => (
                     <div key={`${s.sourceCollection}-${s.id}`} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
+                        <div className="w-14 h-14 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
                           {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
                         </div>
                         <div>
@@ -490,7 +490,7 @@ export default function SimulatorPage() {
               <Card key={`${s.sourceCollection}-${s.id}`} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
+                    <div className="w-20 h-20 rounded-2xl bg-white p-1 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
                       {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
                     </div>
                     <div className="flex-grow min-w-0">
@@ -588,7 +588,7 @@ export default function SimulatorPage() {
                           selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30 hover:scale-105"
                         )}
                       >
-                        <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-2.5" />
+                        <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-0.5" />
                         {selectedEmblem === emblem.url && (
                           <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                             <CheckCircle2 className="text-primary w-8 h-8 drop-shadow-md" />
@@ -599,7 +599,7 @@ export default function SimulatorPage() {
                   </div>
                 </div>
 
-                <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
+                <Button onClick={handleJoinGame} className="w-fit mx-auto px-12 bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
                   Join Game <ChevronRight className="w-8 h-8" />
                 </Button>
               </div>
@@ -610,7 +610,7 @@ export default function SimulatorPage() {
         {phase === 'lab' && (
           <div className="animate-in fade-in duration-1000 mt-8">
             <div className="col-span-full mb-16 text-center space-y-4">
-              <div className="relative w-32 h-32 mx-auto mb-6 bg-white rounded-2xl p-4 shadow-xl">
+              <div className="relative w-40 h-40 mx-auto mb-6 bg-white rounded-[2.5rem] p-2 shadow-xl">
                 <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
               </div>
               <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">Let's Create Your Product</h1>
