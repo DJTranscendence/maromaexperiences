@@ -81,7 +81,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const TEAM_EMBLEMS = [
   { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
   { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2Ffa6aee12-86a5-4cf2-bd0c-2b18f822d65e?alt=media' },
+  { id: 'brand-special', name: 'Special Brand', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
   { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
   { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
   { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
@@ -96,7 +96,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
   { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
   { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-special', name: 'Special Brand', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
+  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
 ];
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
@@ -587,7 +587,7 @@ export default function SimulatorPage() {
                 </div>
 
                 <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
-                  Join the Game <ChevronRight className="w-8 h-8" />
+                  Join Game <ChevronRight className="w-8 h-8" />
                 </Button>
               </div>
             </div>

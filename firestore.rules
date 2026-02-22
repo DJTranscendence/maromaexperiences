@@ -85,6 +85,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.0.3 - Explicit Administrative List/Delete Permissions
+    // Deployment trigger comment: v1.0.4 - Reinforced Administrative Management Permissions
   }
 }
