@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -198,11 +197,15 @@ export default function SimulatorPage() {
             description: (
               <div className="flex items-center gap-6 mt-2">
                 {latest.emblem && (
-                  <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-white shrink-0 border border-border/20 shadow-lg">
-                    <img src={latest.emblem} alt={latest.teamName} className="w-full h-full object-contain p-1" />
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white shrink-0 border border-border/10 shadow-sm p-2">
+                    <img src={latest.emblem} alt={latest.teamName} className="w-full h-full object-contain" />
                   </div>
                 )}
-                <span className="font-bold text-xl">{latest.teamName} joined the game</span>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-slate-800 leading-tight">
+                    {latest.teamName} joined the game
+                  </span>
+                </div>
               </div>
             ),
           });
