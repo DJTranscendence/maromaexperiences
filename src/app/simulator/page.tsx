@@ -748,7 +748,7 @@ export default function SimulatorPage() {
                       <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">
                         {s.status === 'playing' ? 'Status' : 'Score'}
                       </p>
-                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400 text-sm' : 'text-white')}>
+                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400' : 'text-white')}>
                         {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'IN LAB'}
                       </p>
                     </div>
@@ -1052,31 +1052,8 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'market' && (
-          <div id="analysis-dashboard" className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
+          <div id="analysis-dashboard" className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24 relative">
             
-            {animationProgress === 1 && (
-              <div className="max-w-4xl mx-auto animate-in slide-in-from-top-4 duration-1000">
-                <div className="bg-accent/10 border border-accent/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-accent p-3 rounded-2xl shadow-lg">
-                      <PartyPopper className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-headline font-bold text-white leading-tight">Year {year} Stage Complete!</h3>
-                      <p className="text-sm text-slate-400 font-body">Congratulations on completing your sales cycle.</p>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
-                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-12 font-bold transition-all active:scale-95 group"
-                  >
-                    Ready to improve for your second year?
-                    <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
             <div className="text-center space-y-2">
               <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold shadow-lg text-[10px] uppercase tracking-widest">Trajectory Year {year} Active</Badge>
               <h2 className="text-4xl font-headline font-bold text-white">Simulation Analysis</h2>
@@ -1105,7 +1082,31 @@ export default function SimulatorPage() {
                 ))}
               </div>
 
-              <Card className="lg:col-span-3 rounded-[2.5rem] border-none shadow-2xl bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 h-full flex flex-col justify-between">
+              <Card className="lg:col-span-3 rounded-[2.5rem] border-none shadow-2xl bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 h-full flex flex-col justify-between relative overflow-hidden">
+                {animationProgress === 1 && (
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-xl animate-in slide-in-from-top-4 duration-1000 px-4">
+                    <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-2xl backdrop-blur-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0">
+                          <PartyPopper className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-headline font-bold text-white leading-tight">Stage {year} Complete!</h3>
+                          <p className="text-[10px] text-slate-300 font-body uppercase tracking-widest">Growth cycle simulated</p>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm"
+                        onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
+                        className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 h-9 text-xs font-bold transition-all active:scale-95 gap-2 shrink-0"
+                      >
+                        Ready to improve?
+                        <ChevronRight className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between">
                   <CardTitle className="font-headline text-3xl text-white">Trajectory Performance</CardTitle>
                 </CardHeader>
