@@ -292,15 +292,17 @@ export default function SimulatorPage() {
       const month = i + 1;
       let seasonalMultiplier = 1.0;
       let marketNote = "Standard Market Demand";
+      let trustVolatilty = 0;
+      let impactDrift = 0;
       
       // Summer (Months 3-6)
       if (month >= 3 && month <= 6) {
         if (config.category === 'bc') {
-          seasonalMultiplier = 1.25; // Body Care boost in Summer
+          seasonalMultiplier = 1.25;
           marketNote = "Summer heat surges Body Care demand";
         }
         if (config.category === 'hf') {
-          seasonalMultiplier = 0.85; // Candles/Incense lower in Summer
+          seasonalMultiplier = 0.85;
           marketNote = "Heat reduces indoor candle demand";
         }
       }
@@ -308,11 +310,12 @@ export default function SimulatorPage() {
       // Monsoon (Months 7-9)
       if (month >= 7 && month <= 9) {
         if (config.category === 'hf') {
-          seasonalMultiplier = 0.7; // Humidity affects Incense/Fragrance
+          seasonalMultiplier = 0.7;
           marketNote = "Monsoon humidity slows incense interest";
         }
         if (config.sourcingModel === 'lsf') {
-          seasonalMultiplier *= 0.9; // Supply risk for local farmers
+          seasonalMultiplier *= 0.9;
+          trustVolatilty = -8; // Supply chain doubt during rains
           marketNote = "Rain impacts local small farmer supply";
         } else {
           marketNote = "Monsoon rains affect general footfall";
@@ -321,13 +324,18 @@ export default function SimulatorPage() {
       
       // Festive (Months 10-12)
       if (month >= 10 && month <= 12) {
-        seasonalMultiplier = 1.45; // Massive boost for all gifting/home fragrance
+        seasonalMultiplier = 1.45;
+        impactDrift = -5; // Scaling up production impacts environment
         marketNote = "Diwali & Wedding season demand peak";
       }
 
       const revenue = Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.25 - 1.5))) * seasonalMultiplier;
-      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)));
-      const impact = Math.min(98, scores.environmentalScore + (i * 0.1));
+      
+      // Fluctuating Trust: Trends upward if ethical, but dips in risky seasons
+      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty);
+      
+      // Fluctuating Impact: Generally stable but drifts during festive stress
+      const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift);
 
       return {
         month,
