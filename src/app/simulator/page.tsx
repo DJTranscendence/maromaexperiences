@@ -207,14 +207,14 @@ export default function SimulatorPage() {
     message: ""
   });
 
-  const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category)!, [config.category]);
-  const selectedBase = useMemo(() => INGREDIENT_BASES.find(b => b.id === config.ingredientBase)!, [config.ingredientBase]);
-  const selectedSourcing = useMemo(() => SOURCING_MODELS.find(s => s.id === config.sourcingModel)!, [config.sourcingModel]);
-  const selectedPackaging = useMemo(() => PACKAGING_TYPES.find(p => p.id === config.packagingType)!, [config.packagingType]);
-  const selectedProduction = useMemo(() => PRODUCTION_METHODS.find(p => p.id === config.productionMethod)!, [config.productionMethod]);
-  const selectedAudience = useMemo(() => TARGET_AUDIENCES.find(a => a.id === config.targetAudience)!, [config.targetAudience]);
-  const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier)!, [config.priceTier]);
-  const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue)!, [config.coreValue]);
+  const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category) || CATEGORIES[0], [config.category]);
+  const selectedBase = useMemo(() => INGREDIENT_BASES.find(b => b.id === config.ingredientBase) || INGREDIENT_BASES[0], [config.ingredientBase]);
+  const selectedSourcing = useMemo(() => SOURCING_MODELS.find(s => s.id === config.sourcingModel) || SOURCING_MODELS[0], [config.sourcingModel]);
+  const selectedPackaging = useMemo(() => PACKAGING_TYPES.find(p => p.id === config.packagingType) || PACKAGING_TYPES[0], [config.packagingType]);
+  const selectedProduction = useMemo(() => PRODUCTION_METHODS.find(p => p.id === config.productionMethod) || PRODUCTION_METHODS[0], [config.productionMethod]);
+  const selectedAudience = useMemo(() => TARGET_AUDIENCES.find(a => a.id === config.targetAudience) || TARGET_AUDIENCES[0], [config.targetAudience]);
+  const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier) || PRICE_TIERS[0], [config.priceTier]);
+  const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue) || CORE_VALUES[0], [config.coreValue]);
 
   const scores = useMemo(() => {
     const marketingCost = config.marketingChannels.reduce((acc, channelId) => {
@@ -371,7 +371,14 @@ export default function SimulatorPage() {
       setAiFeedback(null);
     }
     setPhase('market');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Smooth scroll to results
+    setTimeout(() => {
+      const el = document.getElementById('analysis-dashboard');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleDeleteEntry = (id: string, sourceCollection: string) => {
@@ -587,7 +594,7 @@ export default function SimulatorPage() {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full mt-4 text-accent border border-accent/20 hover:bg-accent/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px]"
+                      className="w-full mt-4 text-white border border-white/20 hover:bg-white/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px] transition-all"
                       onClick={() => handleViewHistoricalSession(s)}
                     >
                       View Full Analysis <ArrowRight className="w-3 h-3" />
@@ -608,7 +615,7 @@ export default function SimulatorPage() {
           <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000 flex justify-center">
             <Button 
               onClick={scrollToJoinForm}
-              className="w-fit px-16 bg-accent text-white hover:bg-accent/90 rounded-[2rem] h-24 shadow-2xl shadow-accent/20 flex flex-col items-center justify-center gap-1 group transition-all active:scale-[0.98]"
+              className="w-fit px-12 bg-accent text-white hover:bg-accent/90 rounded-[2rem] h-20 shadow-2xl shadow-accent/20 flex flex-col items-center justify-center gap-1 group transition-all active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
                 <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
@@ -838,7 +845,7 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'market' && (
-          <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8">
+          <div id="analysis-dashboard" className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
             <div className="text-center space-y-4">
               <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Year 1 Trajectory Active</Badge>
               <h2 className="text-5xl font-headline font-bold text-white">Simulation Analysis</h2>
