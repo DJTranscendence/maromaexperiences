@@ -108,7 +108,7 @@ const TEAM_EMBLEMS = [
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
 
-const capScore = (val: number) => Math.min(98, Math.max(5, val));
+const capScore = (val: number) => Math.min(98, Math.max(0, val));
 
 export default function SimulatorPage() {
   const firestore = useFirestore();
@@ -280,7 +280,7 @@ export default function SimulatorPage() {
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 10;
     
-    const marketingMultiplier = hasChannels ? 1.5 : 0.05; 
+    const marketingMultiplier = hasChannels ? 1.5 : 0.01; 
     const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.4 : 0.01);
     
     const marketingResonanceRaw = hasChannels
@@ -391,9 +391,12 @@ export default function SimulatorPage() {
 
       const noise = (Math.sin(i * 1.5) * 1.5);
 
-      // Revenue is now scaled by sales base. If shortTermSales is low, growth is negligible.
-      const baseSales = scores.shortTermSales * 1.5;
-      const growthFactor = Math.pow(1 + (scores.longevity / 500), i);
+      // Revenue is now scaled by sales base. If resonance is low, growth is negligible.
+      const baseSales = scores.shortTermSales * 1.2;
+      const growthFactor = scores.shortTermSales < 10 
+        ? 1.0 
+        : Math.pow(1 + (scores.longevity / 1000), i);
+      
       const revenue = baseSales * growthFactor * seasonalMultiplier;
       
       const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty + noise);
