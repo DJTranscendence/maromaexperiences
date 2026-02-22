@@ -898,6 +898,7 @@ export default function SimulatorPage() {
               <div className="lg:col-span-1 space-y-4">
                 {[
                   { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit * 100)}`, icon: IndianRupee },
+                  { label: "Year 1 Profit", val: `₹${Math.round((chartData[11].profit * 100) * selectedPriceTier.margin)}`, icon: TrendingUp, color: "text-emerald-400" },
                   { label: "Final Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Final Price Point", val: `₹${Math.round(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
                   { label: "Total Reach", val: Math.round(scores.shortTermSales * 5000), icon: Users, color: "text-blue-400" }
