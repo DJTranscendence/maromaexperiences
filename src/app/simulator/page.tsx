@@ -57,7 +57,8 @@ import {
   ChevronDown,
   Edit2,
   MessageSquare,
-  Clock
+  Clock,
+  PartyPopper
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -132,7 +133,6 @@ export default function SimulatorPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const syncAttemptedRef = useRef<string | null>(null);
 
-  // Animation state for ticking numbers
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -216,17 +216,15 @@ export default function SimulatorPage() {
     }
   }, [events, lastEventId, toast]);
 
-  // Handle number ticking animation and slow playback (6s duration)
   useEffect(() => {
     if (phase === 'market' && isAnimating) {
       setAnimationProgress(0);
       const start = Date.now();
-      const duration = 6000; // 6 seconds animation (33% of current speed)
+      const duration = 6000;
 
       const animate = () => {
         const now = Date.now();
         const progress = Math.min(1, (now - start) / duration);
-        // Using easeOutExpo-ish easing for a smoother count-up
         const easedProgress = 1 - Math.pow(2, -10 * progress);
         
         setAnimationProgress(easedProgress);
@@ -240,7 +238,6 @@ export default function SimulatorPage() {
 
       requestAnimationFrame(animate);
 
-      // Sequential toasts for reviews over time
       if (aiFeedback) {
         const allReviews = [...(aiFeedback.positiveReviews || []), ...(aiFeedback.negativeReviews || [])];
         allReviews.forEach((review, idx) => {
@@ -254,7 +251,7 @@ export default function SimulatorPage() {
                 </div>
               ),
             });
-          }, 1000 + (idx * 600)); // Space them out during the 6s playback
+          }, 1000 + (idx * 600));
         });
       }
     }
@@ -529,7 +526,6 @@ export default function SimulatorPage() {
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      // Start animation after a pause for historical viewing too
       setTimeout(() => setIsAnimating(true), 1500);
     }, 100);
   };
@@ -542,10 +538,9 @@ export default function SimulatorPage() {
 
   const launchSimulation = async () => {
     setPhase('market');
-    setIsAnimating(false); // Reset animation state
+    setIsAnimating(false);
     setIsAiLoading(true);
     
-    // Jump to the results section immediately
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -571,7 +566,6 @@ export default function SimulatorPage() {
       console.error("AI Analysis failed:", err);
     } finally {
       setIsAiLoading(false);
-      // Wait for a pause before starting animation playback
       setTimeout(() => setIsAnimating(true), 1500);
     }
 
@@ -605,7 +599,6 @@ export default function SimulatorPage() {
     }
   };
 
-  // Helper for ticking numbers
   const displayVal = (val: number) => Math.round(val * animationProgress);
 
   return (
@@ -1059,47 +1052,37 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'market' && (
-          <div id="analysis-dashboard" className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
+          <div id="analysis-dashboard" className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
             
             {animationProgress === 1 && (
-              <Card className="max-w-4xl mx-auto bg-accent/10 border-accent/20 rounded-[3rem] p-8 md:p-12 text-center mb-16 animate-in slide-in-from-top-10 duration-1000 shadow-2xl">
-                <div className="flex justify-center mb-6">
-                  <div className="bg-accent text-white px-8 py-2 rounded-full font-bold uppercase tracking-widest text-sm shadow-lg shadow-accent/20">
-                    Stage Clear: Year {year}
+              <div className="max-w-4xl mx-auto animate-in slide-in-from-top-4 duration-1000">
+                <div className="bg-accent/10 border border-accent/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-accent p-3 rounded-2xl shadow-lg">
+                      <PartyPopper className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-headline font-bold text-white leading-tight">Year {year} Stage Complete!</h3>
+                      <p className="text-sm text-slate-400 font-body">Congratulations on completing your sales cycle.</p>
+                    </div>
                   </div>
-                </div>
-                <h2 className="text-4xl md:text-7xl font-headline font-bold text-white mb-6 leading-tight">
-                  Congratulations on your <br className="hidden md:block" /> {year === 1 ? 'first' : 'second'} year of sales!
-                </h2>
-                <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto font-body leading-relaxed mb-10">
-                  Now it's time to learn from your mistakes and improve your score for your {year === 1 ? 'second' : 'third'} year.
-                </p>
-                
-                <div className="flex flex-col items-center gap-8">
                   <Button 
                     onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
-                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-12 h-16 text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 group"
+                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-12 font-bold transition-all active:scale-95 group"
                   >
-                    Click here to: Improve Your product and increase your score
-                    <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                    Ready to improve for your second year?
+                    <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
-
-                  <div className="flex flex-col items-center gap-2 text-accent/60">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.4em]">Scroll for Analysis</span>
-                    <ChevronDown className="w-6 h-6 animate-bounce" />
-                  </div>
                 </div>
-              </Card>
+              </div>
             )}
 
-            <div className="text-center space-y-4">
-              <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Year {year} Trajectory Active</Badge>
-              <h2 className="text-5xl font-headline font-bold text-white">Simulation Analysis</h2>
-              <p className="text-slate-300">Market results for {teamName}'s {config.format}.</p>
+            <div className="text-center space-y-2">
+              <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold shadow-lg text-[10px] uppercase tracking-widest">Trajectory Year {year} Active</Badge>
+              <h2 className="text-4xl font-headline font-bold text-white">Simulation Analysis</h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto items-start">
-              {/* Summary Cards Column */}
               <div className="lg:col-span-1 space-y-4">
                 {[
                   { label: `Year ${year} Revenue`, val: `₹${displayVal(chartData[11].profit * 100)}`, icon: Clock },
@@ -1115,17 +1098,16 @@ export default function SimulatorPage() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-0.5">{m.label}</p>
-                        <p className="text-3xl font-bold text-white font-headline leading-none">{m.val}</p>
+                        <p className="text-2xl font-bold text-white font-headline leading-none">{m.val}</p>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              {/* Chart Card */}
               <Card className="lg:col-span-3 rounded-[2.5rem] border-none shadow-2xl bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 h-full flex flex-col justify-between">
                 <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between">
-                  <CardTitle className="font-headline text-3xl text-white">Trajectory: Year {year} Performance</CardTitle>
+                  <CardTitle className="font-headline text-3xl text-white">Trajectory Performance</CardTitle>
                 </CardHeader>
                 <div className="h-[500px] w-full mt-8 relative">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1137,10 +1119,7 @@ export default function SimulatorPage() {
                         tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }}
                         label={{ value: 'Months Active', position: 'insideBottom', offset: -10, fill: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' }} 
                       />
-                      <YAxis 
-                        stroke="rgba(255,255,255,0.3)" 
-                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                      />
+                      <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
                       <Tooltip 
                         content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
@@ -1171,13 +1150,7 @@ export default function SimulatorPage() {
                           return null;
                         }}
                       />
-                      <Legend 
-                        verticalAlign="top" 
-                        align="center"
-                        height={60}
-                        iconType="circle"
-                        formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>}
-                      />
+                      <Legend verticalAlign="top" align="center" height={60} iconType="circle" formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>} />
                       <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} />
                       <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} />
                       <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} />
@@ -1187,7 +1160,6 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            {/* Performance Scorecard & AI Analyst Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/5 backdrop-blur-sm text-white overflow-hidden relative border border-white/10">
                 <div className="absolute top-0 right-0 p-8 opacity-10"><Dna className="w-32 h-32" /></div>
@@ -1283,7 +1255,7 @@ export default function SimulatorPage() {
                       <div className="space-y-3 p-6 bg-accent/5 rounded-3xl border border-accent/10">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-accent" />
-                          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Year {year + 1} Strategic Pivot</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Strategic Pivot</Label>
                         </div>
                         <p className="text-sm text-slate-300">
                           {aiFeedback.suggestion}
@@ -1292,7 +1264,7 @@ export default function SimulatorPage() {
                     </div>
                   ) : (
                     <div className="text-center py-20">
-                      <p className="text-slate-500">Analysis results for historical turns are being synchronized...</p>
+                      <p className="text-slate-500 italic">Analysis results are being synchronized...</p>
                     </div>
                   )}
                 </CardContent>
@@ -1307,10 +1279,10 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Gift className="w-5 h-5 text-amber-500 shrink-0" />
-                        <span>The Festive Season (Months 10-12) is projected to boost your Home Fragrance revenue by 40% due to Diwali and wedding demand.</span>
+                        <span>The Festive Season (Months 10-12) is projected to boost Home Fragrance revenue by 40%.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Change 'Category' to 'Gifting Item' or upgrade 'Price Tier' to 'Luxury' to capture premium festive value.
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Switch Category to 'Gifting Item' or upgrade 'Price Tier' to 'Luxury' to capture premium festive value.
                       </div>
                     </div>
                   )}
@@ -1318,10 +1290,10 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Sun className="w-5 h-5 text-amber-500 shrink-0" />
-                        <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand as consumers look for refreshing solutions.</span>
+                        <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Select 'Body Mist' format and add 'Influencer' to 'Marketing Channels' to boost summer resonance.
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Change 'Format' to 'Body Mist' or 'Roll-on' and add 'Influencer' to 'Marketing Channels'.
                       </div>
                     </div>
                   )}
@@ -1329,10 +1301,10 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Star className="w-5 h-5 text-green-500 shrink-0" />
-                        <span>Strong brand alignment: Your production choices and material sourcing directly support your claim of {selectedValue?.name.toLowerCase()}.</span>
+                        <span>Strong brand alignment detected between production and core values.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Add 'Instagram' or 'Facebook' channels to broadcast your {selectedValue?.name} alignment.
+                        <Lightbulb className="w-3 h-3" /> Suggested Action: Add 'Instagram' or 'Facebook' to broadcast this alignment.
                       </div>
                     </div>
                   )}
@@ -1345,21 +1317,10 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
-                        <span>Monsoon Risk (Months 7-9): Relying on local small farmers makes you vulnerable to supply chain delays during heavy rain.</span>
+                        <span>Monsoon Risk (Months 7-9): Supply chain vulnerability during heavy rain.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Change 'Sourcing Model' to 'Fair Trade Cooperative' or 'Imported Bulk Distributor' to ensure year-round stability.
-                      </div>
-                    </div>
-                  )}
-                  {config.category === 'hf' && (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
-                        <span>Incense & Resin demand typically drops by 30% during the Monsoon due to high humidity and shipping challenges.</span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Pivot 'Format' to 'Oil diffuser blend' or 'Room mist' which are less affected by humidity.
+                        <Wrench className="w-3 h-3" /> Suggested Action: Pivot 'Sourcing Model' to 'Fair Trade Cooperative' or 'Imported Bulk' for seasonal stability.
                       </div>
                     </div>
                   )}
@@ -1367,10 +1328,10 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Trash2 className="w-5 h-5 text-red-500 shrink-0" />
-                        <span>A strategic mismatch exists: Your audience has detected that your primary marketing message isn't backed by your production reality.</span>
+                        <span>Strategic mismatch: Your marketing message isn't backed by production reality.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-red-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Change 'Packaging Type' to 'Glass' or 'Refillable Metal' to restore your sustainability integrity.
+                        <Wrench className="w-3 h-3" /> Suggested Action: Change 'Packaging Type' to 'Glass' or 'Refillable Metal' to restore integrity.
                       </div>
                     </div>
                   )}
@@ -1378,89 +1339,47 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            <section className="space-y-8 max-w-7xl mx-auto">
+            <section className="space-y-8 max-w-7xl mx-auto pb-20">
               <div className="flex items-center gap-3">
                 <Users className="w-6 h-6 text-accent" />
                 <h3 className="text-3xl font-headline font-bold text-white uppercase tracking-wider">Customer Feedback</h3>
               </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 px-2 flex items-center gap-2">
-                    <ThumbsUp className="w-3 h-3" /> Positive Voices
-                  </Label>
+                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 px-2 flex items-center gap-2"><ThumbsUp className="w-3 h-3" /> Positive Voices</Label>
                   <div className="grid gap-4">
-                    {isAiLoading ? (
-                      Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
-                      ))
-                    ) : aiFeedback?.positiveReviews && aiFeedback.positiveReviews.length > 0 ? (
-                      aiFeedback.positiveReviews.map((review, i) => (
-                        <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4 group hover:bg-emerald-500/10 transition-all">
-                          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                            <User className="w-5 h-5 text-emerald-400" />
-                          </div>
-                          <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-slate-500 italic px-2">No specific praise recorded for this session.</p>
-                    )}
+                    {aiFeedback?.positiveReviews?.map((review, i) => (
+                      <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0"><User className="w-5 h-5 text-emerald-400" /></div>
+                        <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
                 <div className="space-y-4">
-                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400 px-2 flex items-center gap-2">
-                    <ThumbsDown className="w-3 h-3" /> Critical Voices
-                  </Label>
+                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400 px-2 flex items-center gap-2"><ThumbsDown className="w-3 h-3" /> Critical Voices</Label>
                   <div className="grid gap-4">
-                    {isAiLoading ? (
-                      Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
-                      ))
-                    ) : aiFeedback?.negativeReviews && aiFeedback.negativeReviews.length > 0 ? (
-                      aiFeedback.negativeReviews.map((review, i) => (
-                        <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex flex-col gap-4 group hover:bg-rose-500/10 transition-all">
-                          <div className="flex gap-4">
-                            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
-                              <User className="w-5 h-5 text-rose-400" />
-                            </div>
-                            <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
-                          </div>
-                          {aiFeedback.negativeReviewFixes?.[i] && (
-                            <div className="ml-14 mt-1 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
-                              <div className="p-1.5 bg-rose-500/20 rounded-lg">
-                                <Wrench className="w-3 h-3 text-rose-400" />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Suggested Setting Adjustment</span>
-                                <span className="text-xs text-slate-400">{aiFeedback.negativeReviewFixes[i]}</span>
-                              </div>
-                            </div>
-                          )}
+                    {aiFeedback?.negativeReviews?.map((review, i) => (
+                      <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex flex-col gap-4">
+                        <div className="flex gap-4">
+                          <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0"><User className="w-5 h-5 text-rose-400" /></div>
+                          <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-slate-500 italic px-2">No specific criticisms recorded for this session.</p>
-                    )}
+                        {aiFeedback.negativeReviewFixes?.[i] && (
+                          <div className="ml-14 mt-1 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
+                            <div className="p-1.5 bg-rose-500/20 rounded-lg"><Wrench className="w-3 h-3 text-rose-400" /></div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Suggested Setting Adjustment</span>
+                              <span className="text-xs text-slate-400">{aiFeedback.negativeReviewFixes[i]}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </section>
-
-            <div className="flex justify-center gap-4 pt-8 pb-20">
-              <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
-                <div className="flex gap-4 w-full">
-                  <Button variant="outline" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">
-                    Start Year {year + 1} Strategy
-                  </Button>
-                  <Button onClick={handleExitTeam} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-[0.98] text-white">Start New Team Session</Button>
-                </div>
-                <Button asChild variant="ghost" className="text-slate-400 hover:text-white rounded-full h-12 gap-2">
-                  <Link href="/"><Home className="w-4 h-4" /> Return to Main Dashboard</Link>
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </main>
