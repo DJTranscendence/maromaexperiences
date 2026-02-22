@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -103,6 +104,8 @@ const TEAM_EMBLEMS = [
 ];
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
+
+const capScore = (val: number) => Math.min(98, Math.max(5, val));
 
 export default function SimulatorPage() {
   const firestore = useFirestore();
@@ -228,64 +231,72 @@ export default function SimulatorPage() {
     const retailPrice = productionCost * (1 + (selectedPriceTier?.margin || 0));
     
     const baseEarth = selectedBase?.earthScore || 0;
-    const environmentalScore = Math.min(10, baseEarth * (selectedPackaging?.envMultiplier || 1));
+    const environmentalScore = (baseEarth * (selectedPackaging?.envMultiplier || 1)) * 10;
 
     let consistency = 1.0;
     if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') consistency -= 0.5;
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
-    const marketingResonance = config.marketingChannels.length > 0 
+    const marketingResonanceRaw = config.marketingChannels.length > 0 
       ? config.marketingChannels.reduce((acc, channelId) => {
           const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
           return acc + (channel?.resonance[config.targetAudience] || 1);
         }, 0) / config.marketingChannels.length
       : 0.5;
 
-    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * (marketingResonance * 1.5);
+    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * (marketingResonanceRaw * 1.5);
     const accessibility = Math.min(1.5, (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1));
     const marketingClarity = config.message.length > 5 ? 1.2 : 0.8;
-    const shortTermSales = Math.min(10, (appealScore * 0.4) + (accessibility * 3) + (marketingClarity * 2));
+    
+    // Initial Market Resonance
+    let resonance = ((appealScore * 0.4) + (accessibility * 3) + (marketingClarity * 2)) * 10;
 
-    const trustBase = (environmentalScore * 0.5) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
-    const trust = Math.min(100, (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0));
+    // Trust logic
+    const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
+    let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
-    const longevity = Math.min(10, (trust * 0.06) + ((selectedPriceTier?.margin || 0) * 4));
+    // Re-align Trust and Resonance
+    // Trust cannot be vastly higher than Resonance if growth is slow, 
+    // and Resonance is hindered by very low Trust (rejection).
+    if (trust > 80 && resonance < 40) trust -= 15; // Slow growth cap on trust
+    if (trust < 30) resonance *= 0.7; // Rejection due to poor ethics
+
+    const longevity = (trust * 0.6) + ((selectedPriceTier?.margin || 0) * 40);
 
     return { 
-      environmentalScore, 
-      trust, 
-      shortTermSales, 
-      longevity, 
+      environmentalScore: capScore(environmentalScore), 
+      trust: capScore(trust), 
+      shortTermSales: capScore(resonance), 
+      longevity: capScore(longevity), 
       productionCost, 
       retailPrice,
       consistency,
-      socialImpact: selectedSourcing?.humanScore || 5
+      socialImpact: capScore((selectedSourcing?.humanScore || 5) * 10)
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier]);
 
   const overallScore = useMemo(() => {
     return Math.round((
-      (scores.environmentalScore * 10) + 
+      scores.environmentalScore + 
       scores.trust + 
-      (scores.shortTermSales * 10) + 
-      (scores.socialImpact * 10) + 
-      (scores.longevity * 10)
+      scores.shortTermSales + 
+      scores.socialImpact + 
+      scores.longevity
     ) / 5);
   }, [scores]);
 
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: i + 1,
-      profit: Math.max(0, (scores.shortTermSales * 15) + (i * (scores.longevity * 2 - 10))),
-      trust: Math.min(100, scores.trust + (i * (scores.environmentalScore > 6 ? 1.5 : -3))),
-      impact: Math.min(10, scores.environmentalScore + (i * 0.05))
+      profit: Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.2 - 1))),
+      trust: Math.min(98, scores.trust + (i * (scores.environmentalScore > 60 ? 0.5 : -1))),
+      impact: Math.min(98, scores.environmentalScore + (i * 0.1))
     }));
   }, [scores]);
 
   useEffect(() => {
     if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4) && !isAiLoading && teamName && config.format) {
-      // Prevent sync loops if we just attempted a sync for this session
       if (viewingSessionId && syncAttemptedRef.current === viewingSessionId) return;
       
       const syncFeedback = async () => {
@@ -297,7 +308,7 @@ export default function SimulatorPage() {
             teamName,
             productName: config.format,
             ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
-            earthScore: Math.round(scores.environmentalScore * 10),
+            earthScore: Math.round(scores.environmentalScore),
             trustScore: Math.round(scores.trust),
             pricePoint: Math.round(scores.retailPrice),
             message: config.message,
@@ -380,7 +391,6 @@ export default function SimulatorPage() {
     }
     setPhase('market');
     
-    // Smooth scroll to results
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
       if (el) {
@@ -406,7 +416,7 @@ export default function SimulatorPage() {
         teamName,
         productName: config.format,
         ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
-        earthScore: Math.round(scores.environmentalScore * 10),
+        earthScore: Math.round(scores.environmentalScore),
         trustScore: Math.round(scores.trust),
         pricePoint: Math.round(scores.retailPrice),
         message: config.message,
@@ -429,12 +439,12 @@ export default function SimulatorPage() {
         config: config,
         aiFeedback: generatedFeedback,
         scores: {
-          earth: Math.round(scores.environmentalScore * 10),
+          earth: Math.round(scores.environmentalScore),
           trust: Math.round(scores.trust),
-          resonance: Math.round(scores.shortTermSales * 10),
-          impact: Math.round(scores.socialImpact * 10),
+          resonance: Math.round(scores.shortTermSales),
+          impact: Math.round(scores.socialImpact),
           profit: Math.round(chartData[11].profit),
-          longevity: Math.round(scores.longevity * 10)
+          longevity: Math.round(scores.longevity)
         },
         createdAt: serverTimestamp()
       });
@@ -499,7 +509,7 @@ export default function SimulatorPage() {
                       </div>
                       <div className="flex items-center gap-6">
                         <div className="text-right hidden sm:block">
-                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Status</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Overall Score</p>
                           <p className={cn("text-xl font-black", s.status === 'playing' ? 'text-blue-400' : 'text-accent')}>
                             {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
                           </p>
@@ -605,15 +615,15 @@ export default function SimulatorPage() {
                     <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
                       <div className="flex justify-between items-center group/metric">
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
-                        <p className="text-lg font-bold text-emerald-400">{s.scores.earth}</p>
+                        <p className="text-lg font-bold text-emerald-400">{s.scores.earth}%</p>
                       </div>
                       <div className="flex justify-between items-center group/metric">
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
-                        <p className="text-lg font-bold text-blue-400">{s.scores.trust}</p>
+                        <p className="text-lg font-bold text-blue-400">{s.scores.trust}%</p>
                       </div>
                       <div className="flex justify-between items-center group/metric">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
-                        <p className="text-lg font-bold text-amber-400">{s.scores.profit}</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Revenue</p>
+                        <p className="text-lg font-bold text-amber-400">₹{s.scores.profit * 100}</p>
                       </div>
                     </div>
                   )}
@@ -853,11 +863,11 @@ export default function SimulatorPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-bold uppercase tracking-widest text-slate-400">Ingredients & Sourcing</span>
-                      <span className="text-white font-mono">₹{(selectedBase?.cost || 0) + (selectedSourcing?.costDelta || 0)}</span>
+                      <span className="text-white font-mono">₹{Math.round((selectedBase?.cost || 0) + (selectedSourcing?.costDelta || 0))}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-bold uppercase tracking-widest text-slate-400">Packaging & Production</span>
-                      <span className="text-white font-mono">₹{(selectedPackaging?.cost || 0) + (selectedProduction?.costDelta || 0)}</span>
+                      <span className="text-white font-mono">₹{Math.round((selectedPackaging?.cost || 0) + (selectedProduction?.costDelta || 0))}</span>
                     </div>
                     <div className="flex justify-between items-center pt-4 border-t border-white/5">
                       <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Production Cost</span>
@@ -897,9 +907,9 @@ export default function SimulatorPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Environmental Friendliness</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.environmentalScore * 10)}/100</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.environmentalScore)}%</span>
                     </div>
-                    <Progress value={scores.environmentalScore * 10} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
+                    <Progress value={scores.environmentalScore} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
@@ -911,27 +921,27 @@ export default function SimulatorPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">Market Resonance</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.shortTermSales * 10)}%</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.shortTermSales)}%</span>
                     </div>
-                    <Progress value={scores.shortTermSales * 10} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
+                    <Progress value={scores.shortTermSales} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Human & Social Impact</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.socialImpact * 10)}/100</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.socialImpact)}%</span>
                     </div>
-                    <Progress value={scores.socialImpact * 10} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
+                    <Progress value={scores.socialImpact} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400">Brand Longevity</span>
-                      <span className="text-2xl font-bold font-headline">{Math.round(scores.longevity * 10)}%</span>
+                      <span className="text-2xl font-bold font-headline">{Math.round(scores.longevity)}%</span>
                     </div>
-                    <Progress value={scores.longevity * 10} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
+                    <Progress value={scores.longevity} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
                   </div>
                   <div className="pt-8 border-t border-white/10 flex justify-between items-center">
                     <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Overall Brand Score</span>
-                    <span className="text-5xl font-bold font-headline text-accent">{overallScore}/100</span>
+                    <span className="text-5xl font-bold font-headline text-accent">{overallScore}%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -1007,7 +1017,7 @@ export default function SimulatorPage() {
                   { label: "Year 1 Profit", val: `₹${Math.round((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
                   { label: "Final Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Final Price Point", val: `₹${Math.round(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
-                  { label: "Total Reach", val: Math.round(scores.shortTermSales * 5000), icon: Users, color: "text-blue-400" }
+                  { label: "Total Reach", val: Math.round(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-2xl border-none shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm">
                     <CardContent className="p-6 flex items-center gap-4">
@@ -1059,7 +1069,7 @@ export default function SimulatorPage() {
                       )}
                     </div>
                   )}
-                  {scores.environmentalScore > 7 && (
+                  {scores.environmentalScore > 70 && (
                     <div className="p-4 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200">
                       High Earth Score is attracting the growing eco-conscious segment of the {selectedAudience?.name} market.
                     </div>
