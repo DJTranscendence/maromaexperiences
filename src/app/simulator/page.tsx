@@ -275,24 +275,31 @@ export default function SimulatorPage() {
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
-    const marketingResonanceRaw = config.marketingChannels.length > 0 
+    // --- GATEKEEPER MARKETING LOGIC ---
+    // If you have no channels and no message, your product is effectively invisible.
+    const hasChannels = config.marketingChannels.length > 0;
+    const hasMessage = config.message.trim().length > 10;
+    
+    const marketingMultiplier = hasChannels ? 1.5 : 0.05; 
+    const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.4 : 0.01);
+    
+    const marketingResonanceRaw = hasChannels
       ? config.marketingChannels.reduce((acc, channelId) => {
           const channel = MARKETING_CHANNELS.find(c => channelId === c.id);
           return acc + (channel?.resonance[config.targetAudience] || 1);
         }, 0) / config.marketingChannels.length
       : 0.05;
 
-    const marketingMultiplier = config.marketingChannels.length > 0 ? 1.5 : 0.05; 
-    const marketingClarity = config.message.length > 15 ? 1.2 : (config.message.length > 0 ? 0.4 : 0.01);
-    
     const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * marketingResonanceRaw;
     const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
     
+    // Revenue (Resonance) is a product of these multipliers. Failure in one sinks the ship.
     let resonance = ((appealScore * 0.5) + (accessibility * 2.5)) * marketingClarity * marketingMultiplier * 10;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
+    // Boycott effect for untrustworthy brands
     if (trust < 40) resonance *= 0.3; 
     if (trust < 30) resonance *= 0.1; 
 
@@ -384,7 +391,11 @@ export default function SimulatorPage() {
 
       const noise = (Math.sin(i * 1.5) * 1.5);
 
-      const revenue = Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.25 - 1.5))) * seasonalMultiplier;
+      // Revenue is now scaled by sales base. If shortTermSales is low, growth is negligible.
+      const baseSales = scores.shortTermSales * 1.5;
+      const growthFactor = Math.pow(1 + (scores.longevity / 500), i);
+      const revenue = baseSales * growthFactor * seasonalMultiplier;
+      
       const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty + noise);
       const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift + noise);
 
@@ -1174,9 +1185,9 @@ export default function SimulatorPage() {
                         }}
                       />
                       <Legend verticalAlign="top" align="center" height={60} iconType="circle" formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="Revenue" dot={false} connectNulls={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="Trust Index" dot={false} connectNulls={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="Earth Impact" dot={false} connectNulls={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} connectNulls={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST INDEX" dot={false} connectNulls={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH IMPACT" dot={false} connectNulls={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
