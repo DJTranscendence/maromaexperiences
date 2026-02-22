@@ -56,7 +56,8 @@ import {
   Wrench,
   Lightbulb,
   ChevronDown,
-  Edit2
+  Edit2,
+  MessageSquare
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -133,6 +134,7 @@ export default function SimulatorPage() {
 
   // Animation state for ticking numbers
   const [animationProgress, setAnimationProgress] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -210,17 +212,17 @@ export default function SimulatorPage() {
     }
   }, [events, lastEventId, toast]);
 
-  // Handle number ticking animation
+  // Handle number ticking animation and slow playback (6s duration)
   useEffect(() => {
-    if (phase === 'market') {
+    if (phase === 'market' && isAnimating) {
       setAnimationProgress(0);
       const start = Date.now();
-      const duration = 2000; // 2 seconds animation
+      const duration = 6000; // 6 seconds animation (33% of current speed)
 
       const animate = () => {
         const now = Date.now();
         const progress = Math.min(1, (now - start) / duration);
-        // Using easeOutExpo-ish easing
+        // Using easeOutExpo-ish easing for a smoother count-up
         const easedProgress = 1 - Math.pow(2, -10 * progress);
         
         setAnimationProgress(easedProgress);
@@ -233,8 +235,26 @@ export default function SimulatorPage() {
       };
 
       requestAnimationFrame(animate);
+
+      // Sequential toasts for reviews over time
+      if (aiFeedback) {
+        const allReviews = [...(aiFeedback.positiveReviews || []), ...(aiFeedback.negativeReviews || [])];
+        allReviews.forEach((review, idx) => {
+          setTimeout(() => {
+            toast({
+              title: "New Customer Feedback",
+              description: (
+                <div className="flex items-start gap-3 mt-1">
+                  <MessageSquare className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  <p className="italic font-body leading-tight text-sm">"{review}"</p>
+                </div>
+              ),
+            });
+          }, 1000 + (idx * 600)); // Space them out during the 6s playback
+        });
+      }
     }
-  }, [phase]);
+  }, [phase, isAnimating, aiFeedback, toast]);
 
   const [config, setConfig] = useState({
     category: CATEGORIES[0].id,
@@ -477,6 +497,7 @@ export default function SimulatorPage() {
     setViewingSessionId(null);
     syncAttemptedRef.current = null;
     setAnimationProgress(0);
+    setIsAnimating(false);
     toast({
       title: "Team Session Ended",
       description: "You have been removed from the session. A new team can now join.",
@@ -497,12 +518,15 @@ export default function SimulatorPage() {
       setAiFeedback(null);
     }
     setPhase('market');
+    setIsAnimating(false);
     
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+      // Start animation after a pause for historical viewing too
+      setTimeout(() => setIsAnimating(true), 1500);
     }, 100);
   };
 
@@ -514,8 +538,15 @@ export default function SimulatorPage() {
 
   const launchSimulation = async () => {
     setPhase('market');
+    setIsAnimating(false); // Reset animation state
     setIsAiLoading(true);
     
+    // Jump to the results section immediately
+    setTimeout(() => {
+      const el = document.getElementById('analysis-dashboard');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
     let generatedFeedback: MarketFeedbackOutput | null = null;
 
     try {
@@ -536,6 +567,8 @@ export default function SimulatorPage() {
       console.error("AI Analysis failed:", err);
     } finally {
       setIsAiLoading(false);
+      // Wait for a pause before starting animation playback
+      setTimeout(() => setIsAnimating(true), 1500);
     }
 
     if (firestore) {
@@ -1188,7 +1221,7 @@ export default function SimulatorPage() {
                 <CardHeader className="px-0 pt-0"><CardTitle className="font-headline text-white">Trajectory: Year {year} Performance</CardTitle></CardHeader>
                 <div className="h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
+                    <LineChart data={chartData} key={isAnimating ? 'animating' : 'paused'}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                       <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" label={{ value: 'Months Active', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.5)' }} />
                       <YAxis stroke="rgba(255,255,255,0.5)" />
@@ -1223,9 +1256,9 @@ export default function SimulatorPage() {
                         }}
                       />
                       <Legend verticalAlign="top" height={36}/>
-                      <Line isAnimationActive={true} animationDuration={2000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
-                      <Line isAnimationActive={true} animationDuration={2000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
-                      <Line isAnimationActive={true} animationDuration={2000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="Earth Impact" dot={false} />
+                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="Revenue" dot={false} />
+                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="Trust Index" dot={false} />
+                      <Line isAnimationActive={isAnimating} animationDuration={6000} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="Earth Impact" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -1384,7 +1417,7 @@ export default function SimulatorPage() {
             <div className="flex justify-center gap-4 pt-8">
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
-                  <Button variant="outline" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); }} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">
+                  <Button variant="outline" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">
                     Start Year {year + 1} Strategy
                   </Button>
                   <Button onClick={handleExitTeam} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-[0.98] text-white">Start New Team Session</Button>
