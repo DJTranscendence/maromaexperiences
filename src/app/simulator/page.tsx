@@ -1057,23 +1057,32 @@ export default function SimulatorPage() {
         {phase === 'market' && (
           <div id="analysis-dashboard" className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
             
-            {year === 1 && !viewingSessionId && (
+            {year === 1 && !viewingSessionId && animationProgress === 1 && (
               <Card className="max-w-4xl mx-auto bg-accent/10 border-accent/20 rounded-[3rem] p-8 md:p-12 text-center mb-16 animate-in slide-in-from-top-10 duration-1000 shadow-2xl">
                 <div className="flex justify-center mb-6">
                   <div className="bg-accent text-white px-8 py-2 rounded-full font-bold uppercase tracking-widest text-sm shadow-lg shadow-accent/20">
                     Stage Clear: Year 1
                   </div>
                 </div>
-                <h2 className="text-4xl md:text-6xl font-headline font-bold text-white mb-6 leading-tight">
+                <h2 className="text-4xl md:text-7xl font-headline font-bold text-white mb-6 leading-tight">
                   Congratulations on your <br className="hidden md:block" /> first year of sales!
                 </h2>
-                <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto font-body leading-relaxed">
+                <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto font-body leading-relaxed mb-10">
                   Now it's time to learn from your mistakes and improve your score for your second year.
                 </p>
-                <div className="mt-10 flex justify-center">
-                  <div className="flex items-center gap-3 text-accent animate-bounce">
-                    <span className="text-sm font-bold uppercase tracking-[0.3em]">Scroll for Analysis</span>
-                    <ChevronDown className="w-5 h-5" />
+                
+                <div className="flex flex-col items-center gap-8">
+                  <Button 
+                    onClick={() => { setPhase('lab'); setYear(2); setIsAnimating(false); }}
+                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-12 h-16 text-xl font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 group"
+                  >
+                    Click here to: Improve Your product and increase your score
+                    <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+
+                  <div className="flex flex-col items-center gap-2 text-accent/60">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.4em]">Scroll for Analysis</span>
+                    <ChevronDown className="w-6 h-6 animate-bounce" />
                   </div>
                 </div>
               </Card>
