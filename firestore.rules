@@ -18,6 +18,7 @@ service cloud.firestore {
     }
     match /simulator_events/{eventId} {
       allow read, create: if true;
+      allow delete: if isAdmin();
     }
     
     match /tours/{tourId} { 

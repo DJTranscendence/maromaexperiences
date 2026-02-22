@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -163,7 +162,8 @@ export default function SimulatorPage() {
         emblem: s.emblem,
         productType: s.productType,
         scores: s.scores,
-        status: 'complete'
+        status: 'complete',
+        sourceCollection: 'simulator_sessions'
       });
     });
     
@@ -175,7 +175,8 @@ export default function SimulatorPage() {
           teamName: e.teamName,
           emblem: e.emblem,
           status: 'playing',
-          scores: null
+          scores: null,
+          sourceCollection: 'simulator_events'
         });
       }
     });
@@ -345,10 +346,10 @@ export default function SimulatorPage() {
     });
   };
 
-  const handleDeleteSession = (sessionId: string) => {
+  const handleDeleteEntry = (id: string, sourceCollection: string) => {
     if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "simulator_sessions", sessionId));
-    toast({ title: "Team Session Removed", description: "The team has been removed from the leaderboard." });
+    deleteDocumentNonBlocking(doc(firestore, sourceCollection, id));
+    toast({ title: "Team Entry Removed", description: "The entry has been removed from the dashboard." });
   };
 
   const launchSimulation = async () => {
@@ -461,7 +462,7 @@ export default function SimulatorPage() {
                           size="icon" 
                           variant="ghost" 
                           className="text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-full"
-                          onClick={() => handleDeleteSession(s.id)}
+                          onClick={() => handleDeleteEntry(s.id, s.sourceCollection)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -967,7 +968,7 @@ export default function SimulatorPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allWorkshopTeams.map((s) => (
-              <Card key={s.id} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
+              <Card key={`${s.sourceCollection}-${s.id}`} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
