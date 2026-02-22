@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -195,16 +194,17 @@ export default function SimulatorPage() {
       if (latest.id !== lastEventId) {
         if (lastEventId !== null && latest.type === 'join') {
           toast({
+            variant: "translucent",
             title: "Player Joined",
             description: (
               <div className="flex items-center gap-6 mt-2">
                 {latest.emblem && (
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white shrink-0 border border-border/10 shadow-sm p-2">
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white shrink-0 border border-white/10 shadow-sm p-2">
                     <img src={latest.emblem} alt={latest.teamName} className="w-full h-full object-contain" />
                   </div>
                 )}
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold text-slate-800 leading-tight">
+                  <span className="text-2xl font-bold text-white leading-tight">
                     {latest.teamName} joined the game
                   </span>
                 </div>
@@ -283,7 +283,7 @@ export default function SimulatorPage() {
 
     const marketingResonanceRaw = config.marketingChannels.length > 0 
       ? config.marketingChannels.reduce((acc, channelId) => {
-          const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
+          const channel = MARKETING_CHANNELS.find(c => channelId === c.id);
           return acc + (channel?.resonance[config.targetAudience] || 1);
         }, 0) / config.marketingChannels.length
       : 0.5;
