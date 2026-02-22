@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -441,7 +442,7 @@ export default function SimulatorPage() {
               <ScrollArea className="max-h-[60vh] mt-6 pr-4">
                 <div className="space-y-4">
                   {allWorkshopTeams?.map(s => (
-                    <div key={s.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
+                    <div key={`${s.sourceCollection}-${s.id}`} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
                           {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
@@ -491,7 +492,7 @@ export default function SimulatorPage() {
             >
               <div className="flex items-center gap-3">
                 <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
-                <span className="text-3xl font-headline font-bold uppercase tracking-widest">Join the Game Now</span>
+                <span className="text-3xl font-headline font-bold uppercase tracking-widest">Join Game</span>
               </div>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Enter your team name and emblem below</p>
             </Button>

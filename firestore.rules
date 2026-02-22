@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -84,6 +85,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.0.2 - Fixed Admin Deletion Permissions
+    // Deployment trigger comment: v1.0.3 - Explicit Administrative List/Delete Permissions
   }
 }
