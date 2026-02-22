@@ -1083,34 +1083,35 @@ export default function SimulatorPage() {
               </div>
 
               <Card className="lg:col-span-3 rounded-[2.5rem] border-none shadow-2xl bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 h-full flex flex-col justify-between relative overflow-hidden">
-                {animationProgress === 1 && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-xl animate-in slide-in-from-top-4 duration-1000 px-4">
-                    <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-2xl backdrop-blur-2xl">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0">
-                          <PartyPopper className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-headline font-bold text-white leading-tight">Stage {year} Complete!</h3>
-                          <p className="text-[10px] text-slate-300 font-body uppercase tracking-widest">Growth cycle simulated</p>
-                        </div>
-                      </div>
-                      <Button 
-                        size="sm"
-                        onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
-                        className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 h-9 text-xs font-bold transition-all active:scale-95 gap-2 shrink-0"
-                      >
-                        Ready to improve?
-                        <ChevronRight className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between">
+                <CardHeader className="px-0 pt-0 flex flex-col gap-6">
                   <CardTitle className="font-headline text-3xl text-white">Trajectory Performance</CardTitle>
+                  
+                  {animationProgress === 1 && (
+                    <div className="w-full max-w-xl animate-in slide-in-from-top-4 duration-1000">
+                      <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-2xl backdrop-blur-2xl">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0">
+                            <PartyPopper className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex flex-col">
+                            <h3 className="text-sm font-headline font-bold text-white leading-tight">Stage {year} Complete!</h3>
+                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold mt-0.5">Growth Cycle Simulated</p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm"
+                          onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
+                          className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 h-9 text-xs font-bold transition-all active:scale-95 gap-2 shrink-0"
+                        >
+                          Ready to improve?
+                          <ChevronRight className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardHeader>
-                <div className="h-[500px] w-full mt-8 relative">
+                
+                <div className="h-[500px] w-full mt-4 relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} key={isAnimating ? 'animating' : 'paused'} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
