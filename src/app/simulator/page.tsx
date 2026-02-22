@@ -372,7 +372,7 @@ export default function SimulatorPage() {
   }, [scores, config.category, config.sourcingModel, selectedBase.earthScore]);
 
   useEffect(() => {
-    if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4) && !isAiLoading && teamName && config.format) {
+    if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4 || !aiFeedback.negativeReviewFixes) && !isAiLoading && teamName && config.format) {
       if (viewingSessionId && syncAttemptedRef.current === viewingSessionId) return;
       
       const syncFeedback = async () => {
