@@ -281,18 +281,19 @@ export default function SimulatorPage() {
           const channel = MARKETING_CHANNELS.find(c => channelId === c.id);
           return acc + (channel?.resonance[config.targetAudience] || 1);
         }, 0) / config.marketingChannels.length
-      : 0.05; // Was 0.5, now 0.05 (failure mode)
+      : 0.05;
 
-    const marketingMultiplier = config.marketingChannels.length > 0 ? 1.5 : 0.2; 
-    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * (marketingResonanceRaw * marketingMultiplier);
-    
-    // Accessibility vs Price Sensitivity: if price is way too high for audience, resonance crashes
-    const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
+    // Harsh penalty for zero marketing channels (e.g., obscure testing strategy)
+    const marketingMultiplier = config.marketingChannels.length > 0 ? 1.5 : 0.05; 
     
     // Clarity requirement: Empty or short messages are now a massive penalty
     const marketingClarity = config.message.length > 15 ? 1.2 : (config.message.length > 0 ? 0.4 : 0.01);
     
-    let resonance = ((appealScore * 0.5) + (accessibility * 2.5) + (marketingClarity * 3)) * 10;
+    const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * marketingResonanceRaw;
+    const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
+    
+    // Multiplicative model ensures failure gates are effective
+    let resonance = ((appealScore * 0.5) + (accessibility * 2.5)) * marketingClarity * marketingMultiplier * 10;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
