@@ -117,6 +117,7 @@ export default function SimulatorPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
+  const [year, setYear] = useState(1);
   const [teamName, setTeamName] = useState("");
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
@@ -254,14 +255,11 @@ export default function SimulatorPage() {
     const accessibility = Math.min(1.5, (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1));
     const marketingClarity = config.message.length > 5 ? 1.2 : 0.8;
     
-    // Initial Market Resonance
     let resonance = ((appealScore * 0.4) + (accessibility * 3) + (marketingClarity * 2)) * 10;
 
-    // Trust logic
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
-    // Re-align Trust and Resonance
     if (trust > 80 && resonance < 40) trust -= 15; 
     if (trust < 30) resonance *= 0.7; 
 
@@ -298,7 +296,6 @@ export default function SimulatorPage() {
       let impactDrift = 0;
       let newsNote = "";
       
-      // Seasonal Logic
       if (month >= 3 && month <= 6) {
         if (config.category === 'bc') {
           seasonalMultiplier = 1.25;
@@ -330,7 +327,6 @@ export default function SimulatorPage() {
         marketNote = "Diwali & Wedding season demand peak";
       }
 
-      // NEWS CYCLE FLUCTUATIONS
       if (month === 2) {
         const jitter = selectedBase.earthScore > 6 ? 6 : -10;
         trustVolatilty += jitter;
@@ -353,7 +349,6 @@ export default function SimulatorPage() {
           : "NEWS: Competitor launch challenges your brand's market position.";
       }
 
-      // Small organic noise jitter (±1.5%)
       const noise = (Math.sin(i * 1.5) * 1.5);
 
       const revenue = Math.max(0, (scores.shortTermSales * 1.5) + (i * (scores.longevity * 0.25 - 1.5))) * seasonalMultiplier;
@@ -389,7 +384,8 @@ export default function SimulatorPage() {
             pricePoint: Math.round(scores.retailPrice),
             message: config.message,
             targetAudience: selectedAudience.name,
-            coreValue: selectedValue.name
+            coreValue: selectedValue.name,
+            year: year
           });
           setAiFeedback(feedback);
           
@@ -407,7 +403,7 @@ export default function SimulatorPage() {
       };
       syncFeedback();
     }
-  }, [phase, aiFeedback, isAiLoading, teamName, config, selectedBase, selectedSourcing, selectedPackaging, scores, selectedAudience, selectedValue, viewingSessionId, firestore]);
+  }, [phase, aiFeedback, isAiLoading, teamName, config, selectedBase, selectedSourcing, selectedPackaging, scores, selectedAudience, selectedValue, viewingSessionId, firestore, year]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -443,6 +439,7 @@ export default function SimulatorPage() {
   const handleExitTeam = () => {
     setPhase('intro');
     setTeamName("");
+    setYear(1);
     setAiFeedback(null);
     setLastEventId(null);
     setViewingSessionId(null);
@@ -457,6 +454,7 @@ export default function SimulatorPage() {
     setViewingSessionId(session.id);
     setTeamName(session.teamName);
     setSelectedEmblem(session.emblem);
+    setYear(session.year || 1);
     if (session.config) {
       setConfig(session.config);
     }
@@ -497,7 +495,8 @@ export default function SimulatorPage() {
         pricePoint: Math.round(scores.retailPrice),
         message: config.message,
         targetAudience: selectedAudience.name,
-        coreValue: selectedValue.name
+        coreValue: selectedValue.name,
+        year: year
       });
       setAiFeedback(generatedFeedback);
     } catch (err) {
@@ -514,6 +513,7 @@ export default function SimulatorPage() {
         ingredients: [selectedBase.name, selectedSourcing.name],
         config: config,
         aiFeedback: generatedFeedback,
+        year: year,
         scores: {
           earth: Math.round(scores.environmentalScore),
           trust: Math.round(scores.trust),
@@ -638,6 +638,7 @@ export default function SimulatorPage() {
                   if (phase !== 'intro') {
                     setPhase('intro');
                     setTeamName("");
+                    setYear(1);
                     setAiFeedback(null);
                     setViewingSessionId(null);
                   }
@@ -803,7 +804,9 @@ export default function SimulatorPage() {
                 <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
               </div>
               <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">Let's Create Your Product</h1>
-              <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">Laboratory Phase</p>
+              <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">
+                {year === 1 ? 'Year 1: Laboratory Phase' : `Year ${year}: Refinement Phase`}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -960,7 +963,7 @@ export default function SimulatorPage() {
                 </div>
 
                 <Button onClick={launchSimulation} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-20 text-xl font-bold shadow-xl shadow-accent/20 transition-all active:scale-95">
-                  Launch to Market <ArrowRight className="ml-2" />
+                  {year === 1 ? 'Launch to Market' : `Launch Year ${year} Strategy`} <ArrowRight className="ml-2" />
                 </Button>
               </div>
             </div>
@@ -969,8 +972,31 @@ export default function SimulatorPage() {
 
         {phase === 'market' && (
           <div id="analysis-dashboard" className="space-y-12 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
+            
+            {year === 1 && !viewingSessionId && (
+              <Card className="max-w-4xl mx-auto bg-accent/10 border-accent/20 rounded-[3rem] p-8 md:p-12 text-center mb-16 animate-in slide-in-from-top-10 duration-1000 shadow-2xl">
+                <div className="flex justify-center mb-6">
+                  <div className="bg-accent text-white px-8 py-2 rounded-full font-bold uppercase tracking-widest text-sm shadow-lg shadow-accent/20">
+                    Stage Clear: Year 1
+                  </div>
+                </div>
+                <h2 className="text-4xl md:text-6xl font-headline font-bold text-white mb-6 leading-tight">
+                  Congratulations on your <br className="hidden md:block" /> first year of sales!
+                </h2>
+                <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto font-body leading-relaxed">
+                  Now it's time to learn from your mistakes and improve your score for your second year.
+                </p>
+                <div className="mt-10 flex justify-center">
+                  <div className="flex items-center gap-3 text-accent animate-bounce">
+                    <span className="text-sm font-bold uppercase tracking-[0.3em]">Scroll for Analysis</span>
+                    <ChevronDown className="w-5 h-5" />
+                  </div>
+                </div>
+              </Card>
+            )}
+
             <div className="text-center space-y-4">
-              <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Year 1 Trajectory Active</Badge>
+              <Badge className="bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-green-500/20">Year {year} Trajectory Active</Badge>
               <h2 className="text-5xl font-headline font-bold text-white">Simulation Analysis</h2>
               <p className="text-slate-300">Market results for {teamName}'s {config.format}.</p>
             </div>
@@ -1032,7 +1058,7 @@ export default function SimulatorPage() {
                       <CardTitle className="font-headline text-2xl tracking-wide uppercase">Market Analyst Report</CardTitle>
                     </div>
                     {isAiLoading ? (
-                      <Badge variant="outline" className="animate-pulse text-slate-400 border-white/20">Analyzing Trends...</Badge>
+                      <Badge variant="outline" className="animate-pulse text-slate-400 border-white/20">Analyzing Year {year}...</Badge>
                     ) : aiFeedback && (
                       <Badge className={cn(
                         "uppercase tracking-widest font-bold",
@@ -1048,7 +1074,7 @@ export default function SimulatorPage() {
                   {isAiLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
                       <Loader2 className="w-12 h-12 animate-spin text-accent" />
-                      <p className="text-slate-400 font-medium animate-pulse uppercase tracking-[0.2em] text-xs">Simulating Market Variables</p>
+                      <p className="text-slate-400 font-medium animate-pulse uppercase tracking-[0.2em] text-xs">Simulating Year {year} Variables</p>
                     </div>
                   ) : aiFeedback ? (
                     <div className="space-y-8 animate-in fade-in duration-1000">
@@ -1070,7 +1096,7 @@ export default function SimulatorPage() {
                       <div className="space-y-3 p-6 bg-accent/5 rounded-3xl border border-accent/10">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-accent" />
-                          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Year 2 Strategic Pivot</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Year {year + 1} Strategic Pivot</Label>
                         </div>
                         <p className="text-sm text-slate-300">
                           {aiFeedback.suggestion}
@@ -1089,8 +1115,8 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Year 1 Revenue", val: `₹${Math.round(chartData[11].profit * 100)}`, icon: IndianRupee },
-                  { label: "Year 1 Profit", val: `₹${Math.round((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
+                  { label: `Year ${year} Revenue`, val: `₹${Math.round(chartData[11].profit * 100)}`, icon: IndianRupee },
+                  { label: `Year ${year} Profit`, val: `₹${Math.round((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
                   { label: "Final Trust Index", val: `${Math.round(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Final Price Point", val: `₹${Math.round(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
                   { label: "Total Reach", val: Math.round(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
@@ -1108,7 +1134,7 @@ export default function SimulatorPage() {
               </div>
 
               <Card className="lg:col-span-3 rounded-3xl border-none shadow-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-8">
-                <CardHeader className="px-0 pt-0"><CardTitle className="font-headline text-white">Trajectory: Month 1-12</CardTitle></CardHeader>
+                <CardHeader className="px-0 pt-0"><CardTitle className="font-headline text-white">Trajectory: Year {year} Performance</CardTitle></CardHeader>
                 <div className="h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
@@ -1307,7 +1333,9 @@ export default function SimulatorPage() {
             <div className="flex justify-center gap-4 pt-8">
               <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
                 <div className="flex gap-4 w-full">
-                  <Button variant="outline" onClick={() => setPhase('lab')} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">Iterate Product</Button>
+                  <Button variant="outline" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); }} className="flex-1 rounded-full h-14 border-white/20 text-white hover:bg-white/10">
+                    Start Year {year + 1} Strategy
+                  </Button>
                   <Button onClick={handleExitTeam} className="flex-1 bg-primary rounded-full h-14 font-bold shadow-xl transition-all active:scale-[0.98] text-white">Start New Team Session</Button>
                 </div>
                 <Button asChild variant="ghost" className="text-slate-400 hover:text-white rounded-full h-12 gap-2">

@@ -16,6 +16,7 @@ const MarketFeedbackInputSchema = z.object({
   message: z.string(),
   targetAudience: z.string(),
   coreValue: z.string(),
+  year: z.number().optional(),
 });
 export type MarketFeedbackInput = z.infer<typeof MarketFeedbackInputSchema>;
 
@@ -37,6 +38,7 @@ const marketFeedbackPrompt = ai.definePrompt({
   prompt: `You are a Senior Maroma Market Analyst evaluating a student team's product prototype.
       
 Team: {{{teamName}}}
+Current Year: Year {{{year}}}
 Product: {{{productName}}} (Targeting {{{targetAudience}}})
 Core Value: {{{coreValue}}}
 Earth Score: {{{earthScore}}}/100
@@ -45,7 +47,7 @@ Price: ₹{{{pricePoint}}}
 Marketing Message: "{{{message}}}"
 Ingredients: {{#each ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
-Provide a "Year 1" simulation summary. 
+Provide a "Year {{{year}}}" simulation summary. 
 - If they used plastic or synthetic base but claimed sustainability/zero-waste, use a 'cynical' tone and call out the "Greenwashing".
 - If they prioritized profit over Earth Score, show how trust is declining among their target audience.
 - If they were ethical but very expensive for a budget audience, explain the slow growth.
@@ -76,7 +78,7 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
     console.warn("Market Feedback Generation failed, using robust fallback:", err);
     return {
       analystTone: 'concerned',
-      feedbackText: 'The market response was mixed. While the concept shows promise, the alignment between your values and production methods needs refinement.',
+      feedbackText: `The Year ${input.year || 1} market response was mixed. While the concept shows promise, the alignment between your values and production methods needs refinement.`,
       customerQuote: "I like the idea, but I'm not sure if I can trust the ingredients.",
       suggestion: 'Review your sourcing model to ensure it matches your brand promise.',
       positiveReviews: [
