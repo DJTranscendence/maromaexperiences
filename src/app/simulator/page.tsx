@@ -134,23 +134,6 @@ export default function SimulatorPage() {
   const { data: events } = useCollection(eventsQuery);
   const { data: sessions } = useCollection(sessionsQuery);
 
-  const metricLeaders = useMemo(() => {
-    if (!sessions || sessions.length === 0) return null;
-    
-    const getBest = (metric: 'earth' | 'trust' | 'profit' | 'impact' | 'longevity') => {
-      const sorted = [...sessions].sort((a, b) => (b.scores?.[metric] || 0) - (a.scores?.[metric] || 0));
-      return sorted[0];
-    };
-
-    return {
-      earth: { session: getBest('earth'), label: 'Environment Record', color: 'text-emerald-400' },
-      trust: { session: getBest('trust'), label: 'Public Trust Record', color: 'text-blue-400' },
-      profit: { session: getBest('profit'), label: 'Revenue Record', color: 'text-amber-400' },
-      impact: { session: getBest('impact'), label: 'Social Impact Record', color: 'text-purple-400' },
-      longevity: { session: getBest('longevity'), label: 'Long-term Survival', color: 'text-rose-400' }
-    };
-  }, [sessions]);
-
   const allWorkshopTeams = useMemo(() => {
     const teams = new Map<string, any>();
     
@@ -478,6 +461,78 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
+        
+        {/* Workshop Leaderboard (Score + Ratings) at Top */}
+        <section className="space-y-8 mb-16 animate-in fade-in duration-1000">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
+              <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
+            </h2>
+            <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
+              {allWorkshopTeams?.length || 0} Teams Competing
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {allWorkshopTeams.map((s) => (
+              <Card key={`${s.sourceCollection}-${s.id}`} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
+                      {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
+                      <p className="text-xs text-slate-400 uppercase tracking-widest truncate">
+                        {s.status === 'playing' ? 'In Laboratory' : s.productType}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">
+                        {s.status === 'playing' ? 'Status' : 'Score'}
+                      </p>
+                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400 text-xl' : 'text-white')}>
+                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {s.scores && (
+                    <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
+                      <div className="text-center space-y-1">
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
+                        <p className="text-sm font-bold text-emerald-400">{s.scores.earth}</p>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
+                        <p className="text-sm font-bold text-blue-400">{s.scores.trust}</p>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
+                        <p className="text-sm font-bold text-amber-400">{s.scores.profit}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {s.status === 'playing' && (
+                    <div className="mt-6 pt-6 border-t border-white/5">
+                      <div className="flex items-center gap-2 text-blue-400/60 animate-pulse">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Developing Prototype...</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            {(!allWorkshopTeams || allWorkshopTeams.length === 0) && (
+              <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
+                <p className="text-slate-500 font-body italic">Awaiting the first team to join the game...</p>
+              </div>
+            )}
+          </div>
+        </section>
+
         {phase === 'intro' && (
           <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
             <Button 
@@ -492,44 +547,6 @@ export default function SimulatorPage() {
             </Button>
           </div>
         )}
-
-        <div className="w-full mb-12">
-          <Card className="w-full bg-slate-900/80 backdrop-blur-xl border-accent/20 rounded-[2.5rem] shadow-2xl overflow-hidden border-2">
-            <div className="flex flex-col sm:flex-row">
-              <div className="p-6 border-b sm:border-b-0 sm:border-r border-white/5 bg-accent/10 flex items-center gap-3 shrink-0">
-                <Trophy className="w-6 h-6 text-amber-400" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-headline font-bold text-white uppercase tracking-[0.2em] leading-none mb-1">Team Scores</span>
-                  <span className="text-xs text-slate-400 font-medium">Workshop Leaders</span>
-                </div>
-              </div>
-              <div className="p-4 flex-grow grid grid-cols-2 md:grid-cols-5 gap-4">
-                {metricLeaders ? (
-                  Object.entries(metricLeaders).map(([key, data]) => (
-                    <div key={key} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 animate-in fade-in zoom-in-95 duration-500">
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1 truncate w-full text-center">{data.label}</p>
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-14 h-14 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-xl border-2 border-white/20">
-                          {data.session?.emblem && (
-                            <img src={data.session.emblem} alt="Icon" className="w-10 h-10 object-contain" />
-                          )}
-                        </div>
-                        <span className={cn("text-3xl font-black font-headline tracking-tighter", data.color)}>
-                          {data.session?.scores?.[key as any] || 0}
-                        </span>
-                      </div>
-                      <p className="text-[9px] font-bold text-white/50 truncate max-w-[80px] mt-1.5">{data.session?.teamName || '---'}</p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full flex items-center justify-center py-2">
-                    <p className="text-xs text-slate-500 uppercase tracking-[0.2em] font-medium animate-pulse">Awaiting Simulation Results...</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
 
         {phase === 'intro' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -956,76 +973,6 @@ export default function SimulatorPage() {
             </div>
           </div>
         )}
-
-        <section className="space-y-8 py-20 border-t border-white/5 mt-20">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
-              <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
-            </h2>
-            <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
-              {allWorkshopTeams?.length || 0} Teams Competing
-            </Badge>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allWorkshopTeams.map((s) => (
-              <Card key={`${s.sourceCollection}-${s.id}`} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
-                      {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest truncate">
-                        {s.status === 'playing' ? 'In Laboratory' : s.productType}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">
-                        {s.status === 'playing' ? 'Status' : 'Score'}
-                      </p>
-                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400 text-xl' : 'text-white')}>
-                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {s.scores && (
-                    <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-2">
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
-                        <p className="text-sm font-bold text-emerald-400">{s.scores.earth}</p>
-                      </div>
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
-                        <p className="text-sm font-bold text-blue-400">{s.scores.trust}</p>
-                      </div>
-                      <div className="text-center space-y-1">
-                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
-                        <p className="text-sm font-bold text-amber-400">{s.scores.profit}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {s.status === 'playing' && (
-                    <div className="mt-6 pt-6 border-t border-white/5">
-                      <div className="flex items-center gap-2 text-blue-400/60 animate-pulse">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Developing Prototype...</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            {(!allWorkshopTeams || allWorkshopTeams.length === 0) && (
-              <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
-                <p className="text-slate-500 font-body italic">Awaiting the first team to join the game...</p>
-              </div>
-            )}
-          </div>
-        </section>
       </main>
       <Footer />
     </div>
