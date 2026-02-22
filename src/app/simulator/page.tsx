@@ -142,11 +142,7 @@ export default function SimulatorPage() {
     
     sessions?.forEach(s => {
       teams.set(s.teamName, {
-        id: s.id,
-        teamName: s.teamName,
-        emblem: s.emblem,
-        productType: s.productType,
-        scores: s.scores,
+        ...s,
         status: 'complete',
         sourceCollection: 'simulator_sessions'
       });
@@ -155,9 +151,7 @@ export default function SimulatorPage() {
     events?.filter(e => e.type === 'join').forEach(e => {
       if (!teams.has(e.teamName)) {
         teams.set(e.teamName, {
-          id: e.id,
-          teamName: e.teamName,
-          emblem: e.emblem,
+          ...e,
           status: 'playing',
           scores: null,
           sourceCollection: 'simulator_events'
@@ -329,6 +323,21 @@ export default function SimulatorPage() {
     });
   };
 
+  const handleViewHistoricalSession = (session: any) => {
+    setTeamName(session.teamName);
+    setSelectedEmblem(session.emblem);
+    if (session.config) {
+      setConfig(session.config);
+    }
+    if (session.aiFeedback) {
+      setAiFeedback(session.aiFeedback);
+    } else {
+      setAiFeedback(null);
+    }
+    setPhase('market');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleDeleteEntry = (id: string, sourceCollection: string) => {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, sourceCollection, id));
@@ -339,12 +348,35 @@ export default function SimulatorPage() {
     setPhase('market');
     setIsAiLoading(true);
     
+    let generatedFeedback: MarketFeedbackOutput | null = null;
+
+    try {
+      generatedFeedback = await generateMarketFeedback({
+        teamName,
+        productName: config.format,
+        ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
+        earthScore: Math.round(scores.environmentalScore * 10),
+        trustScore: Math.round(scores.trust),
+        pricePoint: Math.round(scores.retailPrice),
+        message: config.message,
+        targetAudience: selectedAudience.name,
+        coreValue: selectedValue.name
+      });
+      setAiFeedback(generatedFeedback);
+    } catch (err) {
+      console.error("AI Analysis failed:", err);
+    } finally {
+      setIsAiLoading(false);
+    }
+
     if (firestore) {
       addDocumentNonBlocking(collection(firestore, "simulator_sessions"), {
         teamName,
         emblem: selectedEmblem,
         productType: config.format,
         ingredients: [selectedBase.name, selectedSourcing.name],
+        config: config,
+        aiFeedback: generatedFeedback,
         scores: {
           earth: Math.round(scores.environmentalScore * 10),
           trust: Math.round(scores.trust),
@@ -356,25 +388,6 @@ export default function SimulatorPage() {
         createdAt: serverTimestamp()
       });
       broadcastStatus('market');
-    }
-
-    try {
-      const feedback = await generateMarketFeedback({
-        teamName,
-        productName: config.format,
-        ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
-        earthScore: Math.round(scores.environmentalScore * 10),
-        trustScore: Math.round(scores.trust),
-        pricePoint: Math.round(scores.retailPrice),
-        message: config.message,
-        targetAudience: selectedAudience.name,
-        coreValue: selectedValue.name
-      });
-      setAiFeedback(feedback);
-    } catch (err) {
-      console.error("AI Analysis failed:", err);
-    } finally {
-      setIsAiLoading(false);
     }
   };
 
@@ -534,6 +547,17 @@ export default function SimulatorPage() {
                         <span className="text-[10px] font-bold uppercase tracking-widest">Developing Prototype...</span>
                       </div>
                     </div>
+                  )}
+
+                  {s.status === 'complete' && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full mt-4 text-accent border border-accent/20 hover:bg-accent/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px]"
+                      onClick={() => handleViewHistoricalSession(s)}
+                    >
+                      View Full Analysis <ArrowRight className="w-3 h-3" />
+                    </Button>
                   )}
                 </CardContent>
               </Card>
@@ -891,7 +915,7 @@ export default function SimulatorPage() {
                     </div>
                   ) : (
                     <div className="text-center py-20">
-                      <p className="text-slate-500">Wait, the analyst is busy...</p>
+                      <p className="text-slate-500">Analysis results for historical turns are being synchronized...</p>
                     </div>
                   )}
                 </CardContent>
@@ -1007,14 +1031,18 @@ export default function SimulatorPage() {
                       Array.from({ length: 2 }).map((_, i) => (
                         <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
                       ))
-                    ) : aiFeedback?.positiveReviews?.map((review, i) => (
-                      <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4 group hover:bg-emerald-500/10 transition-all">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                          <User className="w-5 h-5 text-emerald-400" />
+                    ) : aiFeedback?.positiveReviews ? (
+                      aiFeedback.positiveReviews.map((review, i) => (
+                        <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4 group hover:bg-emerald-500/10 transition-all">
+                          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                            <User className="w-5 h-5 text-emerald-400" />
+                          </div>
+                          <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
                         </div>
-                        <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-slate-500 italic px-2">No specific praise recorded for this session.</p>
+                    )}
                   </div>
                 </div>
 
@@ -1028,14 +1056,18 @@ export default function SimulatorPage() {
                       Array.from({ length: 2 }).map((_, i) => (
                         <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
                       ))
-                    ) : aiFeedback?.negativeReviews?.map((review, i) => (
-                      <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex gap-4 group hover:bg-rose-500/10 transition-all">
-                        <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
-                          <User className="w-5 h-5 text-rose-400" />
+                    ) : aiFeedback?.negativeReviews ? (
+                      aiFeedback.negativeReviews.map((review, i) => (
+                        <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex gap-4 group hover:bg-rose-500/10 transition-all">
+                          <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+                            <User className="w-5 h-5 text-rose-400" />
+                          </div>
+                          <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
                         </div>
-                        <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-slate-500 italic px-2">No specific criticisms recorded for this session.</p>
+                    )}
                   </div>
                 </div>
               </div>

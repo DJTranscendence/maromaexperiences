@@ -24,6 +24,8 @@
         "emblem": { "type": "string" },
         "productType": { "type": "string" },
         "ingredients": { "type": "array", "items": { "type": "string" } },
+        "config": { "type": "object", "description": "The full strategic configuration used for the simulation." },
+        "aiFeedback": { "type": "object", "description": "The generated analyst report and reviews." },
         "scores": {
           "type": "object",
           "properties": {
