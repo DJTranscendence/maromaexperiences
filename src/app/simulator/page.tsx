@@ -884,7 +884,7 @@ export default function SimulatorPage() {
                       <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} />
                       <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={4} name="AWARENESS" dot={false} />
                       <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST INDEX" dot={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH IMPACT" dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH SCORE" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -913,7 +913,7 @@ export default function SimulatorPage() {
                     </div>
                   )}
                   <div className="space-y-4 pt-4">
-                    {[{ label: "Environmental Score", val: scores.environmentalScore, color: "bg-emerald-500" },
+                    {[{ label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
                       { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
                       { label: "Market Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
                       <div key={idx} className="space-y-2">
