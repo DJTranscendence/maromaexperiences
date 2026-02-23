@@ -350,10 +350,6 @@ export default function SimulatorPage() {
   };
 
   const scrollToLab = () => {
-    if (!teamName) {
-      scrollToJoin();
-      return;
-    }
     setPhase('lab');
     setTimeout(() => {
       document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -361,10 +357,12 @@ export default function SimulatorPage() {
   };
 
   const scrollToMarket = () => {
-    setPhase('market');
-    setTimeout(() => {
-      document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    if (aiFeedback || sessions?.find(s => s.teamName === teamName)) {
+      setPhase('market');
+      setTimeout(() => {
+        document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
   };
 
   const handleEmblemSelect = (url: string) => {
@@ -762,9 +760,17 @@ export default function SimulatorPage() {
 
         {phase === 'market' && (
           <div id="analysis-dashboard" className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
-            <div className="text-center space-y-2">
-              <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[10px]">Year {year} Analysis</Badge>
-              <h2 className="text-4xl font-headline font-bold text-white">Simulation Results</h2>
+            <div className="text-center space-y-6 flex flex-col items-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-24 h-24 bg-white rounded-3xl p-2 shadow-2xl animate-in zoom-in duration-700">
+                  <img src={selectedEmblem} alt={teamName} className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-2xl font-headline font-bold text-accent uppercase tracking-widest">{teamName}</h3>
+              </div>
+              <div className="space-y-2">
+                <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[10px]">Year {year} Analysis</Badge>
+                <h2 className="text-4xl font-headline font-bold text-white">Simulation Results</h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
@@ -953,29 +959,6 @@ export default function SimulatorPage() {
                   )}
                 </CardContent>
               </Card>
-            </div>
-
-            <div className="flex justify-center pt-12 pb-20">
-              <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
-                <button
-                  onClick={scrollToJoin}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
-                >
-                  Join Game
-                </button>
-                <button
-                  onClick={scrollToLab}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
-                >
-                  Laboratory
-                </button>
-                <button
-                  onClick={scrollToMarket}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all bg-primary text-white shadow-lg"
-                >
-                  Market Simulator
-                </button>
-              </div>
             </div>
           </div>
         )}
