@@ -89,18 +89,18 @@ const TEAM_EMBLEMS = [
   { id: 'brand-2', name: 'Brand 2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
   { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
   { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
-  { id: 'brand-5', name: 'Brand 5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
+  { id: 'brand-5', name: 'Brand 5', url: 'https://picsum.photos/seed/maroma-brand5/200/200' },
   { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
   { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
   { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
   { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
   { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2' },
-  { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=60ed0994-bd01-4907-9001-80ed01990101' },
+  { id: 'brand-11', name: 'Brand 11', url: 'https://picsum.photos/seed/maroma-brand11/200/200' },
   { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
   { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
   { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
-  { id: 'brand-15', name: 'Brand 15', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F15-01.png?alt=media&token=a0ed0994-bd01-4907-9001-80ed01990102' },
-  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=b0ed0994-bd01-4907-9001-80ed01990103' },
+  { id: 'brand-15', name: 'Brand 15', url: 'https://picsum.photos/seed/maroma-brand15/200/200' },
+  { id: 'brand-16', name: 'Brand 16', url: 'https://picsum.photos/seed/maroma-brand16/200/200' },
   { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
   { id: 'brand-18', name: 'Brand 18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1' },
 ];
@@ -933,7 +933,7 @@ export default function SimulatorPage() {
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
                 <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
-                  {overallScore > 75 && scores.shortTermSales > 10 && (
+                  {overallScore > 75 && scores.shortTermSales > 10 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Star className="w-5 h-5 text-green-500 shrink-0" />
@@ -943,21 +943,19 @@ export default function SimulatorPage() {
                         <Zap className="w-3 h-3" /> Growth Multiplier Applied
                       </div>
                     </div>
-                  )}
-                  {scores.shortTermSales <= 10 && scores.trust > 70 && scores.environmentalScore > 70 && (
+                  ) : scores.shortTermSales <= 10 && scores.trust > 70 && scores.environmentalScore > 70 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Megaphone className="w-5 h-5 text-blue-500 shrink-0" />
                         <span>Your ethical core is world-class, but the brand remains a "Hidden Gem." Scale awareness to unlock growth!</span>
                       </div>
                     </div>
-                  )}
-                  {scores.trust < 50 && (
+                  ) : scores.trust < 50 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
                       <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
                       <span>Market skepticism is rising. Your ingredient transparency might be insufficient for your target audience.</span>
                     </div>
-                  )}
+                  ) : null}
                   <div className="space-y-4 pt-4">
                     {[{ label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
                       { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
