@@ -10,11 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Heart, 
-  AlertCircle, 
   CheckCircle2, 
   Zap,
   ChevronRight,
@@ -22,19 +19,16 @@ import {
   Sparkles,
   Award,
   Package,
-  Target,
   Users,
   Activity,
   Megaphone,
   ShieldCheck,
   Loader2,
-  TrendingUp,
   X,
   Settings,
   Trash2,
   ThumbsUp,
   ThumbsDown,
-  FlaskConical,
   PartyPopper,
   Star,
   MessageSquare,
@@ -294,11 +288,14 @@ export default function SimulatorPage() {
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier]);
 
+  const overallScore = useMemo(() => {
+    return (scores.environmentalScore + scores.trust + scores.shortTermSales + scores.socialImpact + scores.longevity) / 5;
+  }, [scores]);
+
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => {
       const month = i + 1;
       let seasonalMultiplier = 1.0;
-      let newsNote = "";
       
       if (month >= 3 && month <= 6) {
         if (config.category === 'bc') seasonalMultiplier = 1.25;
