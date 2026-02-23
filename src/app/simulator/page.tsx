@@ -95,12 +95,12 @@ const TEAM_EMBLEMS = [
   { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
   { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
   { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
-  { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
+  { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=60ed0994-bd01-4907-9001-80ed01990101' },
   { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
   { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
   { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
-  { id: 'brand-15', name: 'Brand 15', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F15-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
-  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
+  { id: 'brand-15', name: 'Brand 15', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F15-01.png?alt=media&token=a0ed0994-bd01-4907-9001-80ed01990102' },
+  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=b0ed0994-bd01-4907-9001-80ed01990103' },
   { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
   { id: 'brand-18', name: 'Brand 18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1' },
 ];
@@ -272,7 +272,6 @@ export default function SimulatorPage() {
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 10;
     
-    // Rigorous failure detection: Multiplicative penalty for "Invisibility"
     const marketingMultiplier = hasChannels ? 1.5 : 0.001; 
     const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.05 : 0.001);
     
@@ -936,21 +935,55 @@ export default function SimulatorPage() {
                   ) : aiFeedback ? (
                     <div className="space-y-8 animate-in fade-in duration-1000">
                       <p className="text-lg text-slate-200 leading-relaxed font-body italic">"{aiFeedback.feedbackText}"</p>
+                      
                       <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-3">Customer Voice</Label>
                         <p className="text-xl font-headline font-bold text-white">"{aiFeedback.customerQuote}"</p>
                       </div>
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-bold uppercase tracking-widest text-accent">Market Sentiment</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-3">
-                            <Label className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-2"><ThumbsUp className="w-3 h-3" /> Positive Reviews</Label>
-                            {aiFeedback.positiveReviews.map((r, i) => <div key={i} className="text-xs p-3 bg-green-500/5 rounded-xl border border-green-500/10 text-slate-300">"{r}"</div>)}
+
+                      <div className="space-y-6">
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                          <Activity className="w-4 h-4" /> Market Sentiment
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
+                              <ThumbsUp className="w-3 h-3" /> What Worked
+                            </Label>
+                            {aiFeedback.positiveReviews.map((r, i) => (
+                              <div key={i} className="text-xs p-4 bg-green-500/5 rounded-2xl border border-green-500/10 text-slate-300">
+                                "{r}"
+                              </div>
+                            ))}
                           </div>
-                          <div className="space-y-3">
-                            <Label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center gap-2"><ThumbsDown className="w-3 h-3" /> Critical Feedback</Label>
-                            {aiFeedback.negativeReviews.map((r, i) => <div key={i} className="text-xs p-3 bg-rose-500/5 rounded-xl border border-rose-500/10 text-slate-300">"{r}"</div>)}
+                          <div className="space-y-4">
+                            <Label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center gap-2">
+                              <ThumbsDown className="w-3 h-3" /> What Didn't
+                            </Label>
+                            {aiFeedback.negativeReviews.map((r, i) => (
+                              <div key={i} className="space-y-2">
+                                <div className="text-xs p-4 bg-rose-500/5 rounded-2xl border border-rose-500/10 text-slate-300 italic">
+                                  "{r}"
+                                </div>
+                                {aiFeedback.negativeReviewFixes[i] && (
+                                  <div className="text-[9px] px-3 font-bold text-accent uppercase tracking-wider flex items-center gap-1.5">
+                                    <Wrench className="w-3 h-3" /> Adjustment: {aiFeedback.negativeReviewFixes[i]}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-6 border-t border-white/5">
+                        <div className="p-6 bg-accent/10 rounded-3xl border border-accent/20 space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-accent flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4" /> Strategic Recommendation
+                          </h4>
+                          <p className="text-sm text-slate-200 leading-relaxed font-body">
+                            {aiFeedback.suggestion}
+                          </p>
                         </div>
                       </div>
                     </div>
