@@ -38,7 +38,8 @@ import {
   Coins,
   TrendingUp,
   ArrowUpRight,
-  Lock
+  Lock,
+  LayoutGrid
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -173,10 +174,10 @@ export default function SimulatorPage() {
   const takenLogoTeams = useMemo(() => {
     const map = new Map<string, string>();
     allWorkshopTeams.forEach(t => {
-      if (t.emblem && t.teamName !== teamName) map.set(t.emblem, t.teamName);
+      if (t.emblem) map.set(t.emblem, t.teamName);
     });
     return map;
-  }, [allWorkshopTeams, teamName]);
+  }, [allWorkshopTeams]);
 
   useEffect(() => {
     if (events && events.length > 0) {
@@ -408,7 +409,7 @@ export default function SimulatorPage() {
   };
 
   const handleEmblemSelect = (url: string) => {
-    if (takenLogoTeams.has(url)) return;
+    if (takenLogoTeams.has(url) && takenLogoTeams.get(url) !== teamName) return;
     setSelectedEmblem(url);
     setTimeout(() => {
       document.getElementById('enter-lab-trigger')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -443,6 +444,23 @@ export default function SimulatorPage() {
     setTimeout(() => {
       document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
+  };
+
+  const handleSwitchTeam = (team: any) => {
+    setTeamName(team.teamName);
+    setSelectedEmblem(team.emblem);
+    if (team.status === 'complete') {
+      setPhase('market');
+      setConfig(team.config);
+      setYear(team.year || 1);
+      setAiFeedback(team.aiFeedback);
+      setIsAnimating(true);
+      setAnimationProgress(1);
+    } else {
+      setPhase('lab');
+      setAiFeedback(null);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const launchSimulation = async () => {
@@ -580,7 +598,7 @@ export default function SimulatorPage() {
             Strategically design your ethical product and test its viability in the Maroma Market Simulator.
           </p>
 
-          <div className="flex justify-center relative z-[100] mt-12">
+          <div className="flex flex-col items-center gap-8 relative z-[100] mt-12">
             <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
               <button
                 onClick={handleStartNewGame}
@@ -610,6 +628,31 @@ export default function SimulatorPage() {
                 Market Simulator
               </button>
             </div>
+
+            {/* Team Switcher Tabs */}
+            {allWorkshopTeams.length > 0 && (
+              <ScrollArea className="w-full max-w-4xl">
+                <div className="flex justify-center gap-4 pb-4">
+                  {allWorkshopTeams.map((team) => (
+                    <button
+                      key={`${team.sourceCollection}-${team.id}`}
+                      onClick={() => handleSwitchTeam(team)}
+                      className={cn(
+                        "flex items-center gap-3 p-2 pr-4 rounded-full border transition-all shrink-0",
+                        teamName === team.teamName ? "bg-accent/20 border-accent scale-105" : "bg-white/5 border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white p-1 overflow-hidden shrink-0">
+                        <img src={team.emblem} alt="" className="w-full h-full object-contain" />
+                      </div>
+                      <span className={cn("text-[10px] font-bold whitespace-nowrap uppercase tracking-widest", teamName === team.teamName ? "text-white" : "text-slate-400")}>
+                        {team.teamName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
         </section>
 
@@ -624,21 +667,23 @@ export default function SimulatorPage() {
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                 {TEAM_EMBLEMS.map((emblem) => {
                   const claimingTeam = takenLogoTeams.get(emblem.url);
-                  const isTaken = !!claimingTeam;
+                  const isTakenByOther = !!claimingTeam && claimingTeam !== teamName;
+                  const isSelected = selectedEmblem === emblem.url;
+
                   return (
                     <button 
                       key={emblem.id} 
-                      disabled={isTaken}
+                      disabled={isTakenByOther}
                       onClick={() => handleEmblemSelect(emblem.url)} 
                       className={cn(
                         "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 bg-white shadow-md group",
-                        selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent",
-                        isTaken ? "cursor-not-allowed border-none shadow-none" : "hover:border-muted-foreground/30"
+                        isSelected ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent",
+                        isTakenByOther ? "cursor-not-allowed border-none shadow-none" : "hover:border-muted-foreground/30"
                       )}
                     >
                       <img src={emblem.url} alt="Logo" className="w-full h-full object-contain p-0.5" />
-                      {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
-                      {isTaken && (
+                      {isSelected && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
+                      {isTakenByOther && (
                         <div className="absolute inset-0 bg-orange-600/90 flex flex-col items-center justify-center p-2 text-center animate-in fade-in duration-500">
                           <span className="text-[10px] font-black text-white leading-tight uppercase drop-shadow-md">
                             {claimingTeam}
