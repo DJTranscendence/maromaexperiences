@@ -644,6 +644,7 @@ export default function SimulatorPage() {
     setPhase('lab');
     setIsAnimating(false);
     setAiFeedback(null);
+    setConfig(DEFAULT_CONFIG); // Reset choices for the new budget cycle
     toast({
       title: `Year ${year + 1} Capital Assigned`,
       description: `New budget: ₹${Math.round(reinvestmentCapital).toLocaleString()}.`
