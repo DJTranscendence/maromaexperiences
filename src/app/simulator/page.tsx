@@ -31,7 +31,6 @@ import {
   ThumbsDown,
   PartyPopper,
   Star,
-  MessageSquare,
   Wrench,
   Lightbulb,
   Clock,
@@ -79,7 +78,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
   { id: 'brand-2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
   { id: 'brand-3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F24c47a94-c6a3-4da4-ba42-adeedad88e96' },
+  { id: 'brand-4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
   { id: 'brand-5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=986c6d33-6c6d-42a1-8cfe-91129dcc553f' },
   { id: 'brand-6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
   { id: 'brand-7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
@@ -102,7 +101,6 @@ export default function SimulatorPage() {
   const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
-  const [viewingSessionId, setViewingSessionId] = useState<string | null>(null);
   
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -344,6 +342,31 @@ export default function SimulatorPage() {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
+  const scrollToJoin = () => {
+    setPhase('intro');
+    setTimeout(() => {
+      document.getElementById('join-game-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const scrollToLab = () => {
+    if (!teamName) {
+      scrollToJoin();
+      return;
+    }
+    setPhase('lab');
+    setTimeout(() => {
+      document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const scrollToMarket = () => {
+    setPhase('market');
+    setTimeout(() => {
+      document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   const handleEmblemSelect = (url: string) => {
     setSelectedEmblem(url);
     setTimeout(() => {
@@ -389,14 +412,12 @@ export default function SimulatorPage() {
     setYear(1);
     setAiFeedback(null);
     setLastEventId(null);
-    setViewingSessionId(null);
     setAnimationProgress(0);
     setIsAnimating(false);
     toast({ title: "Team Session Ended" });
   };
 
   const handleViewHistoricalSession = (session: any) => {
-    setViewingSessionId(session.id);
     setTeamName(session.teamName);
     setSelectedEmblem(session.emblem);
     setYear(session.year || 1);
@@ -533,7 +554,7 @@ export default function SimulatorPage() {
           <div className="flex justify-center relative z-[100] mt-12">
             <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
               <button
-                onClick={() => setPhase('intro')}
+                onClick={scrollToJoin}
                 className={cn(
                   "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
                   phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
@@ -542,7 +563,7 @@ export default function SimulatorPage() {
                 Join Game
               </button>
               <button
-                onClick={() => setPhase('lab')}
+                onClick={scrollToLab}
                 className={cn(
                   "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
                   phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
@@ -551,7 +572,7 @@ export default function SimulatorPage() {
                 Laboratory
               </button>
               <button
-                onClick={() => setPhase('market')}
+                onClick={scrollToMarket}
                 className={cn(
                   "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
                   phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
@@ -608,7 +629,7 @@ export default function SimulatorPage() {
         </section>
 
         {phase === 'intro' && (
-          <div className="max-w-3xl mx-auto py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10">
+          <div id="join-game-section" className="max-w-3xl mx-auto py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10 scroll-mt-24">
             <div className="space-y-4">
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Team Name</Label>
               <Input placeholder="e.g. The Eco-Warriors" value={teamName} onChange={e => setTeamName(e.target.value)} className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 bg-slate-50" />
@@ -932,6 +953,29 @@ export default function SimulatorPage() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="flex justify-center pt-12 pb-20">
+              <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
+                <button
+                  onClick={scrollToJoin}
+                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
+                >
+                  Join Game
+                </button>
+                <button
+                  onClick={scrollToLab}
+                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
+                >
+                  Laboratory
+                </button>
+                <button
+                  onClick={scrollToMarket}
+                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all bg-primary text-white shadow-lg"
+                >
+                  Market Simulator
+                </button>
+              </div>
             </div>
           </div>
         )}
