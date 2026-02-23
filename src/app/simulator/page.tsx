@@ -361,14 +361,26 @@ export default function SimulatorPage() {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
-  const scrollToJoin = () => {
+  const handleStartNewGame = () => {
     setPhase('intro');
+    setTeamName("");
+    setYear(1);
+    setBudget(STARTUP_BUDGET);
+    setLastYearProfit(0);
+    setAiFeedback(null);
+    setLastEventId(null);
+    setAnimationProgress(0);
+    setIsAnimating(false);
     setTimeout(() => {
       document.getElementById('join-game-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
 
   const scrollToLab = () => {
+    if (!teamName.trim()) {
+      toast({ title: "Team Details Required", description: "Please enter a team name and select an emblem first." });
+      return;
+    }
     setPhase('lab');
     setTimeout(() => {
       document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -381,6 +393,8 @@ export default function SimulatorPage() {
       setTimeout(() => {
         document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
+    } else {
+      toast({ title: "Run Simulation First", description: "You must launch your laboratory strategy to see market results." });
     }
   };
 
@@ -524,7 +538,6 @@ export default function SimulatorPage() {
   };
 
   const handleNextYear = () => {
-    // Logic for next year budget: Profit reinvestment
     const reinvestmentCapital = 800000 + (Math.max(0, lastYearProfit) * 0.8);
     setBudget(Math.round(reinvestmentCapital));
     setYear(prev => prev + 1);
@@ -600,7 +613,7 @@ export default function SimulatorPage() {
           <div className="flex justify-center relative z-[100] mt-12">
             <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
               <button
-                onClick={scrollToJoin}
+                onClick={handleStartNewGame}
                 className={cn(
                   "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
                   phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
@@ -691,9 +704,9 @@ export default function SimulatorPage() {
                 ))}
               </div>
             </div>
-            <button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95 flex items-center justify-center">
+            <Button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95 flex items-center justify-center">
               Enter Laboratory <ChevronRight className="w-8 h-8 ml-2" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -757,14 +770,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name} (₹{i.investmentCost/1000}k)</SelectItem>)}</SelectContent>
+                        <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name} (₹{(i.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (₹{s.investmentCost/1000}k)</SelectItem>)}</SelectContent>
+                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (₹{(s.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -780,14 +793,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{p.investmentCost/1000}k)</SelectItem>)}</SelectContent>
+                        <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{(p.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{p.investmentCost/1000}k)</SelectItem>)}</SelectContent>
+                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{(p.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -804,7 +817,7 @@ export default function SimulatorPage() {
                           <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30" />
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-white">{channel.name}</span>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase">₹{(channel.cost/1000)}k</span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase">₹{(channel.cost/1000).toLocaleString()}k</span>
                           </div>
                         </div>
                       ))}
