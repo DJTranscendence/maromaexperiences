@@ -722,7 +722,7 @@ export default function SimulatorPage() {
             </div>
             <Button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95">
               Enter Laboratory <ChevronRight className="w-8 h-8 ml-2" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -944,7 +944,7 @@ export default function SimulatorPage() {
                       </div>
                     </div>
                   )}
-                  {scores.shortTermSales <= 10 && scores.trust > 70 && (
+                  {scores.shortTermSales <= 10 && scores.trust > 70 && scores.environmentalScore > 70 && (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Megaphone className="w-5 h-5 text-blue-500 shrink-0" />

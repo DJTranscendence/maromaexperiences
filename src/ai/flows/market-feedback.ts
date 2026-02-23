@@ -87,13 +87,13 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
         "I found this by accident, they should really advertise more.", 
         "I can't find any information about where this is made.",
         "The price is a bit high for a brand I've never heard of before.",
-        "Shipping took longer than expected and there was too much waste in the box."
+        "Sustainability claims are great but I never see this brand anywhere."
       ],
       negativeReviewFixes: [
         "Add 'Instagram' or 'Facebook' to 'Marketing Channels'.",
         "Clarify your 'Marketing Message' in the laboratory.",
         "Change 'Price Tier' to 'Accessible' strategy.",
-        "Change 'Packaging Type' to 'No Packaging' or 'Compostable Pouch'."
+        "Add more 'Marketing Channels' to increase visibility."
       ]
     };
   }
