@@ -34,7 +34,8 @@ import {
   MessageSquare,
   Wrench,
   Lightbulb,
-  Clock
+  Clock,
+  AlertCircle
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -78,7 +79,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
   { id: 'brand-2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
   { id: 'brand-3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
+  { id: 'brand-4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F24c47a94-c6a3-4da4-ba42-adeedad88e96' },
   { id: 'brand-5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=986c6d33-6c6d-42a1-8cfe-91129dcc553f' },
   { id: 'brand-6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
   { id: 'brand-7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
@@ -541,23 +542,19 @@ export default function SimulatorPage() {
                 Join Game
               </button>
               <button
-                onClick={() => teamName && setPhase('lab')}
-                disabled={!teamName}
+                onClick={() => setPhase('lab')}
                 className={cn(
                   "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
-                  phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
-                  !teamName && "opacity-20 cursor-not-allowed"
+                  phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
                 )}
               >
                 Laboratory
               </button>
               <button
-                onClick={() => (aiFeedback || viewingSessionId) && setPhase('market')}
-                disabled={!aiFeedback && !viewingSessionId}
+                onClick={() => setPhase('market')}
                 className={cn(
                   "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
-                  phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
-                  (!aiFeedback && !viewingSessionId) && "opacity-20 cursor-not-allowed"
+                  phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
                 )}
               >
                 Market Simulator
@@ -583,7 +580,7 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 hover:line-clamp-none transition-all duration-300 bg-slate-900/0 hover:bg-slate-800/90 hover:p-2 hover:-m-2 hover:rounded-xl hover:z-20 hover:relative cursor-help">
+                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 group-hover:line-clamp-none transition-all duration-300 bg-slate-900/0 group-hover:bg-slate-800/90 group-hover:p-2 group-hover:-m-2 group-hover:rounded-xl group-hover:z-20 group-hover:relative cursor-help">
                         {s.status === 'playing' ? 'In Laboratory' : s.productType}
                       </p>
                     </div>
