@@ -52,7 +52,8 @@ Ingredients: {{#each ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/eac
 Provide a "Year {{{year}}}" simulation summary. 
 
 CRITICAL - MARKETING EVALUATION:
-- If they have NO marketing channels selected or a deliberately obscure strategy, use a 'concerned' tone.
+- If they have NO marketing channels selected or a deliberately obscure strategy, use a 'concerned' tone. 
+- IMPORTANT: If Earth and Trust scores are HIGH (above 70) but marketing is missing, do NOT say "alignment needs refinement". Instead, say the product is an "ethical masterpiece that is unfortunately invisible". Focus the critique ONLY on the lack of visibility.
 - REVIEWS FOR NO MARKETING: If channels are empty, reviews MUST NOT mention the "message". Instead, reviews should say things like: "Found this by total accident", "Never seen an ad for this", "I wish they advertised more so I could find it easily", or "Stumbled upon it in a cafe".
 - If they used plastic or synthetic base but claimed sustainability/zero-waste, use a 'cynical' tone and call out the "Greenwashing".
 - If they prioritized profit over Earth Score, show how trust is declining.

@@ -272,7 +272,7 @@ export default function SimulatorPage() {
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 10;
     
-    // Marketing Multiplier: 0.001 if no channels, reflecting total invisibility.
+    // Rigorous Marketing Penalty: Near-zero reach if no channels selected
     const marketingMultiplier = hasChannels ? 1.5 : 0.001; 
     const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.05 : 0.001);
     
@@ -516,7 +516,7 @@ export default function SimulatorPage() {
     try {
       generatedFeedback = await generateMarketFeedback({
         teamName,
-        productName: config.format,
+        productName: richDescription,
         ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
         marketingChannels: channelNames,
         earthScore: Math.round(scores.environmentalScore),
@@ -671,8 +671,8 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <div className="relative">
-                        <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 transition-all duration-300 group-hover:line-clamp-none bg-slate-900/80 group-hover:bg-slate-800 rounded px-1 -ml-1 group-hover:z-20 group-hover:relative cursor-help">
+                      <div className="relative group/desc">
+                        <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 transition-all duration-300 group-hover/desc:line-clamp-none bg-slate-900/80 group-hover/desc:bg-slate-800 rounded px-1 -ml-1 group-hover/desc:z-20 group-hover/desc:relative cursor-help">
                           {s.status === 'playing' ? 'In Laboratory' : s.productType}
                         </p>
                       </div>
@@ -722,7 +722,7 @@ export default function SimulatorPage() {
             </div>
             <Button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95">
               Enter Laboratory <ChevronRight className="w-8 h-8 ml-2" />
-            </Button>
+            </button>
           </div>
         )}
 
@@ -933,7 +933,7 @@ export default function SimulatorPage() {
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
                 <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
-                  {overallScore > 75 && (
+                  {overallScore > 75 && scores.shortTermSales > 10 && (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Star className="w-5 h-5 text-green-500 shrink-0" />
@@ -941,6 +941,14 @@ export default function SimulatorPage() {
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
                         <Zap className="w-3 h-3" /> Growth Multiplier Applied
+                      </div>
+                    </div>
+                  )}
+                  {scores.shortTermSales <= 10 && scores.trust > 70 && (
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <Megaphone className="w-5 h-5 text-blue-500 shrink-0" />
+                        <span>Your ethical core is world-class, but the brand remains a "Hidden Gem." Scale awareness to unlock growth!</span>
                       </div>
                     </div>
                   )}
