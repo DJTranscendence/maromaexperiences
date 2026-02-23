@@ -52,11 +52,10 @@ Ingredients: {{#each ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/eac
 Provide a "Year {{{year}}}" simulation summary. 
 
 CRITICAL - MARKETING EVALUATION:
-- If they have NO marketing channels selected or a deliberately obscure strategy, use a 'concerned' tone. 
-- IMPORTANT: If Earth and Trust scores are HIGH (above 70) but marketing is missing, do NOT say "alignment needs refinement". Instead, say the product is an "ethical masterpiece that is unfortunately invisible". Focus the critique ONLY on the lack of visibility.
-- REVIEWS FOR NO MARKETING: If channels are empty, reviews MUST NOT mention the "message". Instead, reviews should say things like: "Found this by total accident", "Never seen an ad for this", "I wish they advertised more so I could find it easily", or "Stumbled upon it in a cafe".
-- If they used plastic or synthetic base but claimed sustainability/zero-waste, use a 'cynical' tone and call out the "Greenwashing".
-- If they prioritized profit over Earth Score, show how trust is declining.
+- If they have NO marketing channels selected, use a 'concerned' tone. 
+- IMPORTANT: If Earth and Trust scores are HIGH (above 70) but marketing is missing, do NOT say "alignment needs refinement". Instead, say the product is an "ethical masterpiece that is unfortunately invisible to the market". Focus the critique ONLY on the lack of visibility.
+- REVIEWS FOR NO MARKETING: If channels are empty, reviews MUST NOT mention the "message" or "vibe". Instead, reviews should say things like: "Found this by total accident in a shop", "Never seen an ad for this", "I wish they advertised more so I could find it easily", or "Stumbled upon it in a cafe".
+- If they used synthetic base but claimed sustainability, use a 'cynical' tone and call out "Greenwashing".
 - If they hit the sweet spot of ethics, resonance, and strong marketing, be 'enthusiastic'.
 
 Generate EXACTLY 4 positive and 4 negative customer reviews. 
@@ -74,7 +73,7 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
     console.warn("Market Feedback Generation failed, using robust fallback:", err);
     return {
       analystTone: 'concerned',
-      feedbackText: `The Year ${input.year || 1} market response was mixed. While the concept shows promise, the brand currently lacks the visibility required to reach your target audience.`,
+      feedbackText: `The Year ${input.year || 1} market response was limited. While the concept shows promise, the brand currently lacks the visibility required to reach your target audience.`,
       customerQuote: "I like the idea, but I've never actually seen this in any of the shops I visit.",
       suggestion: 'Expand your marketing channels to increase brand awareness.',
       positiveReviews: [
