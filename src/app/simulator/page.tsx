@@ -16,13 +16,11 @@ import {
   Heart, 
   AlertCircle, 
   CheckCircle2, 
-  Dna,
   Zap,
   ChevronRight,
   ArrowRight,
   Sparkles,
   Award,
-  CircleCheck,
   Package,
   Target,
   Users,
@@ -30,31 +28,21 @@ import {
   Megaphone,
   ShieldCheck,
   Loader2,
-  MessageSquareQuote,
   TrendingUp,
-  BrainCircuit,
   X,
   Settings,
   Trash2,
-  PlayCircle,
   ThumbsUp,
   ThumbsDown,
-  User,
   FlaskConical,
-  CloudRain,
-  Sun,
-  Gift,
-  Newspaper,
+  PartyPopper,
+  Star,
+  MessageSquare,
   Wrench,
   Lightbulb,
-  Edit2,
-  MessageSquare,
-  Clock,
-  PartyPopper,
-  Star
+  Clock
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { 
   CATEGORIES, 
   INGREDIENT_BASES, 
@@ -81,7 +69,7 @@ import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, u
 import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TEAM_EMBLEMS = [
@@ -123,7 +111,6 @@ export default function SimulatorPage() {
   
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const syncAttemptedRef = useRef<string | null>(null);
 
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -464,7 +451,6 @@ export default function SimulatorPage() {
     setAiFeedback(null);
     setLastEventId(null);
     setViewingSessionId(null);
-    syncAttemptedRef.current = null;
     setAnimationProgress(0);
     setIsAnimating(false);
     toast({
@@ -559,43 +545,6 @@ export default function SimulatorPage() {
 
   const displayVal = (val: number) => Math.round(val * animationProgress);
 
-  const PhaseNavigation = () => (
-    <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full flex gap-1 shadow-2xl relative z-[100]">
-      <Button 
-        variant="ghost"
-        onClick={() => setPhase('intro')}
-        className={cn(
-          "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white cursor-pointer",
-          phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-500"
-        )}
-      >
-        <Users className="w-4 h-4" /> Join Game
-      </Button>
-      <Button 
-        variant="ghost"
-        onClick={() => setPhase('lab')}
-        disabled={!teamName.trim()}
-        className={cn(
-          "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white cursor-pointer",
-          phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
-        )}
-      >
-        <FlaskConical className="w-4 h-4" /> Laboratory
-      </Button>
-      <Button 
-        variant="ghost"
-        onClick={() => setPhase('market')}
-        disabled={!aiFeedback && !viewingSessionId}
-        className={cn(
-          "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white cursor-pointer",
-          phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
-        )}
-      >
-        <TrendingUp className="w-4 h-4" /> Market Simulator
-      </Button>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
@@ -615,9 +564,9 @@ export default function SimulatorPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl rounded-[2.5rem] bg-slate-900 border-white/10 text-white">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-headline flex items-center gap-2">
+                <CardTitle className="text-2xl font-headline flex items-center gap-2">
                   <Activity className="w-6 h-6 text-accent" /> Game Management
-                </DialogTitle>
+                </CardTitle>
               </DialogHeader>
               <ScrollArea className="max-h-[60vh] mt-6 pr-4">
                 <div className="space-y-4">
@@ -652,11 +601,6 @@ export default function SimulatorPage() {
           <p className="text-xl text-slate-300 font-body leading-relaxed max-w-3xl mx-auto px-4">
             Create an imaginary product that we will run through a market simulator based on your strategic laboratory choices.
           </p>
-        </section>
-
-        {/* Phase Navigation Bar */}
-        <section className="mb-16 flex justify-center">
-          <PhaseNavigation />
         </section>
 
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
@@ -906,7 +850,6 @@ export default function SimulatorPage() {
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
                       <Tooltip content={({ active, payload, label }) => {
                         if (active && payload?.length) {
-                          const data = payload[0].payload;
                           return (
                             <div className="bg-slate-950 border border-white/10 p-5 rounded-3xl shadow-2xl min-w-[240px] backdrop-blur-2xl">
                               <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {label}</p>
@@ -1038,15 +981,10 @@ export default function SimulatorPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-20 text-slate-500 italic">Analysis complete. Click View Analysis on the leaderboard to refresh.</div>
+                    <div className="text-center py-20 text-slate-500 italic">Analysis complete. Launch a strategy or view a historical result to see details.</div>
                   )}
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Parallel Navigation Links at the bottom of simulation */}
-            <div className="flex justify-center pb-20">
-              <PhaseNavigation />
             </div>
           </div>
         )}
