@@ -618,37 +618,40 @@ export default function SimulatorPage() {
         </section>
 
         {/* Phase Navigation Bar */}
-        <section className="mb-16 flex justify-center relative z-20">
+        <section className="mb-16 flex justify-center relative z-[50]">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full flex gap-1 shadow-2xl">
-            <button 
+            <Button 
+              variant="ghost"
               onClick={() => setPhase('intro')}
               className={cn(
-                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2",
-                phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
+                phase === 'intro' ? "bg-primary text-white shadow-lg pointer-events-none" : "text-slate-500"
               )}
             >
               <Users className="w-4 h-4" /> Join Game
-            </button>
-            <button 
-              onClick={() => teamName && setPhase('lab')}
-              disabled={!teamName}
+            </Button>
+            <Button 
+              variant="ghost"
+              onClick={() => setPhase('lab')}
+              disabled={!teamName.trim()}
               className={cn(
-                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2",
-                phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
+                phase === 'lab' ? "bg-primary text-white shadow-lg pointer-events-none" : "text-slate-500 disabled:opacity-30"
               )}
             >
               <FlaskConical className="w-4 h-4" /> Laboratory
-            </button>
-            <button 
-              onClick={() => (aiFeedback || viewingSessionId) && setPhase('market')}
+            </Button>
+            <Button 
+              variant="ghost"
+              onClick={() => setPhase('market')}
               disabled={!aiFeedback && !viewingSessionId}
               className={cn(
-                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2",
-                phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
+                phase === 'market' ? "bg-primary text-white shadow-lg pointer-events-none" : "text-slate-500 disabled:opacity-30"
               )}
             >
               <TrendingUp className="w-4 h-4" /> Market Simulator
-            </button>
+            </Button>
           </div>
         </section>
 
@@ -851,7 +854,7 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 100)}`, icon: Clock },
+                  { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 1000)}`, icon: Clock },
                   { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Price Strategy", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
                   { label: "Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
