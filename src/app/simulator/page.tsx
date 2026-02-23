@@ -142,6 +142,7 @@ export default function SimulatorPage() {
 
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [playedAnimations, setPlayedAnimations] = useState<string[]>([]);
 
   const [config, setConfig] = useState(DEFAULT_CONFIG);
 
@@ -402,13 +403,13 @@ export default function SimulatorPage() {
   }, [scores, config]);
 
   const animatedChartData = useMemo(() => {
-    if (phase !== 'market' || !isAnimating) return chartData.map(d => ({ ...d, profit: null, trust: null, impact: null, awareness: null }));
+    if (phase !== 'market') return chartData.map(d => ({ ...d, profit: null, trust: null, impact: null, awareness: null }));
     return chartData.map((d, index) => {
       const threshold = (index + 1) / chartData.length;
       if (animationProgress >= threshold) return d;
       return { ...d, profit: null, trust: null, impact: null, awareness: null };
     });
-  }, [chartData, animationProgress, phase, isAnimating]);
+  }, [chartData, animationProgress, phase]);
 
   const milestones = useMemo(() => {
     const list = [];
@@ -508,8 +509,10 @@ export default function SimulatorPage() {
 
   const scrollToMarket = () => {
     setPhase('market');
+    const isMobile = window.innerWidth < 768;
     setTimeout(() => {
-      document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const el = document.getElementById('analysis-dashboard');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'center' });
     }, 100);
   };
 
@@ -559,8 +562,16 @@ export default function SimulatorPage() {
       setConfig(team.config || DEFAULT_CONFIG);
       setYear(team.year || 1);
       setAiFeedback(team.aiFeedback);
-      setIsAnimating(true);
-      setAnimationProgress(1);
+      
+      // Animation Guard: Only play if not played before for this team
+      if (!playedAnimations.includes(team.teamName)) {
+        setIsAnimating(true);
+        setAnimationProgress(0);
+        setPlayedAnimations(prev => [...prev, team.teamName]);
+      } else {
+        setIsAnimating(false);
+        setAnimationProgress(1);
+      }
     } else {
       setPhase('lab');
       setConfig(team.config || DEFAULT_CONFIG);
@@ -576,13 +587,13 @@ export default function SimulatorPage() {
     }
 
     setPhase('market');
-    setIsAnimating(false);
     setIsAiLoading(true);
-    setAnimationProgress(0);
     
+    // Mobile optimization: Jump to graph immediately
+    const isMobile = window.innerWidth < 768;
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'center' });
     }, 100);
 
     let generatedFeedback: MarketFeedbackOutput | null = null;
@@ -608,7 +619,16 @@ export default function SimulatorPage() {
       console.error("AI Analysis failed:", err);
     } finally {
       setIsAiLoading(false);
-      setTimeout(() => setIsAnimating(true), 1500);
+      
+      // Animation Guard: Only play once per team
+      if (!playedAnimations.includes(teamName)) {
+        setAnimationProgress(0);
+        setTimeout(() => setIsAnimating(true), 1500);
+        setPlayedAnimations(prev => [...prev, teamName]);
+      } else {
+        setIsAnimating(false);
+        setAnimationProgress(1);
+      }
     }
 
     const yearProfit = (getStatsAtMonth(11).profit * 1000) - investmentCost;
