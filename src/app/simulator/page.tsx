@@ -594,6 +594,43 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
+        {/* Phase Navigation links */}
+        <div className="flex justify-center mb-12 relative z-[100]">
+          <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
+            <button
+              onClick={() => setPhase('intro')}
+              className={cn(
+                "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
+                phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
+              )}
+            >
+              Join Game
+            </button>
+            <button
+              onClick={() => teamName && setPhase('lab')}
+              disabled={!teamName}
+              className={cn(
+                "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
+                phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
+                !teamName && "opacity-20 cursor-not-allowed"
+              )}
+            >
+              Laboratory
+            </button>
+            <button
+              onClick={() => (aiFeedback || viewingSessionId) && setPhase('market')}
+              disabled={!aiFeedback && !viewingSessionId}
+              className={cn(
+                "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
+                phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
+                (!aiFeedback && !viewingSessionId) && "opacity-20 cursor-not-allowed"
+              )}
+            >
+              Market Simulator
+            </button>
+          </div>
+        </div>
+
         <section className="mb-12 text-center space-y-8 animate-in fade-in duration-1000">
           <div className="relative h-48 w-full max-w-2xl mx-auto">
             <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
@@ -877,7 +914,7 @@ export default function SimulatorPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto pb-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
                 <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
@@ -985,6 +1022,24 @@ export default function SimulatorPage() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Duplicate Navigation links for bottom visibility */}
+            <div className="flex justify-center pt-12 pb-20 relative z-[100]">
+              <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
+                <button
+                  onClick={() => { setPhase('intro'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
+                >
+                  Return to Join Game
+                </button>
+                <button
+                  onClick={() => { setPhase('lab'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
+                >
+                  Adjust Laboratory
+                </button>
+              </div>
             </div>
           </div>
         )}
