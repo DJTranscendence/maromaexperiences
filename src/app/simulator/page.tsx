@@ -827,7 +827,7 @@ export default function SimulatorPage() {
                           <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30" />
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-white">{channel.name}</span>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase">₹{(channel.cost/1000).toLocaleString()}k</span>
+                            <span className="text-base font-black text-accent uppercase tracking-tight">₹{(channel.cost/1000).toLocaleString()}k</span>
                           </div>
                         </div>
                       ))}
