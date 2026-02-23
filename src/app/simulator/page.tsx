@@ -45,7 +45,10 @@ import {
   Info,
   CloudRain,
   Sun,
-  Newspaper
+  Newspaper,
+  Quote,
+  TrendingDown,
+  ExternalLink
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -334,14 +337,14 @@ export default function SimulatorPage() {
     
     // Summer (Month 3-5)
     if (month >= 3 && month <= 5) {
-      if (config.category === 'bc') seasonalMultiplier = 1.3; // Body care boost
-      if (config.category === 'hf') seasonalMultiplier = 0.8; // Home fragrance dip
+      if (config.category === 'bc') seasonalMultiplier = 1.3; 
+      if (config.category === 'hf') seasonalMultiplier = 0.8; 
     }
     
     // Monsoon (Month 6-8)
     if (month >= 6 && month <= 8) {
-      if (config.sourcingModel === 'lsf') seasonalMultiplier = 0.75; // Logistics issues for local
-      if (config.category === 'hf') seasonalMultiplier = 1.15; // Indoor atmosphere boost
+      if (config.sourcingModel === 'lsf') seasonalMultiplier = 0.75; 
+      if (config.category === 'hf') seasonalMultiplier = 1.15; 
     }
     
     if (month >= 10 && month <= 12) seasonalMultiplier = 1.45;
@@ -354,7 +357,6 @@ export default function SimulatorPage() {
     
     const revenue = baseSales * growthFactor * seasonalMultiplier;
     
-    // Ingredient news impact
     let trustModifier = 0;
     if (month >= 4) {
       const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
@@ -412,14 +414,12 @@ export default function SimulatorPage() {
     const list = [];
     list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters.", icon: PlayCircle });
     
-    // Summer Surge
     if (config.category === 'bc') {
       list.push({ month: 3, title: "Summer Demand", desc: "Soaring temperatures drive 30% spike in body care sales.", icon: Sun });
     } else if (config.category === 'hf') {
       list.push({ month: 3, title: "Seasonal Slump", desc: "Summer heat reduces interest in candles and heavy fragrances.", icon: Sun });
     }
 
-    // News Cycle
     const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
     list.push({ 
       month: 4, 
@@ -434,7 +434,6 @@ export default function SimulatorPage() {
       list.push({ month: 5, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is starting to take root.`, icon: Megaphone });
     }
 
-    // Monsoon Lag
     if (config.sourcingModel === 'lsf') {
       list.push({ month: 7, title: "Monsoon Supply Lag", desc: "Heavy rains disrupt local farm logistics, leading to inventory gaps.", icon: CloudRain });
     } else {
@@ -446,11 +445,39 @@ export default function SimulatorPage() {
     }
 
     list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the campus network.", icon: PartyPopper });
-    
     list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2.", icon: Clock });
 
     return list;
   }, [scores, config]);
+
+  const newsArticle = useMemo(() => {
+    const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
+    const isLocal = config.sourcingModel === 'lsf';
+    const isIndustrial = config.sourcingModel === 'is';
+
+    if (isEthical && isLocal) {
+      return {
+        headline: "The Soil Revolution: How Small Farmers are Redefining Luxury",
+        snippet: "A breakthrough report in the Maroma Business Journal highlights a new wave of brands opting for high-integrity ingredients. Customer trust is soaring as transparency becomes the new gold standard.",
+        outcome: "Trust Index +15%, Organic Growth Accelerated",
+        type: 'positive'
+      };
+    } else if (!isEthical && isIndustrial) {
+      return {
+        headline: "The Hidden Cost of Fragrance: Investigation Reveals Synthetic Toll",
+        snippet: "Consumer advocacy groups have flagged a rise in low-cost, high-impact synthetic bases. Brands using industrial bulk sourcing face heavy scrutiny as 'Greenwashing' claims gain traction online.",
+        outcome: "Revenue -20%, Trust Index Plummeting",
+        type: 'negative'
+      };
+    }
+    
+    return {
+      headline: "Market Volatility: Seasonal Shifts Challenge New Entrants",
+      snippet: "As seasonal weather patterns shift, the Maroma market sees a bifurcation between stable industrial brands and weather-sensitive local craft producers.",
+      outcome: "Stability Profile: Moderate",
+      type: 'neutral'
+    };
+  }, [config]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -996,7 +1023,6 @@ export default function SimulatorPage() {
                       />
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
                       
-                      {/* Dynamic Event Markers on Graph */}
                       {animationProgress >= 0.08 && (
                         <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
                       )}
@@ -1055,70 +1081,118 @@ export default function SimulatorPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-              <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
-                <CardHeader className="p-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="font-headline text-3xl">Strategic Insights</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-blue-500/20 text-blue-400 border-none">Yearly Event Log</Badge>
+              <div className="space-y-8">
+                {/* News Article Component */}
+                <Card className={cn(
+                  "rounded-[2.5rem] p-8 border-l-8 overflow-hidden relative group animate-in slide-in-from-left duration-1000",
+                  newsArticle.type === 'positive' ? "bg-emerald-950/20 border-emerald-500" : 
+                  newsArticle.type === 'negative' ? "bg-rose-950/20 border-rose-500" : 
+                  "bg-slate-900/40 border-slate-500"
+                )}>
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center justify-between">
+                      <Badge className={cn(
+                        "rounded-full px-4 py-1 uppercase tracking-widest text-[10px] font-black border-none",
+                        newsArticle.type === 'positive' ? "bg-emerald-500 text-white" : 
+                        newsArticle.type === 'negative' ? "bg-rose-500 text-white" : 
+                        "bg-slate-500 text-white"
+                      )}>
+                        Breaking News: Month 4 Cycle
+                      </Badge>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <Clock className="w-3 h-3" /> Latest Edition
+                      </span>
                     </div>
-                  </div>
-                </CardHeader>
-                
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    {milestones.map((m, i) => {
-                      const Icon = m.icon;
-                      return (
-                        <div key={i} className="flex gap-4 group">
-                          <div className="flex flex-col items-center">
-                            <div className={cn(
-                              "w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all",
-                              displayVal(12) >= m.month ? "bg-accent/20 border-accent text-accent" : "bg-white/5 border-white/10 text-slate-500"
-                            )}>
-                              {m.month}
-                            </div>
-                            {i !== milestones.length - 1 && <div className="w-px h-full bg-white/10 my-1" />}
-                          </div>
-                          <div className={cn(
-                            "flex-grow pb-6 transition-opacity",
-                            displayVal(12) >= m.month ? "opacity-100" : "opacity-20"
-                          )}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Icon className="w-3.5 h-3.5 text-accent" />
-                              <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{m.title}</h4>
-                            </div>
-                            <p className="text-xs text-slate-400 leading-relaxed">{m.desc}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-3xl font-headline font-bold text-white leading-tight group-hover:text-accent transition-colors">
+                        "{newsArticle.headline}"
+                      </h3>
+                      <p className="text-slate-300 font-body leading-relaxed text-lg">
+                        {newsArticle.snippet}
+                      </p>
+                    </div>
 
-                  <div className="pt-6 border-t border-white/5 space-y-4">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
-                      <Activity className="w-3 h-3" /> Core Performance Drivers
-                    </div>
-                    {[
-                      { label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
-                      { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
-                      { label: "Resonance", val: scores.shortTermSales, color: "bg-amber-500" }
-                    ].map((s, idx) => (
-                      <div key={idx} className="space-y-2">
-                        <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
-                        <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
+                    <div className={cn(
+                      "p-4 rounded-2xl flex items-center justify-between gap-4 border",
+                      newsArticle.type === 'positive' ? "bg-emerald-500/10 border-emerald-500/30" : 
+                      newsArticle.type === 'negative' ? "bg-rose-500/10 border-rose-500/30" : 
+                      "bg-white/5 border-white/10"
+                    )}>
+                      <div className="flex items-center gap-3">
+                        {newsArticle.type === 'positive' ? <TrendingUp className="w-5 h-5 text-emerald-400" /> : <TrendingDown className="w-5 h-5 text-rose-400" />}
+                        <span className="text-sm font-bold text-white uppercase tracking-widest">{newsArticle.outcome}</span>
                       </div>
-                    ))}
+                      <Button variant="ghost" size="sm" className="text-slate-400 text-xs gap-2">Read Full Story <ExternalLink className="w-3 h-3" /></Button>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
 
-              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/60 backdrop-blur-xl text-white border border-white/10">
+                <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
+                  <CardHeader className="p-0">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="font-headline text-3xl">Strategic Insights</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-blue-500/20 text-blue-400 border-none">Yearly Event Log</Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      {milestones.map((m, i) => {
+                        const Icon = m.icon;
+                        return (
+                          <div key={i} className="flex gap-4 group">
+                            <div className="flex flex-col items-center">
+                              <div className={cn(
+                                "w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all",
+                                displayVal(12) >= m.month ? "bg-accent/20 border-accent text-accent" : "bg-white/5 border-white/10 text-slate-500"
+                              )}>
+                                {m.month}
+                              </div>
+                              {i !== milestones.length - 1 && <div className="w-px h-full bg-white/10 my-1" />}
+                            </div>
+                            <div className={cn(
+                              "flex-grow pb-6 transition-opacity",
+                              displayVal(12) >= m.month ? "opacity-100" : "opacity-20"
+                            )}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Icon className="w-3.5 h-3.5 text-accent" />
+                                <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{m.title}</h4>
+                              </div>
+                              <p className="text-xs text-slate-400 leading-relaxed">{m.desc}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pt-6 border-t border-white/5 space-y-4">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+                        <Activity className="w-3 h-3" /> Core Performance Drivers
+                      </div>
+                      {[
+                        { label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
+                        { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
+                        { label: "Resonance", val: scores.shortTermSales, color: "bg-amber-500" }
+                      ].map((s, idx) => (
+                        <div key={idx} className="space-y-2">
+                          <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
+                          <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <Card className="lg:col-span-1 rounded-[2.5rem] bg-slate-900/60 backdrop-blur-xl text-white border border-white/10 flex flex-col">
                 <CardHeader className="bg-white/5 border-b border-white/5 py-6 flex flex-row items-center justify-between">
                   <CardTitle className="font-headline text-2xl uppercase">Analyst Report</CardTitle>
                   {aiFeedback && <Badge className="bg-accent text-white uppercase font-bold tracking-widest">{aiFeedback.analystTone}</Badge>}
                 </CardHeader>
-                <CardContent className="p-8 space-y-8">
+                <CardContent className="p-8 space-y-8 flex-grow">
                   {isAiLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="w-12 h-12 animate-spin text-accent" /><p className="text-slate-400 font-medium animate-pulse text-xs uppercase tracking-widest">Compiling Year 1 Data...</p></div>
                   ) : aiFeedback ? (
@@ -1134,7 +1208,7 @@ export default function SimulatorPage() {
                         <h4 className="text-sm font-bold uppercase tracking-widest text-accent flex items-center gap-2">
                           <Activity className="w-4 h-4" /> Market Sentiment
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-6">
                           <div className="space-y-4">
                             <Label className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
                               <ThumbsUp className="w-3 h-3" /> Success Signals
