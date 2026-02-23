@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -273,9 +272,9 @@ export default function SimulatorPage() {
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 10;
     
-    // Rigorous failure detection: 0.001 multiplier if invisible
+    // Rigorous failure detection: Multiplicative penalty for "Invisibility"
     const marketingMultiplier = hasChannels ? 1.5 : 0.001; 
-    const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.4 : 0.001);
+    const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.05 : 0.001);
     
     const marketingResonanceRaw = hasChannels
       ? config.marketingChannels.reduce((acc, channelId) => {
@@ -383,7 +382,7 @@ export default function SimulatorPage() {
 
       const noise = (Math.sin(i * 1.5) * 1.5);
       const baseSales = scores.shortTermSales * 1.2;
-      const growthFactor = scores.shortTermSales < 10 
+      const growthFactor = scores.shortTermSales < 1 
         ? 1.0 
         : Math.pow(1 + (scores.longevity / 1000), i);
       
@@ -509,12 +508,14 @@ export default function SimulatorPage() {
 
     let generatedFeedback: MarketFeedbackOutput | null = null;
     const richDescription = `${selectedBase.name} ${config.format}`;
+    const channelNames = config.marketingChannels.map(id => MARKETING_CHANNELS.find(c => c.id === id)?.name || id);
 
     try {
       generatedFeedback = await generateMarketFeedback({
         teamName,
         productName: config.format,
         ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
+        marketingChannels: channelNames,
         earthScore: Math.round(scores.environmentalScore),
         trustScore: Math.round(scores.trust),
         pricePoint: Math.round(scores.retailPrice),
