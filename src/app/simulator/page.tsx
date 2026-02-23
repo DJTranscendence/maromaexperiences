@@ -97,6 +97,21 @@ const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-1391
 
 const STARTUP_BUDGET = 1000000;
 
+const DEFAULT_CONFIG = {
+  category: CATEGORIES[0].id,
+  format: CATEGORIES[0].formats[0],
+  ingredientBase: INGREDIENT_BASES[0].id,
+  sourcingModel: SOURCING_MODELS[0].id,
+  packagingType: PACKAGING_TYPES[0].id,
+  productionMethod: PRODUCTION_METHODS[0].id,
+  targetAudience: TARGET_AUDIENCES[0].id,
+  priceTier: PRICE_TIERS[0].id,
+  coreValue: CORE_VALUES[0].id,
+  marketingChannels: [] as string[],
+  message: "",
+  customDetails: ""
+};
+
 const capScore = (val: number) => Math.min(98, Math.max(0, val));
 
 export default function SimulatorPage() {
@@ -118,6 +133,8 @@ export default function SimulatorPage() {
 
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const [config, setConfig] = useState(DEFAULT_CONFIG);
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -226,21 +243,6 @@ export default function SimulatorPage() {
       requestAnimationFrame(animate);
     }
   }, [phase, isAnimating]);
-
-  const [config, setConfig] = useState({
-    category: CATEGORIES[0].id,
-    format: CATEGORIES[0].formats[0],
-    ingredientBase: INGREDIENT_BASES[0].id,
-    sourcingModel: SOURCING_MODELS[0].id,
-    packagingType: PACKAGING_TYPES[0].id,
-    productionMethod: PRODUCTION_METHODS[0].id,
-    targetAudience: TARGET_AUDIENCES[0].id,
-    priceTier: PRICE_TIERS[0].id,
-    coreValue: CORE_VALUES[0].id,
-    marketingChannels: [] as string[],
-    message: "",
-    customDetails: ""
-  });
 
   const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category) || CATEGORIES[0], [config.category]);
   const selectedBase = useMemo(() => INGREDIENT_BASES.find(b => b.id === config.ingredientBase) || INGREDIENT_BASES[0], [config.ingredientBase]);
@@ -404,16 +406,13 @@ export default function SimulatorPage() {
     setAiFeedback(null);
     setAnimationProgress(0);
     setIsAnimating(false);
+    setConfig(DEFAULT_CONFIG); // CRITICAL: Reset configuration so budget readout clears
     setTimeout(() => {
       document.getElementById('join-game-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
 
   const scrollToLab = () => {
-    if (!teamName.trim() || !selectedEmblem) {
-      toast({ title: "Team Details Required", description: "Please enter a team name and select an available logo." });
-      return;
-    }
     setPhase('lab');
     setTimeout(() => {
       document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -421,14 +420,10 @@ export default function SimulatorPage() {
   };
 
   const scrollToMarket = () => {
-    if (aiFeedback || sessions?.find(s => s.teamName === teamName)) {
-      setPhase('market');
-      setTimeout(() => {
-        document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    } else {
-      toast({ title: "Run Simulation First", description: "You must launch your strategy to see market results." });
-    }
+    setPhase('market');
+    setTimeout(() => {
+      document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const handleEmblemSelect = (url: string) => {
@@ -474,13 +469,14 @@ export default function SimulatorPage() {
     setSelectedEmblem(team.emblem);
     if (team.status === 'complete') {
       setPhase('market');
-      setConfig(team.config);
+      setConfig(team.config || DEFAULT_CONFIG);
       setYear(team.year || 1);
       setAiFeedback(team.aiFeedback);
       setIsAnimating(true);
       setAnimationProgress(1);
     } else {
       setPhase('lab');
+      setConfig(team.config || DEFAULT_CONFIG);
       setAiFeedback(null);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1002,9 +998,11 @@ export default function SimulatorPage() {
                     </div>
                   )}
                   <div className="space-y-4 pt-4">
-                    {[{ label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
+                    {[
+                      { label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
                       { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
-                      { label: "Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
+                      { label: "Resonance", val: scores.shortTermSales, color: "bg-amber-500" }
+                    ].map((s, idx) => (
                       <div key={idx} className="space-y-2">
                         <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
                         <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
