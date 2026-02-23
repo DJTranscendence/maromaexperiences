@@ -38,8 +38,8 @@ import {
   Coins,
   TrendingUp,
   ArrowUpRight,
-  Lock,
-  LayoutGrid
+  LayoutGrid,
+  PlayCircle
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -320,50 +320,75 @@ export default function SimulatorPage() {
     return (scores.environmentalScore + scores.trust + scores.shortTermSales + scores.socialImpact + scores.longevity) / 5;
   }, [scores]);
 
-  const chartData = useMemo(() => {
-    return Array.from({ length: 12 }).map((_, i) => {
-      const month = i + 1;
-      let seasonalMultiplier = 1.0;
-      
-      if (month >= 3 && month <= 6) {
-        if (config.category === 'bc') seasonalMultiplier = 1.25;
-        if (config.category === 'hf') seasonalMultiplier = 0.85;
-      }
-      
-      if (month >= 7 && month <= 9) {
-        if (config.category === 'hf') seasonalMultiplier = 0.7;
-        if (config.sourcingModel === 'lsf') seasonalMultiplier *= 0.9;
-      }
-      
-      if (month >= 10 && month <= 12) seasonalMultiplier = 1.45;
+  const getStatsAtMonth = (mIndex: number) => {
+    const month = mIndex + 1;
+    let seasonalMultiplier = 1.0;
+    
+    if (month >= 3 && month <= 6) {
+      if (config.category === 'bc') seasonalMultiplier = 1.25;
+      if (config.category === 'hf') seasonalMultiplier = 0.85;
+    }
+    
+    if (month >= 7 && month <= 9) {
+      if (config.category === 'hf') seasonalMultiplier = 0.7;
+      if (config.sourcingModel === 'lsf') seasonalMultiplier *= 0.9;
+    }
+    
+    if (month >= 10 && month <= 12) seasonalMultiplier = 1.45;
 
-      const noise = (Math.sin(i * 1.5) * 1.5);
-      const baseSales = scores.shortTermSales * 1.2;
-      const growthFactor = scores.shortTermSales < 1 
-        ? 1.0 
-        : Math.pow(1 + (scores.longevity / 1000), i);
-      
-      const revenue = baseSales * growthFactor * seasonalMultiplier;
-      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + noise);
-      const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + noise);
-      const awareness = Math.min(98, scores.shortTermSales + (i * (scores.shortTermSales > 5 ? 3 : 0.2)) + noise);
+    const noise = (Math.sin(mIndex * 1.5) * 1.5);
+    const baseSales = scores.shortTermSales * 1.2;
+    const growthFactor = scores.shortTermSales < 1 
+      ? 1.0 
+      : Math.pow(1 + (scores.longevity / 1000), mIndex);
+    
+    const revenue = baseSales * growthFactor * seasonalMultiplier;
+    const trust = Math.min(98, scores.trust + (mIndex * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + noise);
+    const impact = Math.min(98, scores.environmentalScore + (mIndex * 0.1) + noise);
+    const awareness = Math.min(98, scores.shortTermSales + (mIndex * (scores.shortTermSales > 5 ? 3 : 0.2)) + noise);
+
+    return {
+      month,
+      profit: Math.round(revenue),
+      trust: Math.round(trust),
+      impact: Math.round(impact),
+      awareness: Math.round(awareness)
+    };
+  };
+
+  const chartData = useMemo(() => {
+    // Generate 60 points for high-fidelity smooth reveal (5 points per month)
+    const pointsPerMonth = 5;
+    const totalPoints = 12 * pointsPerMonth;
+    return Array.from({ length: totalPoints }).map((_, i) => {
+      const monthProgress = i / pointsPerMonth; // 0, 0.2, 0.4...
+      const floorM = Math.floor(monthProgress);
+      const ceilM = Math.min(11, Math.ceil(monthProgress));
+      const t = monthProgress - floorM;
+
+      const s1 = getStatsAtMonth(floorM);
+      const s2 = getStatsAtMonth(ceilM);
+
+      // Interpolate for smooth animation
+      const interp = (v1: number, v2: number) => v1 + (v2 - v1) * t;
 
       return {
-        month,
-        profit: Math.round(revenue),
-        trust: Math.round(trust),
-        impact: Math.round(impact),
-        awareness: Math.round(awareness)
+        month: monthProgress + 1,
+        displayMonth: t === 0 ? floorM + 1 : null, // only show whole month numbers
+        profit: interp(s1.profit, s2.profit),
+        trust: interp(s1.trust, s2.trust),
+        impact: interp(s1.impact, s2.impact),
+        awareness: interp(s1.awareness, s2.awareness)
       };
     });
-  }, [scores, config.category, config.sourcingModel]);
+  }, [scores, config]);
 
   const animatedChartData = useMemo(() => {
-    if (phase !== 'market' || !isAnimating) return chartData.map(d => ({ month: d.month }));
+    if (phase !== 'market' || !isAnimating) return chartData.map(d => ({ ...d, profit: null, trust: null, impact: null, awareness: null }));
     return chartData.map((d, index) => {
       const threshold = (index + 1) / chartData.length;
       if (animationProgress >= threshold) return d;
-      return { month: d.month };
+      return { ...d, profit: null, trust: null, impact: null, awareness: null };
     });
   }, [chartData, animationProgress, phase, isAnimating]);
 
@@ -505,7 +530,7 @@ export default function SimulatorPage() {
       setTimeout(() => setIsAnimating(true), 1500);
     }
 
-    const yearProfit = (chartData[11].profit * 1000) - investmentCost;
+    const yearProfit = (getStatsAtMonth(11).profit * 1000) - investmentCost;
     setLastYearProfit(yearProfit);
 
     if (firestore) {
@@ -522,7 +547,7 @@ export default function SimulatorPage() {
           trust: Math.round(scores.trust),
           resonance: Math.round(scores.shortTermSales),
           impact: Math.round(scores.socialImpact),
-          profit: Math.round(chartData[11].profit),
+          profit: Math.round(getStatsAtMonth(11).profit),
           longevity: Math.round(scores.longevity)
         },
         createdAt: serverTimestamp()
@@ -864,10 +889,10 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Revenue", val: `₹${displayVal(chartData[11].profit * 1000).toLocaleString()}`, icon: TrendingUp },
-                  { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
+                  { label: "Revenue", val: `₹${displayVal(getStatsAtMonth(11).profit * 1000).toLocaleString()}`, icon: TrendingUp },
+                  { label: "Market Trust", val: `${displayVal(getStatsAtMonth(11).trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Net Profit", val: `₹${displayVal(lastYearProfit).toLocaleString()}`, icon: ArrowUpRight, color: lastYearProfit > 0 ? "text-emerald-400" : "text-rose-400" },
-                  { label: "Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
+                  { label: "Awareness", val: `${displayVal(getStatsAtMonth(11).awareness)}%`, icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
                     <CardContent className="p-6 flex items-center gap-5">
@@ -908,13 +933,20 @@ export default function SimulatorPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={animatedChartData} key={`${teamName}-${phase}-${animationProgress === 1}`} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }} />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="rgba(255,255,255,0.3)" 
+                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }} 
+                        type="number"
+                        domain={[1, 12]}
+                        ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+                      />
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
                       <Tooltip content={({ active, payload, label }) => {
                         if (active && payload?.length) {
                           return (
                             <div className="bg-slate-950 border border-white/10 p-5 rounded-3xl shadow-2xl min-w-[240px] backdrop-blur-2xl">
-                              <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {label}</p>
+                              <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {Math.floor(Number(label))}</p>
                               <div className="space-y-3">
                                 {payload.map((entry: any) => (
                                   <div key={entry.name} className="flex justify-between gap-8 items-center">
@@ -929,10 +961,10 @@ export default function SimulatorPage() {
                         return null;
                       }} />
                       <Legend verticalAlign="top" align="center" height={60} iconType="circle" />
-                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={4} name="AWARENESS" dot={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST" dot={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH SCORE" dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} connectNulls />
+                      <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={4} name="AWARENESS" dot={false} connectNulls />
+                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST" dot={false} connectNulls />
+                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH SCORE" dot={false} connectNulls />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -965,7 +997,12 @@ export default function SimulatorPage() {
                       <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
                       <span>Market skepticism is rising. Transparency strategy requires immediate Laboratory revision.</span>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-slate-500 text-slate-200 flex gap-3">
+                      <Activity className="w-5 h-5 text-slate-500 shrink-0" />
+                      <span>Year 1 baseline established. Analyze sentiment reviews below to refine positioning.</span>
+                    </div>
+                  )}
                   <div className="space-y-4 pt-4">
                     {[{ label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
                       { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
