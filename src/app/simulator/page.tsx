@@ -42,7 +42,10 @@ import {
   LayoutGrid,
   PlayCircle,
   CalendarDays,
-  Info
+  Info,
+  CloudRain,
+  Sun,
+  Newspaper
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -329,14 +332,16 @@ export default function SimulatorPage() {
     const month = mIndex + 1;
     let seasonalMultiplier = 1.0;
     
-    if (month >= 3 && month <= 6) {
-      if (config.category === 'bc') seasonalMultiplier = 1.25;
-      if (config.category === 'hf') seasonalMultiplier = 0.85;
+    // Summer (Month 3-5)
+    if (month >= 3 && month <= 5) {
+      if (config.category === 'bc') seasonalMultiplier = 1.3; // Body care boost
+      if (config.category === 'hf') seasonalMultiplier = 0.8; // Home fragrance dip
     }
     
-    if (month >= 7 && month <= 9) {
-      if (config.category === 'hf') seasonalMultiplier = 0.7;
-      if (config.sourcingModel === 'lsf') seasonalMultiplier *= 0.9;
+    // Monsoon (Month 6-8)
+    if (month >= 6 && month <= 8) {
+      if (config.sourcingModel === 'lsf') seasonalMultiplier = 0.75; // Logistics issues for local
+      if (config.category === 'hf') seasonalMultiplier = 1.15; // Indoor atmosphere boost
     }
     
     if (month >= 10 && month <= 12) seasonalMultiplier = 1.45;
@@ -348,7 +353,15 @@ export default function SimulatorPage() {
       : Math.pow(1 + (scores.longevity / 1000), mIndex);
     
     const revenue = baseSales * growthFactor * seasonalMultiplier;
-    const trust = Math.min(98, scores.trust + (mIndex * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + noise);
+    
+    // Ingredient news impact
+    let trustModifier = 0;
+    if (month >= 4) {
+      const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
+      trustModifier = isEthical ? 5 : -15;
+    }
+
+    const trust = Math.min(98, scores.trust + trustModifier + (mIndex * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + noise);
     const impact = Math.min(98, scores.environmentalScore + (mIndex * 0.1) + noise);
     const awareness = Math.min(98, scores.shortTermSales + (mIndex * (scores.shortTermSales > 5 ? 3 : 0.2)) + noise);
 
@@ -397,31 +410,44 @@ export default function SimulatorPage() {
 
   const milestones = useMemo(() => {
     const list = [];
-    list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters." });
+    list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters.", icon: PlayCircle });
     
+    // Summer Surge
+    if (config.category === 'bc') {
+      list.push({ month: 3, title: "Summer Demand", desc: "Soaring temperatures drive 30% spike in body care sales.", icon: Sun });
+    } else if (config.category === 'hf') {
+      list.push({ month: 3, title: "Seasonal Slump", desc: "Summer heat reduces interest in candles and heavy fragrances.", icon: Sun });
+    }
+
+    // News Cycle
+    const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
+    list.push({ 
+      month: 4, 
+      title: "News Feature", 
+      desc: isEthical 
+        ? "Viral story highlights your clean ingredient base as 'The Future of Ethical Craft'." 
+        : "Skeptical investigative piece questions the hidden environmental cost of your ingredients.", 
+      icon: Newspaper 
+    });
+
     if (config.marketingChannels.length > 0) {
-      list.push({ month: 3, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is starting to take root.` });
+      list.push({ month: 5, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is starting to take root.`, icon: Megaphone });
     }
 
-    if (config.sourcingModel === 'lsf' || config.sourcingModel === 'ftc') {
-      list.push({ month: 5, title: "Sourcing Audit", desc: "Local supply chain transparency boosts initial consumer trust." });
-    } else if (config.sourcingModel === 'is') {
-      list.push({ month: 5, title: "Cost Efficiency", desc: "Industrial sourcing keeps margins high but draws scrutiny from eco-conscious segments." });
-    }
-
-    if (config.productionMethod === 'hsb') {
-      list.push({ month: 7, title: "Craft Validation", desc: "Handcrafted quality verified by early niche influencers." });
-    } else if (config.productionMethod === 'mip') {
-      list.push({ month: 7, title: "Scalability Test", desc: "Mass production ensures high inventory, but some 'artisan' brand appeal is lost." });
+    // Monsoon Lag
+    if (config.sourcingModel === 'lsf') {
+      list.push({ month: 7, title: "Monsoon Supply Lag", desc: "Heavy rains disrupt local farm logistics, leading to inventory gaps.", icon: CloudRain });
+    } else {
+      list.push({ month: 7, title: "Monsoon Stability", desc: "Industrial sourcing avoids weather-related delays, maintaining consistent stock.", icon: Package });
     }
 
     if (scores.trust > 70) {
-      list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations." });
+      list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations.", icon: ShieldCheck });
     }
 
-    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the campus network." });
+    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the campus network.", icon: PartyPopper });
     
-    list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2." });
+    list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2.", icon: Clock });
 
     return list;
   }, [scores, config]);
@@ -972,14 +998,18 @@ export default function SimulatorPage() {
                       
                       {/* Dynamic Event Markers on Graph */}
                       {animationProgress >= 0.08 && (
-                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Market Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
+                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
                       )}
                       
-                      {animationProgress >= 0.4 && (
-                        <ReferenceLine x={5} stroke="#ec4899" strokeDasharray="3 3" label={{ position: 'top', value: 'Sourcing Audit', fill: '#ec4899', fontSize: 10, fontWeight: 'bold' }} />
+                      {animationProgress >= 0.33 && (
+                        <ReferenceLine x={4} stroke="#ec4899" strokeDasharray="3 3" label={{ position: 'top', value: 'News cycle', fill: '#ec4899', fontSize: 10, fontWeight: 'bold' }} />
                       )}
 
-                      {animationProgress >= 0.8 && (
+                      {animationProgress >= 0.5 && (
+                        <ReferenceLine x={6} stroke="#3b82f6" strokeDasharray="3 3" label={{ position: 'top', value: 'Monsoon', fill: '#3b82f6', fontSize: 10, fontWeight: 'bold' }} />
+                      )}
+
+                      {animationProgress >= 0.83 && (
                         <ReferenceLine 
                           x={10} 
                           stroke="#fbbf24" 
@@ -1037,26 +1067,32 @@ export default function SimulatorPage() {
                 
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    {milestones.map((m, i) => (
-                      <div key={i} className="flex gap-4 group">
-                        <div className="flex flex-col items-center">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all",
-                            displayVal(12) >= m.month ? "bg-accent/20 border-accent text-accent" : "bg-white/5 border-white/10 text-slate-500"
-                          )}>
-                            {m.month}
+                    {milestones.map((m, i) => {
+                      const Icon = m.icon;
+                      return (
+                        <div key={i} className="flex gap-4 group">
+                          <div className="flex flex-col items-center">
+                            <div className={cn(
+                              "w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all",
+                              displayVal(12) >= m.month ? "bg-accent/20 border-accent text-accent" : "bg-white/5 border-white/10 text-slate-500"
+                            )}>
+                              {m.month}
+                            </div>
+                            {i !== milestones.length - 1 && <div className="w-px h-full bg-white/10 my-1" />}
                           </div>
-                          {i !== milestones.length - 1 && <div className="w-px h-full bg-white/10 my-1" />}
+                          <div className={cn(
+                            "flex-grow pb-6 transition-opacity",
+                            displayVal(12) >= m.month ? "opacity-100" : "opacity-20"
+                          )}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <Icon className="w-3.5 h-3.5 text-accent" />
+                              <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{m.title}</h4>
+                            </div>
+                            <p className="text-xs text-slate-400 leading-relaxed">{m.desc}</p>
+                          </div>
                         </div>
-                        <div className={cn(
-                          "flex-grow pb-6 transition-opacity",
-                          displayVal(12) >= m.month ? "opacity-100" : "opacity-20"
-                        )}>
-                          <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{m.title}</h4>
-                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">{m.desc}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="pt-6 border-t border-white/5 space-y-4">
