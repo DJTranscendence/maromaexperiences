@@ -546,9 +546,9 @@ export default function SimulatorPage() {
       
       <div className="fixed top-20 left-4 z-[100] flex flex-col gap-3">
         {phase !== 'intro' && (
-          <Button variant="outline" onClick={handleExitTeam} className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl group">
+          <button onClick={handleExitTeam} className="bg-slate-900/80 backdrop-blur-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl group flex items-center">
             <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Team
-          </Button>
+          </button>
         )}
         {isAdmin && (
           <Dialog open={isAdminPanelOpen} onOpenChange={setIsAdminPanelOpen}>
@@ -691,9 +691,9 @@ export default function SimulatorPage() {
                 ))}
               </div>
             </div>
-            <Button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95">
+            <button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95 flex items-center justify-center">
               Enter Laboratory <ChevronRight className="w-8 h-8 ml-2" />
-            </Button>
+            </button>
           </div>
         )}
 
@@ -757,14 +757,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name} (₹{i.investmentCost/1000}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (+₹{s.investmentCost/1000}k)</SelectItem>)}</SelectContent>
+                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (₹{s.investmentCost/1000}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -780,14 +780,14 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{p.investmentCost/1000}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (+₹{p.investmentCost/1000}k)</SelectItem>)}</SelectContent>
+                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{p.investmentCost/1000}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -974,7 +974,7 @@ export default function SimulatorPage() {
                 </div>
               </Card>
 
-              <Card className="rounded-[2.5rem] bg-slate-900/60 backdrop-blur-xl text-white border border-white/10">
+              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/60 backdrop-blur-xl text-white border border-white/10">
                 <CardHeader className="bg-white/5 border-b border-white/5 py-6 flex flex-row items-center justify-between">
                   <CardTitle className="font-headline text-2xl uppercase">Analyst Report</CardTitle>
                   {aiFeedback && <Badge className="bg-accent text-white uppercase font-bold tracking-widest">{aiFeedback.analystTone}</Badge>}
