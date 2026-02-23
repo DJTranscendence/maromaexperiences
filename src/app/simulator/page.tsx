@@ -88,7 +88,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=986c6d33-6c6d-42a1-8cfe-91129dcc553f' },
   { id: 'brand-6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
   { id: 'brand-7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
-  { id: 'brand-8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
+  { id: 'brand-8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F535b652d-ecad-4390-a1c0-eebada8459d6' },
   { id: 'brand-9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
   { id: 'brand-main', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2' },
 ];
@@ -98,15 +98,15 @@ const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-1391
 const STARTUP_BUDGET = 1000000;
 
 const DEFAULT_CONFIG = {
-  category: CATEGORIES[0].id,
-  format: CATEGORIES[0].formats[0],
-  ingredientBase: INGREDIENT_BASES[0].id,
-  sourcingModel: SOURCING_MODELS[0].id,
-  packagingType: PACKAGING_TYPES[0].id,
-  productionMethod: PRODUCTION_METHODS[0].id,
-  targetAudience: TARGET_AUDIENCES[0].id,
-  priceTier: PRICE_TIERS[0].id,
-  coreValue: CORE_VALUES[0].id,
+  category: "",
+  format: "",
+  ingredientBase: "",
+  sourcingModel: "",
+  packagingType: "",
+  productionMethod: "",
+  targetAudience: "",
+  priceTier: "",
+  coreValue: "",
   marketingChannels: [] as string[],
   message: "",
   customDetails: ""
@@ -244,14 +244,14 @@ export default function SimulatorPage() {
     }
   }, [phase, isAnimating]);
 
-  const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category) || CATEGORIES[0], [config.category]);
-  const selectedBase = useMemo(() => INGREDIENT_BASES.find(b => b.id === config.ingredientBase) || INGREDIENT_BASES[0], [config.ingredientBase]);
-  const selectedSourcing = useMemo(() => SOURCING_MODELS.find(s => s.id === config.sourcingModel) || SOURCING_MODELS[0], [config.sourcingModel]);
-  const selectedPackaging = useMemo(() => PACKAGING_TYPES.find(p => p.id === config.packagingType) || PACKAGING_TYPES[0], [config.packagingType]);
-  const selectedProduction = useMemo(() => PRODUCTION_METHODS.find(p => p.id === config.productionMethod) || PRODUCTION_METHODS[0], [config.productionMethod]);
-  const selectedAudience = useMemo(() => TARGET_AUDIENCES.find(a => a.id === config.targetAudience) || TARGET_AUDIENCES[0], [config.targetAudience]);
-  const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier) || PRICE_TIERS[0], [config.priceTier]);
-  const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue) || CORE_VALUES[0], [config.coreValue]);
+  const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === config.category), [config.category]);
+  const selectedBase = useMemo(() => INGREDIENT_BASES.find(b => b.id === config.ingredientBase), [config.ingredientBase]);
+  const selectedSourcing = useMemo(() => SOURCING_MODELS.find(s => s.id === config.sourcingModel), [config.sourcingModel]);
+  const selectedPackaging = useMemo(() => PACKAGING_TYPES.find(p => p.id === config.packagingType), [config.packagingType]);
+  const selectedProduction = useMemo(() => PRODUCTION_METHODS.find(p => p.id === config.productionMethod), [config.productionMethod]);
+  const selectedAudience = useMemo(() => TARGET_AUDIENCES.find(a => a.id === config.targetAudience), [config.targetAudience]);
+  const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier), [config.priceTier]);
+  const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue), [config.coreValue]);
 
   const investmentCost = useMemo(() => {
     const marketingCost = config.marketingChannels.reduce((acc, channelId) => {
@@ -260,16 +260,16 @@ export default function SimulatorPage() {
     }, 0);
 
     return (
-      selectedBase.investmentCost +
-      selectedSourcing.investmentCost +
-      selectedPackaging.investmentCost +
-      selectedProduction.investmentCost +
+      (selectedBase?.investmentCost || 0) +
+      (selectedSourcing?.investmentCost || 0) +
+      (selectedPackaging?.investmentCost || 0) +
+      (selectedProduction?.investmentCost || 0) +
       marketingCost
     );
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction]);
 
   const scores = useMemo(() => {
-    const unitCost = Math.max(10, selectedBase.unitCost + selectedSourcing.unitCostDelta + selectedPackaging.unitCost + selectedProduction.unitCostDelta);
+    const unitCost = Math.max(10, (selectedBase?.unitCost || 0) + (selectedSourcing?.unitCostDelta || 0) + (selectedPackaging?.unitCost || 0) + (selectedProduction?.unitCostDelta || 0));
     const retailPrice = unitCost * (1 + (selectedPriceTier?.margin || 0));
     
     const baseEarth = selectedBase?.earthScore || 0;
@@ -406,7 +406,7 @@ export default function SimulatorPage() {
     setAiFeedback(null);
     setAnimationProgress(0);
     setIsAnimating(false);
-    setConfig(DEFAULT_CONFIG); // CRITICAL: Reset configuration so budget readout clears
+    setConfig(DEFAULT_CONFIG); 
     setTimeout(() => {
       document.getElementById('join-game-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
@@ -499,21 +499,21 @@ export default function SimulatorPage() {
     }, 100);
 
     let generatedFeedback: MarketFeedbackOutput | null = null;
-    const richDescription = `${selectedBase.name} ${config.format}`;
+    const richDescription = `${selectedBase?.name || "Standard"} ${config.format || "Product"}`;
     const channelNames = config.marketingChannels.map(id => MARKETING_CHANNELS.find(c => c.id === id)?.name || id);
 
     try {
       generatedFeedback = await generateMarketFeedback({
         teamName,
         productName: richDescription,
-        ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
+        ingredients: [selectedBase?.name || "Standard", selectedSourcing?.name || "Standard", selectedPackaging?.name || "Standard"],
         marketingChannels: channelNames,
         earthScore: Math.round(scores.environmentalScore),
         trustScore: Math.round(scores.trust),
         pricePoint: Math.round(scores.retailPrice),
         message: config.message,
-        targetAudience: selectedAudience.name,
-        coreValue: selectedValue.name,
+        targetAudience: selectedAudience?.name || "General",
+        coreValue: selectedValue?.name || "None",
         year: year
       });
       setAiFeedback(generatedFeedback);
@@ -532,7 +532,7 @@ export default function SimulatorPage() {
         teamName,
         emblem: selectedEmblem,
         productType: richDescription,
-        ingredients: [selectedBase.name, selectedSourcing.name],
+        ingredients: [selectedBase?.name || "Standard", selectedSourcing?.name || "Standard"],
         config: config,
         aiFeedback: generatedFeedback,
         year: year,
@@ -648,7 +648,6 @@ export default function SimulatorPage() {
               </button>
             </div>
 
-            {/* Team Switcher Tabs */}
             {allWorkshopTeams.length > 0 && (
               <ScrollArea className="w-full max-w-4xl">
                 <div className="flex justify-center gap-4 pb-4">
@@ -757,15 +756,15 @@ export default function SimulatorPage() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue placeholder="Select Category" /></SelectTrigger>
                         <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue placeholder="Select Format" /></SelectTrigger>
+                        <SelectContent>{selectedCategory?.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -774,20 +773,20 @@ export default function SimulatorPage() {
                 <section className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Sparkles className="w-6 h-6 text-accent" /> 2. Ingredients</h3>
-                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Base Cost: ₹{selectedBase.investmentCost.toLocaleString()}</Badge>
+                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Base Cost: ₹{(selectedBase?.investmentCost || 0).toLocaleString()}</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue placeholder="Select Base" /></SelectTrigger>
                         <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name} (₹{(i.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing Model</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue placeholder="Select Sourcing" /></SelectTrigger>
                         <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (₹{(s.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -797,20 +796,20 @@ export default function SimulatorPage() {
                 <section className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Package className="w-6 h-6 text-accent" /> 3. Production</h3>
-                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Process Cost: ₹{selectedProduction.investmentCost.toLocaleString()}</Badge>
+                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Process Cost: ₹{(selectedProduction?.investmentCost || 0).toLocaleString()}</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue placeholder="Select Packaging" /></SelectTrigger>
                         <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{(p.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue placeholder="Select Method" /></SelectTrigger>
                         <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{(p.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -846,19 +845,19 @@ export default function SimulatorPage() {
                       <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Target Price Point</span>
                       <span className="text-[10px] text-slate-500">Retail Target</span>
                     </div>
-                    <span className="text-4xl font-bold text-white font-headline">₹{Math.round(scores.retailPrice)}</span>
+                    <span className="text-4xl font-bold text-white font-headline">₹{Math.round(scores.retailPrice || 0)}</span>
                   </div>
                 </div>
 
                 <Button 
                   onClick={launchSimulation} 
-                  disabled={investmentCost > budget}
+                  disabled={investmentCost > budget || !config.ingredientBase}
                   className={cn(
                     "w-full rounded-full h-20 text-xl font-bold shadow-xl transition-all active:scale-95",
                     investmentCost > budget ? "bg-rose-600 text-white cursor-not-allowed" : "bg-accent hover:bg-accent/90 text-white"
                   )}
                 >
-                  {investmentCost > budget ? "Insufficient Capital" : "Launch Year Strategy"} <ArrowRight className="ml-2" />
+                  {!config.ingredientBase ? "Select Strategy First" : investmentCost > budget ? "Insufficient Capital" : "Launch Year Strategy"} <ArrowRight className="ml-2" />
                 </Button>
               </div>
             </div>
