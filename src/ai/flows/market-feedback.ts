@@ -52,14 +52,13 @@ Ingredients: {{#each ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/eac
 Provide a "Year {{{year}}}" simulation summary. 
 
 CRITICAL - MARKETING EVALUATION:
-- If they have NO marketing channels selected or a deliberately obscure/cryptic marketing strategy, use a 'concerned' tone. Explain that despite any product quality, the brand is "invisible" to the market and consumer awareness is near zero.
+- If they have NO marketing channels selected or a deliberately obscure strategy, use a 'concerned' tone.
+- REVIEWS FOR NO MARKETING: If channels are empty, reviews MUST NOT mention the "message". Instead, reviews should say things like: "Found this by total accident", "Never seen an ad for this", "I wish they advertised more so I could find it easily", or "Stumbled upon it in a cafe".
 - If they used plastic or synthetic base but claimed sustainability/zero-waste, use a 'cynical' tone and call out the "Greenwashing".
-- If they prioritized profit over Earth Score, show how trust is declining among their target audience.
+- If they prioritized profit over Earth Score, show how trust is declining.
 - If they hit the sweet spot of ethics, resonance, and strong marketing, be 'enthusiastic'.
 
 Generate EXACTLY 4 positive and 4 negative customer reviews. 
-If marketing is missing, negative reviews should mention "Never heard of this brand" or "Hard to find information".
-
 For EACH negative review, provide a matching "Suggested Action" (one short sentence) that MUST BE a specific setting change available in the laboratory (e.g., "Add 'Instagram' to 'Marketing Channels'").`,
 });
 
@@ -84,16 +83,16 @@ export async function generateMarketFeedback(input: MarketFeedbackInput): Promis
         "Finally, a product that doesn't trigger my allergies with synthetic chemicals."
       ],
       negativeReviews: [
-        "It is a bit expensive for my daily routine.", 
+        "I found this by accident, they should really advertise more.", 
         "I can't find any information about where this is made.",
-        "The marketing is a bit too cryptic for me to understand the product.",
+        "The price is a bit high for a brand I've never heard of before.",
         "Shipping took longer than expected and there was too much waste in the box."
       ],
       negativeReviewFixes: [
-        "Change 'Price Tier' to 'Accessible' or 'Budget' strategy.",
-        "Add 'Facebook' or 'Instagram' to 'Marketing Channels'.",
+        "Add 'Instagram' or 'Facebook' to 'Marketing Channels'.",
         "Clarify your 'Marketing Message' in the laboratory.",
-        "Change 'Packaging Type' to 'No Packaging' or 'Compostable Pouch' to reduce waste."
+        "Change 'Price Tier' to 'Accessible' strategy.",
+        "Change 'Packaging Type' to 'No Packaging' or 'Compostable Pouch'."
       ]
     };
   }
