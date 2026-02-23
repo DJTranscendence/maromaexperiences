@@ -170,12 +170,12 @@ export default function SimulatorPage() {
     });
   }, [sessions, events]);
 
-  const takenEmblems = useMemo(() => {
-    const taken = new Set<string>();
+  const takenLogoTeams = useMemo(() => {
+    const map = new Map<string, string>();
     allWorkshopTeams.forEach(t => {
-      if (t.emblem && t.teamName !== teamName) taken.add(t.emblem);
+      if (t.emblem && t.teamName !== teamName) map.set(t.emblem, t.teamName);
     });
-    return taken;
+    return map;
   }, [allWorkshopTeams, teamName]);
 
   useEffect(() => {
@@ -408,7 +408,7 @@ export default function SimulatorPage() {
   };
 
   const handleEmblemSelect = (url: string) => {
-    if (takenEmblems.has(url)) return;
+    if (takenLogoTeams.has(url)) return;
     setSelectedEmblem(url);
     setTimeout(() => {
       document.getElementById('enter-lab-trigger')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -623,7 +623,8 @@ export default function SimulatorPage() {
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                 {TEAM_EMBLEMS.map((emblem) => {
-                  const isTaken = takenEmblems.has(emblem.url);
+                  const claimingTeam = takenLogoTeams.get(emblem.url);
+                  const isTaken = !!claimingTeam;
                   return (
                     <button 
                       key={emblem.id} 
@@ -632,15 +633,17 @@ export default function SimulatorPage() {
                       className={cn(
                         "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 bg-white shadow-md group",
                         selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent",
-                        isTaken ? "opacity-40 grayscale cursor-not-allowed border-none" : "hover:border-muted-foreground/30"
+                        isTaken ? "cursor-not-allowed border-none shadow-none" : "hover:border-muted-foreground/30"
                       )}
                     >
                       <img src={emblem.url} alt="Logo" className="w-full h-full object-contain p-0.5" />
                       {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
                       {isTaken && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                          <Lock className="text-white w-6 h-6" />
-                          <div className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-white font-bold py-1 uppercase tracking-tighter">TAKEN</div>
+                        <div className="absolute inset-0 bg-orange-600/90 flex flex-col items-center justify-center p-2 text-center animate-in fade-in duration-500">
+                          <span className="text-[10px] font-black text-white leading-tight uppercase drop-shadow-md">
+                            {claimingTeam}
+                          </span>
+                          <div className="absolute bottom-0 inset-x-0 bg-black/20 text-[7px] text-white font-bold py-1 uppercase tracking-tighter">CLAIMED</div>
                         </div>
                       )}
                     </button>
@@ -893,7 +896,7 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
-                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
+                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Strategic Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
                   {overallScore > 75 && scores.shortTermSales > 10 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
