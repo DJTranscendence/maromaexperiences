@@ -77,7 +77,7 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
@@ -389,12 +389,15 @@ export default function SimulatorPage() {
       const revenue = baseSales * growthFactor * seasonalMultiplier;
       const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty + noise);
       const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift + noise);
+      const baseAwareness = scores.shortTermSales;
+      const awareness = Math.min(98, baseAwareness + (i * (baseAwareness > 5 ? 3 : 0.2)) + noise);
 
       return {
         month,
         profit: Math.round(revenue),
         trust: Math.round(trust),
         impact: Math.round(impact),
+        awareness: Math.round(awareness),
         marketNote: newsNote ? `${newsNote} | ${marketNote}` : marketNote,
         isNewsEvent: !!newsNote
       };
@@ -815,7 +818,7 @@ export default function SimulatorPage() {
                   { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 100)}`, icon: Clock },
                   { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Price Strategy", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
-                  { label: "Awareness", val: displayVal(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
+                  { label: "Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
                     <CardContent className="p-6 flex items-center gap-5">
@@ -879,6 +882,7 @@ export default function SimulatorPage() {
                       }} />
                       <Legend verticalAlign="top" align="center" height={60} iconType="circle" />
                       <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={4} name="AWARENESS" dot={false} />
                       <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST INDEX" dot={false} />
                       <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH IMPACT" dot={false} />
                     </LineChart>
