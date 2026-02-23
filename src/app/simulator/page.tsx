@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -109,7 +110,6 @@ export default function SimulatorPage() {
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   
-  // Budget Logic
   const [budget, setBudget] = useState(STARTUP_BUDGET);
   const [lastYearProfit, setLastYearProfit] = useState(0);
 
@@ -357,11 +357,10 @@ export default function SimulatorPage() {
   };
 
   const chartData = useMemo(() => {
-    // Generate 60 points for high-fidelity smooth reveal (5 points per month)
-    const pointsPerMonth = 5;
+    const pointsPerMonth = 10;
     const totalPoints = 12 * pointsPerMonth;
     return Array.from({ length: totalPoints }).map((_, i) => {
-      const monthProgress = i / pointsPerMonth; // 0, 0.2, 0.4...
+      const monthProgress = i / pointsPerMonth;
       const floorM = Math.floor(monthProgress);
       const ceilM = Math.min(11, Math.ceil(monthProgress));
       const t = monthProgress - floorM;
@@ -369,12 +368,11 @@ export default function SimulatorPage() {
       const s1 = getStatsAtMonth(floorM);
       const s2 = getStatsAtMonth(ceilM);
 
-      // Interpolate for smooth animation
       const interp = (v1: number, v2: number) => v1 + (v2 - v1) * t;
 
       return {
         month: monthProgress + 1,
-        displayMonth: t === 0 ? floorM + 1 : null, // only show whole month numbers
+        displayMonth: t === 0 ? floorM + 1 : null,
         profit: interp(s1.profit, s2.profit),
         trust: interp(s1.trust, s2.trust),
         impact: interp(s1.impact, s2.impact),
