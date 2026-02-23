@@ -273,7 +273,6 @@ export default function SimulatorPage() {
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 10;
     
-    // Rigorous Marketing Penalty: Near-zero reach if no channels selected
     const marketingMultiplier = hasChannels ? 1.5 : 0.001; 
     const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.05 : 0.001);
     
