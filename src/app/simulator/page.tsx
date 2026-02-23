@@ -559,6 +559,43 @@ export default function SimulatorPage() {
 
   const displayVal = (val: number) => Math.round(val * animationProgress);
 
+  const PhaseNavigation = () => (
+    <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full flex gap-1 shadow-2xl relative z-[100]">
+      <Button 
+        variant="ghost"
+        onClick={() => setPhase('intro')}
+        className={cn(
+          "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white cursor-pointer",
+          phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-500"
+        )}
+      >
+        <Users className="w-4 h-4" /> Join Game
+      </Button>
+      <Button 
+        variant="ghost"
+        onClick={() => setPhase('lab')}
+        disabled={!teamName.trim()}
+        className={cn(
+          "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white cursor-pointer",
+          phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
+        )}
+      >
+        <FlaskConical className="w-4 h-4" /> Laboratory
+      </Button>
+      <Button 
+        variant="ghost"
+        onClick={() => setPhase('market')}
+        disabled={!aiFeedback && !viewingSessionId}
+        className={cn(
+          "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white cursor-pointer",
+          phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
+        )}
+      >
+        <TrendingUp className="w-4 h-4" /> Market Simulator
+      </Button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
@@ -617,42 +654,9 @@ export default function SimulatorPage() {
           </p>
         </section>
 
-        {/* Phase Navigation Bar - Restored and Priority Fixed */}
-        <section className="mb-16 flex justify-center relative z-[100]">
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full flex gap-1 shadow-2xl">
-            <Button 
-              variant="ghost"
-              onClick={() => setPhase('intro')}
-              className={cn(
-                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
-                phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-500"
-              )}
-            >
-              <Users className="w-4 h-4" /> Join Game
-            </Button>
-            <Button 
-              variant="ghost"
-              onClick={() => setPhase('lab')}
-              disabled={!teamName.trim()}
-              className={cn(
-                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
-                phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
-              )}
-            >
-              <FlaskConical className="w-4 h-4" /> Laboratory
-            </Button>
-            <Button 
-              variant="ghost"
-              onClick={() => setPhase('market')}
-              disabled={!aiFeedback && !viewingSessionId}
-              className={cn(
-                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
-                phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
-              )}
-            >
-              <TrendingUp className="w-4 h-4" /> Market Simulator
-            </Button>
-          </div>
+        {/* Phase Navigation Bar */}
+        <section className="mb-16 flex justify-center">
+          <PhaseNavigation />
         </section>
 
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
@@ -1038,6 +1042,11 @@ export default function SimulatorPage() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Parallel Navigation Links at the bottom of simulation */}
+            <div className="flex justify-center pb-20">
+              <PhaseNavigation />
             </div>
           </div>
         )}
