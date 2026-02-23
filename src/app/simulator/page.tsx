@@ -40,7 +40,9 @@ import {
   TrendingUp,
   ArrowUpRight,
   LayoutGrid,
-  PlayCircle
+  PlayCircle,
+  CalendarDays,
+  Info
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -63,7 +65,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  ReferenceLine
 } from "recharts";
 import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, limit, doc } from "firebase/firestore";
@@ -391,6 +394,25 @@ export default function SimulatorPage() {
       return { ...d, profit: null, trust: null, impact: null, awareness: null };
     });
   }, [chartData, animationProgress, phase, isAnimating]);
+
+  const milestones = useMemo(() => {
+    const list = [];
+    list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters." });
+    
+    if (scores.shortTermSales > 40) {
+      list.push({ month: 4, title: "Organic Growth", desc: "Strategic marketing channels creating buzz." });
+    } else if (scores.shortTermSales < 10) {
+      list.push({ month: 4, title: "Visibility Issues", desc: "Limited awareness slowing initial uptake." });
+    }
+
+    if (scores.trust > 70) {
+      list.push({ month: 7, title: "Brand Authority", desc: "Consistent ethics building consumer trust." });
+    }
+
+    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand." });
+    
+    return list;
+  }, [scores]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -903,7 +925,7 @@ export default function SimulatorPage() {
 
               <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 relative overflow-hidden">
                 <CardHeader className="px-0 pt-0 flex flex-col gap-6">
-                  <CardTitle className="font-headline text-3xl text-white">Trajectory</CardTitle>
+                  <CardTitle className="font-headline text-3xl text-white">Market Trajectory</CardTitle>
                   {animationProgress === 1 && (
                     <div className="w-full max-w-xl animate-in slide-in-from-top-4 duration-1000">
                       <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-2xl">
@@ -935,6 +957,23 @@ export default function SimulatorPage() {
                         ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
                       />
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
+                      
+                      {animationProgress >= 0.8 && (
+                        <ReferenceLine 
+                          x={10} 
+                          stroke="#fbbf24" 
+                          strokeDasharray="3 3" 
+                          label={{ 
+                            position: 'top', 
+                            value: 'Festive Spike', 
+                            fill: '#fbbf24', 
+                            fontSize: 10, 
+                            fontWeight: 'bold',
+                            className: "animate-in fade-in duration-1000"
+                          }} 
+                        />
+                      )}
+
                       <Tooltip content={({ active, payload, label }) => {
                         if (active && payload?.length) {
                           return (
@@ -966,37 +1005,37 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
-                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Strategic Opportunities</CardTitle></CardHeader>
+                <CardHeader className="p-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="font-headline text-3xl">Strategic Insights</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-blue-500/20 text-blue-400 border-none">Month 1-12 Breakdown</Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                
                 <div className="space-y-6">
-                  {overallScore > 75 && scores.shortTermSales > 10 ? (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <Star className="w-5 h-5 text-green-500 shrink-0" />
-                        <span>High alignment detected between core values and production strategy.</span>
+                  <div className="space-y-4">
+                    {milestones.map((m, i) => (
+                      <div key={i} className="flex gap-4 group">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-[10px] font-bold">
+                            {m.month}
+                          </div>
+                          {i !== milestones.length - 1 && <div className="w-px h-full bg-white/10 my-1" />}
+                        </div>
+                        <div className="flex-grow pb-6">
+                          <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{m.title}</h4>
+                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">{m.desc}</p>
+                        </div>
                       </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Zap className="w-3 h-3" /> Growth Multiplier Applied
-                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-6 border-t border-white/5 space-y-4">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+                      <Activity className="w-3 h-3" /> Core Performance Drivers
                     </div>
-                  ) : scores.shortTermSales <= 10 && scores.trust > 70 && scores.environmentalScore > 70 ? (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <Megaphone className="w-5 h-5 text-blue-500 shrink-0" />
-                        <span>Ethical core is excellent, but the brand remains invisible. Scale awareness to unlock Year 2 growth.</span>
-                      </div>
-                    </div>
-                  ) : scores.trust < 50 ? (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span>Market skepticism is rising. Transparency strategy requires immediate Laboratory revision.</span>
-                    </div>
-                  ) : (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-slate-500 text-slate-200 flex gap-3">
-                      <Activity className="w-5 h-5 text-slate-500 shrink-0" />
-                      <span>Year 1 baseline established. Analyze sentiment reviews below to refine positioning.</span>
-                    </div>
-                  )}
-                  <div className="space-y-4 pt-4">
                     {[
                       { label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
                       { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
