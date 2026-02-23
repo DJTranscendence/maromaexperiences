@@ -737,7 +737,7 @@ export default function SimulatorPage() {
 
             {allWorkshopTeams.length > 0 && (
               <ScrollArea className="w-full max-w-4xl">
-                <div className="flex justify-center gap-4 pb-4">
+                <div className="flex justify-center gap-4 pb-4 px-4">
                   {allWorkshopTeams.map((team) => (
                     <button
                       key={`${team.sourceCollection}-${team.id}`}
@@ -762,10 +762,10 @@ export default function SimulatorPage() {
         </section>
 
         {phase === 'intro' && (
-          <div id="join-game-section" className="max-w-3xl mx-auto py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10 scroll-mt-24">
+          <div id="join-game-section" className="max-w-3xl mx-auto py-12 px-6 sm:px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10 scroll-mt-24">
             <div className="space-y-4">
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Team Name</Label>
-              <Input placeholder="e.g. The Eco-Warriors" value={teamName} onChange={e => setTeamName(e.target.value)} className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 bg-slate-50" />
+              <Input placeholder="e.g. The Eco-Warriors" value={teamName} onChange={e => setTeamName(e.target.value)} className="rounded-3xl h-20 text-center text-2xl sm:text-3xl font-headline border-primary/20 bg-slate-50" />
             </div>
             <div className="space-y-6">
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
@@ -811,18 +811,18 @@ export default function SimulatorPage() {
           <div id="lab-header" className="animate-in fade-in duration-1000 mt-8 scroll-mt-24">
             <div className="col-span-full mb-16 flex flex-col md:flex-row items-center justify-between gap-8 bg-slate-900/40 p-8 rounded-[3rem] border border-white/5 backdrop-blur-xl">
               <div className="flex items-center gap-6">
-                <div className="relative w-32 h-32 bg-white rounded-[2rem] p-2 shadow-xl shrink-0">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-[2rem] p-2 shadow-xl shrink-0">
                   <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <Badge className="bg-primary text-white mb-2 font-bold uppercase tracking-widest">Year {year}</Badge>
-                  <h1 className="text-4xl font-headline font-bold text-white tracking-tight">{teamName}</h1>
+                  <h1 className="text-2xl sm:text-4xl font-headline font-bold text-white tracking-tight">{teamName}</h1>
                 </div>
               </div>
               
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-center md:items-end gap-2 w-full md:w-auto">
                 <div className={cn(
-                  "p-6 rounded-[2rem] border transition-all flex flex-col items-end",
+                  "p-6 rounded-[2rem] border transition-all flex flex-col items-center md:items-end w-full sm:w-auto",
                   investmentCost > budget ? "bg-rose-500/10 border-rose-500/50" : "bg-emerald-500/10 border-emerald-500/50"
                 )}>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -908,7 +908,7 @@ export default function SimulatorPage() {
                 <section className="space-y-6">
                   <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Megaphone className="w-6 h-6 text-accent" /> 4. Market Awareness</h3>
                   <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4 bg-white/5 p-6 rounded-2xl border border-white/10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 p-6 rounded-2xl border border-white/10">
                       {MARKETING_CHANNELS.map(channel => (
                         <div key={channel.id} className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer", config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent")} onClick={() => toggleMarketingChannel(channel.id)}>
                           <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30" />
@@ -988,7 +988,7 @@ export default function SimulatorPage() {
                 ))}
               </div>
 
-              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 relative overflow-hidden">
+              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-4 sm:p-8 md:p-12 relative overflow-hidden">
                 <CardHeader className="px-0 pt-0 flex flex-col gap-6">
                   <CardTitle className="font-headline text-3xl text-white">Market Trajectory</CardTitle>
                   {animationProgress === 1 && (
@@ -1002,37 +1002,37 @@ export default function SimulatorPage() {
                           </div>
                         </div>
                         <Button size="sm" onClick={handleNextYear} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
-                          Advance to Year {year + 1} <ChevronRight className="w-3 h-3" />
+                          Advance <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
                   )}
                 </CardHeader>
                 
-                <div className="h-[500px] w-full mt-4">
+                <div className="h-[400px] sm:h-[500px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={animatedChartData} key={`${teamName}-${phase}-${animationProgress === 1}`} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                    <LineChart data={animatedChartData} key={`${teamName}-${phase}-${animationProgress === 1}`} margin={{ top: 40, right: 10, left: -20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                       <XAxis 
                         dataKey="month" 
                         stroke="rgba(255,255,255,0.3)" 
-                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }} 
+                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} 
                         type="number"
                         domain={[1, 12]}
                         ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
                       />
-                      <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
+                      <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
                       
                       {animationProgress >= 0.08 && (
-                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
+                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 'bold' }} />
                       )}
                       
                       {animationProgress >= 0.33 && (
-                        <ReferenceLine x={4} stroke="#ec4899" strokeDasharray="3 3" label={{ position: 'top', value: 'News cycle', fill: '#ec4899', fontSize: 10, fontWeight: 'bold' }} />
+                        <ReferenceLine x={4} stroke="#ec4899" strokeDasharray="3 3" label={{ position: 'top', value: 'News cycle', fill: '#ec4899', fontSize: 9, fontWeight: 'bold' }} />
                       )}
 
                       {animationProgress >= 0.5 && (
-                        <ReferenceLine x={6} stroke="#3b82f6" strokeDasharray="3 3" label={{ position: 'top', value: 'Monsoon', fill: '#3b82f6', fontSize: 10, fontWeight: 'bold' }} />
+                        <ReferenceLine x={6} stroke="#3b82f6" strokeDasharray="3 3" label={{ position: 'top', value: 'Monsoon', fill: '#3b82f6', fontSize: 9, fontWeight: 'bold' }} />
                       )}
 
                       {animationProgress >= 0.83 && (
@@ -1044,7 +1044,7 @@ export default function SimulatorPage() {
                             position: 'top', 
                             value: 'Festive Spike', 
                             fill: '#fbbf24', 
-                            fontSize: 10, 
+                            fontSize: 9, 
                             fontWeight: 'bold',
                             className: "animate-in fade-in duration-1000"
                           }} 
@@ -1054,13 +1054,13 @@ export default function SimulatorPage() {
                       <Tooltip content={({ active, payload, label }) => {
                         if (active && payload?.length) {
                           return (
-                            <div className="bg-slate-950 border border-white/10 p-5 rounded-3xl shadow-2xl min-w-[240px] backdrop-blur-2xl">
-                              <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {Math.floor(Number(label))}</p>
-                              <div className="space-y-3">
+                            <div className="bg-slate-950 border border-white/10 p-4 rounded-2xl shadow-2xl min-w-[180px] backdrop-blur-2xl">
+                              <p className="text-[9px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Month {Math.floor(Number(label))}</p>
+                              <div className="space-y-2">
                                 {payload.map((entry: any) => (
-                                  <div key={entry.name} className="flex justify-between gap-8 items-center">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: entry.color }}>{entry.name}</span>
-                                    <span className="text-base font-black text-white">{Math.round(entry.value)}</span>
+                                  <div key={entry.name} className="flex justify-between gap-4 items-center">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: entry.color }}>{entry.name}</span>
+                                    <span className="text-sm font-black text-white">{Math.round(entry.value)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -1069,11 +1069,11 @@ export default function SimulatorPage() {
                         }
                         return null;
                       }} />
-                      <Legend verticalAlign="top" align="center" height={60} iconType="circle" />
-                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} connectNulls />
-                      <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={4} name="AWARENESS" dot={false} connectNulls />
-                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST" dot={false} connectNulls />
-                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH SCORE" dot={false} connectNulls />
+                      <Legend verticalAlign="top" align="center" height={60} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={3} name="REVENUE" dot={false} connectNulls />
+                      <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={3} name="AWARENESS" dot={false} connectNulls />
+                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={3} name="TRUST" dot={false} connectNulls />
+                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={3} name="EARTH SCORE" dot={false} connectNulls />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -1105,16 +1105,16 @@ export default function SimulatorPage() {
                     </div>
                     
                     <div className="space-y-4">
-                      <h3 className="text-3xl font-headline font-bold text-white leading-tight group-hover:text-accent transition-colors">
+                      <h3 className="text-2xl sm:text-3xl font-headline font-bold text-white leading-tight group-hover:text-accent transition-colors">
                         "{newsArticle.headline}"
                       </h3>
-                      <p className="text-slate-300 font-body leading-relaxed text-lg">
+                      <p className="text-slate-300 font-body leading-relaxed text-base sm:text-lg">
                         {newsArticle.snippet}
                       </p>
                     </div>
 
                     <div className={cn(
-                      "p-4 rounded-2xl flex items-center justify-between gap-4 border",
+                      "p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border",
                       newsArticle.type === 'positive' ? "bg-emerald-500/10 border-emerald-500/30" : 
                       newsArticle.type === 'negative' ? "bg-rose-500/10 border-rose-500/30" : 
                       "bg-white/5 border-white/10"
@@ -1123,7 +1123,7 @@ export default function SimulatorPage() {
                         {newsArticle.type === 'positive' ? <TrendingUp className="w-5 h-5 text-emerald-400" /> : <TrendingDown className="w-5 h-5 text-rose-400" />}
                         <span className="text-sm font-bold text-white uppercase tracking-widest">{newsArticle.outcome}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-slate-400 text-xs gap-2">Read Full Story <ExternalLink className="w-3 h-3" /></Button>
+                      <Button variant="ghost" size="sm" className="text-slate-400 text-xs gap-2 justify-start sm:justify-center">Read Full Story <ExternalLink className="w-3 h-3" /></Button>
                     </div>
                   </div>
                 </Card>
