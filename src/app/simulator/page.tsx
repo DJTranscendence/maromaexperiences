@@ -86,24 +86,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TEAM_EMBLEMS = [
-  { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
-  { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
-  { id: 'brand-special', name: 'Special Brand', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
+  { id: 'brand-1', name: 'Brand 1', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
+  { id: 'brand-2', name: 'Brand 2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
+  { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
+  { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
+  { id: 'brand-5', name: 'Brand 5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
   { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
-  { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
-  { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
-  { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
-  { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
-  { id: 'brand-5', name: 'Brand 5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
+  { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
   { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
+  { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
+  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
   { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
+  { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
+  { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
+  { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
+  { id: 'brand-15', name: 'Brand 15', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F15-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
+  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
   { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
   { id: 'brand-18', name: 'Brand 18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1' },
-  { id: 'brand-2', name: 'Brand 2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
-  { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
-  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
-  { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
 ];
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
@@ -417,6 +417,13 @@ export default function SimulatorPage() {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleEmblemSelect = (url: string) => {
+    setSelectedEmblem(url);
+    setTimeout(() => {
+      document.getElementById('enter-lab-trigger')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
   const toggleMarketingChannel = (id: string) => {
     const current = config.marketingChannels;
     const next = current.includes(id) ? current.filter(c => c !== id) : [...current, id];
@@ -444,6 +451,9 @@ export default function SimulatorPage() {
     broadcastStatus('join');
     setPhase('lab');
     broadcastStatus('lab');
+    setTimeout(() => {
+      document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleExitTeam = () => {
@@ -635,6 +645,7 @@ export default function SimulatorPage() {
                   {s.status === 'playing' && (
                     <Button variant="outline" className="w-full mt-6 text-white border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px] py-6 h-auto" onClick={() => {
                       setTeamName(s.teamName); setSelectedEmblem(s.emblem); setPhase('lab');
+                      setTimeout(() => document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth' }), 100);
                     }}>
                       Edit / Launch Product
                     </Button>
@@ -660,21 +671,21 @@ export default function SimulatorPage() {
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                 {TEAM_EMBLEMS.map((emblem) => (
-                  <button key={emblem.id} onClick={() => setSelectedEmblem(emblem.url)} className={cn("relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md", selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30")}>
+                  <button key={emblem.id} onClick={() => handleEmblemSelect(emblem.url)} className={cn("relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md", selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30")}>
                     <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-0.5" />
                     {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
                   </button>
                 ))}
               </div>
             </div>
-            <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95">
+            <Button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95">
               Enter Laboratory <ChevronRight className="w-8 h-8 ml-2" />
             </Button>
           </div>
         )}
 
         {phase === 'lab' && (
-          <div className="animate-in fade-in duration-1000 mt-8">
+          <div id="lab-header" className="animate-in fade-in duration-1000 mt-8 scroll-mt-24">
             <div className="col-span-full mb-16 text-center space-y-4">
               <div className="relative w-40 h-40 mx-auto mb-6 bg-white rounded-[2.5rem] p-2 shadow-xl">
                 <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
@@ -766,7 +777,10 @@ export default function SimulatorPage() {
 
                 <section className="space-y-6">
                   <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><MessageSquare className="w-6 h-6 text-accent" /> 5. Custom Specs</h3>
-                  <Textarea placeholder="Type in extra details (product type, specific ideas...)" value={config.customDetails} onChange={e => handleUpdateConfig('customDetails', e.target.value)} className="min-h-[100px] rounded-2xl bg-white border-none text-primary font-medium" />
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Can't find options? Describe unique details here.</Label>
+                    <Textarea placeholder="Type in extra details (product quirks, specific marketing ideas...)" value={config.customDetails} onChange={e => handleUpdateConfig('customDetails', e.target.value)} className="min-h-[100px] rounded-2xl bg-white border-none text-primary font-medium" />
+                  </div>
                 </section>
 
                 <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl">
@@ -830,7 +844,7 @@ export default function SimulatorPage() {
                           </div>
                         </div>
                         <Button size="sm" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
-                          Start Year {year + 1} Refinement <ChevronRight className="w-3 h-3" />
+                          Ready to improve for your second year? <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
@@ -874,22 +888,41 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto pb-20">
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
-                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Scorecard Integrity</CardTitle></CardHeader>
+                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
-                  {[{ label: "Environmental Score", val: scores.environmentalScore, color: "bg-emerald-500" },
-                    { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
-                    { label: "Market Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
-                      <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
+                  {overallScore > 75 && (
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
+                      <div className="flex gap-3">
+                        <Star className="w-5 h-5 text-green-500 shrink-0" />
+                        <span>Strong brand alignment detected between production and core values.</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
+                        <Zap className="w-3 h-3" /> Growth Multiplier Applied
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  {scores.trust < 50 && (
+                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
+                      <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+                      <span>Market skepticism is rising. Your ingredient transparency might be insufficient for your target audience.</span>
+                    </div>
+                  )}
+                  <div className="space-y-4 pt-4">
+                    {[{ label: "Environmental Score", val: scores.environmentalScore, color: "bg-emerald-500" },
+                      { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
+                      { label: "Market Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
+                        <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Card>
 
               <Card className="rounded-[2.5rem] bg-slate-900/60 backdrop-blur-xl text-white border border-white/10">
                 <CardHeader className="bg-white/5 border-b border-white/5 py-6 flex flex-row items-center justify-between">
-                  <CardTitle className="font-headline text-2xl uppercase">Market Report</CardTitle>
+                  <CardTitle className="font-headline text-2xl uppercase">Analyst Report</CardTitle>
                   {aiFeedback && <Badge className="bg-accent text-white uppercase font-bold tracking-widest">{aiFeedback.analystTone}</Badge>}
                 </CardHeader>
                 <CardContent className="p-8 space-y-8">
@@ -901,6 +934,19 @@ export default function SimulatorPage() {
                       <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-3">Customer Voice</Label>
                         <p className="text-xl font-headline font-bold text-white">"{aiFeedback.customerQuote}"</p>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-accent">Market Sentiment</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <Label className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-2"><ThumbsUp className="w-3 h-3" /> Positive Reviews</Label>
+                            {aiFeedback.positiveReviews.map((r, i) => <div key={i} className="text-xs p-3 bg-green-500/5 rounded-xl border border-green-500/10 text-slate-300">"{r}"</div>)}
+                          </div>
+                          <div className="space-y-3">
+                            <Label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center gap-2"><ThumbsDown className="w-3 h-3" /> Critical Feedback</Label>
+                            {aiFeedback.negativeReviews.map((r, i) => <div key={i} className="text-xs p-3 bg-rose-500/5 rounded-xl border border-rose-500/10 text-slate-300">"{r}"</div>)}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ) : (
