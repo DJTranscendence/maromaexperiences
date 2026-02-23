@@ -791,7 +791,7 @@ export default function SimulatorPage() {
                   disabled={investmentCost > budget}
                   className={cn(
                     "w-full rounded-full h-20 text-xl font-bold shadow-xl transition-all active:scale-95",
-                    investmentCost > budget ? "bg-slate-700 text-slate-500 cursor-not-allowed" : "bg-accent hover:bg-accent/90 text-white"
+                    investmentCost > budget ? "bg-rose-600 text-white cursor-not-allowed" : "bg-accent hover:bg-accent/90 text-white"
                   )}
                 >
                   {investmentCost > budget ? "Insufficient Capital" : "Launch Year Strategy"} <ArrowRight className="ml-2" />
