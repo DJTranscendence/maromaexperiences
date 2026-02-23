@@ -609,13 +609,49 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
-        <section className="mb-16 text-center space-y-8 animate-in fade-in duration-1000">
+        <section className="mb-12 text-center space-y-8 animate-in fade-in duration-1000">
           <div className="relative h-48 w-full max-w-2xl mx-auto">
             <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
           </div>
           <p className="text-xl text-slate-300 font-body leading-relaxed max-w-3xl mx-auto px-4">
             Create an imaginary product that we will run through a market simulator based on your strategic laboratory choices.
           </p>
+        </section>
+
+        {/* Phase Navigation Bar */}
+        <section className="mb-16 flex justify-center">
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full flex gap-1 shadow-2xl">
+            <button 
+              onClick={() => teamName && setPhase('intro')}
+              disabled={!teamName}
+              className={cn(
+                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2",
+                phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+              )}
+            >
+              <Users className="w-4 h-4" /> Join Game
+            </button>
+            <button 
+              onClick={() => teamName && setPhase('lab')}
+              disabled={!teamName}
+              className={cn(
+                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2",
+                phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+              )}
+            >
+              <FlaskConical className="w-4 h-4" /> Laboratory
+            </button>
+            <button 
+              onClick={() => teamName && phase === 'market' && setPhase('market')}
+              disabled={phase !== 'market'}
+              className={cn(
+                "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2",
+                phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+              )}
+            >
+              <TrendingUp className="w-4 h-4" /> Market Simulator
+            </button>
+          </div>
         </section>
 
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
@@ -635,9 +671,11 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 group-hover:line-clamp-none transition-all duration-300 cursor-default">
-                        {s.status === 'playing' ? 'In Laboratory' : s.productType}
-                      </p>
+                      <div className="relative">
+                        <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 transition-all duration-300 group-hover:line-clamp-none bg-slate-900/80 group-hover:bg-slate-800 rounded px-1 -ml-1 group-hover:z-20 group-hover:relative cursor-help">
+                          {s.status === 'playing' ? 'In Laboratory' : s.productType}
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
