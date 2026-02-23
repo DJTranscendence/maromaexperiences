@@ -399,20 +399,32 @@ export default function SimulatorPage() {
     const list = [];
     list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters." });
     
-    if (scores.shortTermSales > 40) {
-      list.push({ month: 4, title: "Organic Growth", desc: "Strategic marketing channels creating buzz." });
-    } else if (scores.shortTermSales < 10) {
-      list.push({ month: 4, title: "Visibility Issues", desc: "Limited awareness slowing initial uptake." });
+    if (config.marketingChannels.length > 0) {
+      list.push({ month: 3, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is starting to take root.` });
+    }
+
+    if (config.sourcingModel === 'lsf' || config.sourcingModel === 'ftc') {
+      list.push({ month: 5, title: "Sourcing Audit", desc: "Local supply chain transparency boosts initial consumer trust." });
+    } else if (config.sourcingModel === 'is') {
+      list.push({ month: 5, title: "Cost Efficiency", desc: "Industrial sourcing keeps margins high but draws scrutiny from eco-conscious segments." });
+    }
+
+    if (config.productionMethod === 'hsb') {
+      list.push({ month: 7, title: "Craft Validation", desc: "Handcrafted quality verified by early niche influencers." });
+    } else if (config.productionMethod === 'mip') {
+      list.push({ month: 7, title: "Scalability Test", desc: "Mass production ensures high inventory, but some 'artisan' brand appeal is lost." });
     }
 
     if (scores.trust > 70) {
-      list.push({ month: 7, title: "Brand Authority", desc: "Consistent ethics building consumer trust." });
+      list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations." });
     }
 
-    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand." });
+    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the campus network." });
     
+    list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2." });
+
     return list;
-  }, [scores]);
+  }, [scores, config]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -958,6 +970,15 @@ export default function SimulatorPage() {
                       />
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
                       
+                      {/* Dynamic Event Markers on Graph */}
+                      {animationProgress >= 0.08 && (
+                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Market Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} />
+                      )}
+                      
+                      {animationProgress >= 0.4 && (
+                        <ReferenceLine x={5} stroke="#ec4899" strokeDasharray="3 3" label={{ position: 'top', value: 'Sourcing Audit', fill: '#ec4899', fontSize: 10, fontWeight: 'bold' }} />
+                      )}
+
                       {animationProgress >= 0.8 && (
                         <ReferenceLine 
                           x={10} 
@@ -1009,7 +1030,7 @@ export default function SimulatorPage() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="font-headline text-3xl">Strategic Insights</CardTitle>
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-blue-500/20 text-blue-400 border-none">Month 1-12 Breakdown</Badge>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-none">Yearly Event Log</Badge>
                     </div>
                   </div>
                 </CardHeader>
@@ -1019,12 +1040,18 @@ export default function SimulatorPage() {
                     {milestones.map((m, i) => (
                       <div key={i} className="flex gap-4 group">
                         <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-[10px] font-bold">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all",
+                            displayVal(12) >= m.month ? "bg-accent/20 border-accent text-accent" : "bg-white/5 border-white/10 text-slate-500"
+                          )}>
                             {m.month}
                           </div>
                           {i !== milestones.length - 1 && <div className="w-px h-full bg-white/10 my-1" />}
                         </div>
-                        <div className="flex-grow pb-6">
+                        <div className={cn(
+                          "flex-grow pb-6 transition-opacity",
+                          displayVal(12) >= m.month ? "opacity-100" : "opacity-20"
+                        )}>
                           <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{m.title}</h4>
                           <p className="text-xs text-slate-400 mt-1 leading-relaxed">{m.desc}</p>
                         </div>
