@@ -37,7 +37,8 @@ import {
   AlertCircle,
   Coins,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
+  Lock
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -103,7 +104,7 @@ export default function SimulatorPage() {
   const [phase, setPhase] = useState<'intro' | 'lab' | 'market'>('intro');
   const [year, setYear] = useState(1);
   const [teamName, setTeamName] = useState("");
-  const [selectedEmblem, setSelectedEmblem] = useState(TEAM_EMBLEMS[0].url);
+  const [selectedEmblem, setSelectedEmblem] = useState("");
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   
@@ -131,7 +132,7 @@ export default function SimulatorPage() {
 
   const sessionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "simulator_sessions"), orderBy("createdAt", "desc"), limit(50));
+    return query(collection(firestore, "simulator_sessions"), orderBy("createdAt", "desc"), limit(100));
   }, [firestore]);
 
   const { data: events } = useCollection(eventsQuery);
@@ -168,6 +169,14 @@ export default function SimulatorPage() {
       return getAvg(b) - getAvg(a);
     });
   }, [sessions, events]);
+
+  const takenEmblems = useMemo(() => {
+    const taken = new Set<string>();
+    allWorkshopTeams.forEach(t => {
+      if (t.emblem && t.teamName !== teamName) taken.add(t.emblem);
+    });
+    return taken;
+  }, [allWorkshopTeams, teamName]);
 
   useEffect(() => {
     if (events && events.length > 0) {
@@ -364,11 +373,11 @@ export default function SimulatorPage() {
   const handleStartNewGame = () => {
     setPhase('intro');
     setTeamName("");
+    setSelectedEmblem("");
     setYear(1);
     setBudget(STARTUP_BUDGET);
     setLastYearProfit(0);
     setAiFeedback(null);
-    setLastEventId(null);
     setAnimationProgress(0);
     setIsAnimating(false);
     setTimeout(() => {
@@ -377,8 +386,8 @@ export default function SimulatorPage() {
   };
 
   const scrollToLab = () => {
-    if (!teamName.trim()) {
-      toast({ title: "Team Details Required", description: "Please enter a team name and select an emblem first." });
+    if (!teamName.trim() || !selectedEmblem) {
+      toast({ title: "Team Details Required", description: "Please enter a team name and select an available logo." });
       return;
     }
     setPhase('lab');
@@ -394,11 +403,12 @@ export default function SimulatorPage() {
         document.getElementById('analysis-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } else {
-      toast({ title: "Run Simulation First", description: "You must launch your laboratory strategy to see market results." });
+      toast({ title: "Run Simulation First", description: "You must launch your strategy to see market results." });
     }
   };
 
   const handleEmblemSelect = (url: string) => {
+    if (takenEmblems.has(url)) return;
     setSelectedEmblem(url);
     setTimeout(() => {
       document.getElementById('enter-lab-trigger')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -411,13 +421,11 @@ export default function SimulatorPage() {
     handleUpdateConfig('marketingChannels', next);
   };
 
-  const broadcastStatus = (status: 'join' | 'lab' | 'market', overrideName?: string, overrideEmblem?: string) => {
-    const nameToUse = overrideName || teamName;
-    const emblemToUse = overrideEmblem || selectedEmblem;
-    if (firestore && nameToUse) {
+  const broadcastStatus = (status: 'join' | 'lab' | 'market') => {
+    if (firestore && teamName) {
       addDocumentNonBlocking(collection(firestore, "simulator_events"), {
-        teamName: nameToUse,
-        emblem: emblemToUse,
+        teamName,
+        emblem: selectedEmblem,
         type: status,
         timestamp: serverTimestamp()
       });
@@ -425,8 +433,8 @@ export default function SimulatorPage() {
   };
 
   const handleJoinGame = () => {
-    if (!teamName.trim()) {
-      toast({ variant: "destructive", title: "Team Name Required", description: "Please enter a team name to start." });
+    if (!teamName.trim() || !selectedEmblem) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Please enter a team name and select a logo." });
       return;
     }
     broadcastStatus('join');
@@ -437,41 +445,9 @@ export default function SimulatorPage() {
     }, 100);
   };
 
-  const handleExitTeam = () => {
-    setPhase('intro');
-    setTeamName("");
-    setYear(1);
-    setBudget(STARTUP_BUDGET);
-    setLastYearProfit(0);
-    setAiFeedback(null);
-    setLastEventId(null);
-    setAnimationProgress(0);
-    setIsAnimating(false);
-    toast({ title: "Team Session Ended" });
-  };
-
-  const handleViewHistoricalSession = (session: any) => {
-    setTeamName(session.teamName);
-    setSelectedEmblem(session.emblem);
-    setYear(session.year || 1);
-    if (session.config) setConfig(session.config);
-    if (session.aiFeedback) setAiFeedback(session.aiFeedback);
-    setPhase('market');
-    setIsAnimating(false);
-    setTimeout(() => {
-      const el = document.getElementById('analysis-dashboard');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setTimeout(() => setIsAnimating(true), 1500);
-    }, 100);
-  };
-
   const launchSimulation = async () => {
     if (investmentCost > budget) {
-      toast({ 
-        variant: "destructive", 
-        title: "Budget Overrun", 
-        description: "Your investment strategy exceeds current capital. Please compromise on laboratory settings." 
-      });
+      toast({ variant: "destructive", title: "Budget Overrun", description: "Your strategy exceeds available capital." });
       return;
     }
 
@@ -543,11 +519,10 @@ export default function SimulatorPage() {
     setYear(prev => prev + 1);
     setPhase('lab');
     setIsAnimating(false);
-    setAnimationProgress(0);
     setAiFeedback(null);
     toast({
       title: `Year ${year + 1} Capital Assigned`,
-      description: `Based on Year ${year} performance, your new budget is ₹${Math.round(reinvestmentCapital).toLocaleString()}.`
+      description: `New budget: ₹${Math.round(reinvestmentCapital).toLocaleString()}.`
     });
   };
 
@@ -558,11 +533,6 @@ export default function SimulatorPage() {
       <Navbar />
       
       <div className="fixed top-20 left-4 z-[100] flex flex-col gap-3">
-        {phase !== 'intro' && (
-          <button onClick={handleExitTeam} className="bg-slate-900/80 backdrop-blur-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl group flex items-center">
-            <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Team
-          </button>
-        )}
         {isAdmin && (
           <Dialog open={isAdminPanelOpen} onOpenChange={setIsAdminPanelOpen}>
             <DialogTrigger asChild>
@@ -573,7 +543,7 @@ export default function SimulatorPage() {
             <DialogContent className="max-w-2xl rounded-[2.5rem] bg-slate-900 border-white/10 text-white">
               <DialogHeader>
                 <CardTitle className="text-2xl font-headline flex items-center gap-2">
-                  <Activity className="w-6 h-6 text-accent" /> Game Management
+                  <Activity className="w-6 h-6 text-accent" /> Workshop Reset
                 </CardTitle>
               </DialogHeader>
               <ScrollArea className="max-h-[60vh] mt-6 pr-4">
@@ -607,7 +577,7 @@ export default function SimulatorPage() {
             <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
           </div>
           <p className="text-xl text-slate-300 font-body leading-relaxed max-w-3xl mx-auto px-4">
-            Create an imaginary product that we will run through a market simulator based on your strategic laboratory choices.
+            Strategically design your ethical product and test its viability in the Maroma Market Simulator.
           </p>
 
           <div className="flex justify-center relative z-[100] mt-12">
@@ -643,50 +613,6 @@ export default function SimulatorPage() {
           </div>
         </section>
 
-        <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
-              <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allWorkshopTeams.map((s) => (
-              <Card key={`${s.sourceCollection}-${s.id}`} className="bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[2rem] overflow-hidden hover:bg-white/5 transition-all group border shadow-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-2xl bg-white p-1 flex items-center justify-center shrink-0 shadow-xl group-hover:scale-110 transition-transform">
-                      {s.emblem && <img src={s.emblem} alt="Logo" className="w-full h-full object-contain" />}
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 hover:line-clamp-none transition-all duration-300 bg-slate-900/0 hover:bg-slate-800/90 hover:p-2 hover:-m-2 hover:rounded-xl hover:z-20 hover:relative cursor-help">
-                        {s.status === 'playing' ? 'In Laboratory' : s.productType}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
-                      <p className="text-3xl font-black font-headline text-white">
-                        {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'IN LAB'}
-                      </p>
-                    </div>
-                  </div>
-                  {s.status === 'playing' && (
-                    <Button variant="outline" className="w-full mt-6 text-white border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px] py-6 h-auto" onClick={() => { setTeamName(s.teamName); setSelectedEmblem(s.emblem); setPhase('lab'); }}>
-                      Edit / Launch Product
-                    </Button>
-                  )}
-                  {s.status === 'complete' && (
-                    <Button variant="ghost" className="w-full mt-4 text-white border border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={() => handleViewHistoricalSession(s)}>
-                      View Analysis <ArrowRight className="w-3 h-3 ml-2" />
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
         {phase === 'intro' && (
           <div id="join-game-section" className="max-w-3xl mx-auto py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10 scroll-mt-24">
             <div className="space-y-4">
@@ -696,12 +622,30 @@ export default function SimulatorPage() {
             <div className="space-y-6">
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                {TEAM_EMBLEMS.map((emblem) => (
-                  <button key={emblem.id} onClick={() => handleEmblemSelect(emblem.url)} className={cn("relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 bg-white shadow-md", selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30")}>
-                    <img src={emblem.url} alt="Logo" className="w-full h-full object-contain p-0.5" />
-                    {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
-                  </button>
-                ))}
+                {TEAM_EMBLEMS.map((emblem) => {
+                  const isTaken = takenEmblems.has(emblem.url);
+                  return (
+                    <button 
+                      key={emblem.id} 
+                      disabled={isTaken}
+                      onClick={() => handleEmblemSelect(emblem.url)} 
+                      className={cn(
+                        "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 bg-white shadow-md group",
+                        selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent",
+                        isTaken ? "opacity-40 grayscale cursor-not-allowed border-none" : "hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <img src={emblem.url} alt="Logo" className="w-full h-full object-contain p-0.5" />
+                      {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
+                      {isTaken && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <Lock className="text-white w-6 h-6" />
+                          <div className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-white font-bold py-1 uppercase tracking-tighter">TAKEN</div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <Button id="enter-lab-trigger" onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95 flex items-center justify-center">
@@ -734,7 +678,7 @@ export default function SimulatorPage() {
                   <div className="text-3xl font-headline font-bold text-white">₹{(budget - investmentCost).toLocaleString()}</div>
                   <Progress value={(investmentCost / budget) * 100} className="h-1.5 w-40 mt-3" />
                 </div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-4">Startup Investment: ₹{budget.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-4">Investment Ceiling: ₹{budget.toLocaleString()}</p>
               </div>
             </div>
 
@@ -763,18 +707,18 @@ export default function SimulatorPage() {
                 <section className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Sparkles className="w-6 h-6 text-accent" /> 2. Ingredients</h3>
-                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Cost: ₹{selectedBase.investmentCost.toLocaleString()}</Badge>
+                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Base Cost: ₹{selectedBase.investmentCost.toLocaleString()}</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Base</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Ingredient Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name} (₹{(i.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing Model</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (₹{(s.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
@@ -785,19 +729,19 @@ export default function SimulatorPage() {
 
                 <section className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Package className="w-6 h-6 text-accent" /> 3. Packaging</h3>
-                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Cost: ₹{selectedPackaging.investmentCost.toLocaleString()}</Badge>
+                    <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Package className="w-6 h-6 text-accent" /> 3. Production</h3>
+                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Process Cost: ₹{selectedProduction.investmentCost.toLocaleString()}</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Type</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Packaging Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{(p.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production Method</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (₹{(p.investmentCost/1000).toLocaleString()}k)</SelectItem>)}</SelectContent>
@@ -809,7 +753,7 @@ export default function SimulatorPage() {
 
               <div className="space-y-12 pb-20">
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Megaphone className="w-6 h-6 text-accent" /> 4. Marketing</h3>
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Megaphone className="w-6 h-6 text-accent" /> 4. Market Awareness</h3>
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4 bg-white/5 p-6 rounded-2xl border border-white/10">
                       {MARKETING_CHANNELS.map(channel => (
@@ -823,8 +767,8 @@ export default function SimulatorPage() {
                       ))}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Marketing Message</Label>
-                      <Input placeholder="e.g., Purely Natural. Purely Maroma." value={config.message} onChange={e => handleUpdateConfig('message', e.target.value)} className="rounded-xl h-12 bg-white border-none text-primary font-medium" />
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Brand Positioning Message</Label>
+                      <Input placeholder="e.g., Authentic Craft. Sustainable Impact." value={config.message} onChange={e => handleUpdateConfig('message', e.target.value)} className="rounded-xl h-12 bg-white border-none text-primary font-medium" />
                     </div>
                   </div>
                 </section>
@@ -847,7 +791,7 @@ export default function SimulatorPage() {
                     investmentCost > budget ? "bg-slate-700 text-slate-500 cursor-not-allowed" : "bg-accent hover:bg-accent/90 text-white"
                   )}
                 >
-                  {investmentCost > budget ? "Over Budget" : "Launch Strategy"} <ArrowRight className="ml-2" />
+                  {investmentCost > budget ? "Insufficient Capital" : "Launch Year Strategy"} <ArrowRight className="ml-2" />
                 </Button>
               </div>
             </div>
@@ -864,18 +808,18 @@ export default function SimulatorPage() {
                 <h3 className="text-2xl font-headline font-bold text-accent uppercase tracking-widest">{teamName}</h3>
               </div>
               <div className="space-y-2">
-                <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[10px]">Year {year} Analysis</Badge>
-                <h2 className="text-4xl font-headline font-bold text-white">Simulation Results</h2>
+                <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[10px]">Year {year} Cycle Analysis</Badge>
+                <h2 className="text-4xl font-headline font-bold text-white">Simulation Insights</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 1000).toLocaleString()}`, icon: TrendingUp },
+                  { label: "Revenue", val: `₹${displayVal(chartData[11].profit * 1000).toLocaleString()}`, icon: TrendingUp },
                   { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Estimated Profit", val: `₹${displayVal(lastYearProfit).toLocaleString()}`, icon: ArrowUpRight, color: lastYearProfit > 0 ? "text-emerald-400" : "text-rose-400" },
-                  { label: "Market Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
+                  { label: "Net Profit", val: `₹${displayVal(lastYearProfit).toLocaleString()}`, icon: ArrowUpRight, color: lastYearProfit > 0 ? "text-emerald-400" : "text-rose-400" },
+                  { label: "Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
                     <CardContent className="p-6 flex items-center gap-5">
@@ -893,19 +837,19 @@ export default function SimulatorPage() {
 
               <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 relative overflow-hidden">
                 <CardHeader className="px-0 pt-0 flex flex-col gap-6">
-                  <CardTitle className="font-headline text-3xl text-white">Growth Trajectory</CardTitle>
+                  <CardTitle className="font-headline text-3xl text-white">Trajectory</CardTitle>
                   {animationProgress === 1 && (
                     <div className="w-full max-w-xl animate-in slide-in-from-top-4 duration-1000">
                       <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-2xl">
                         <div className="flex items-center gap-3">
                           <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0"><PartyPopper className="w-5 h-5 text-white" /></div>
                           <div className="flex flex-col">
-                            <h3 className="text-sm font-headline font-bold text-white">Year {year} Cycle Complete!</h3>
-                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold">Data Harvested</p>
+                            <h3 className="text-sm font-headline font-bold text-white">Cycle Complete</h3>
+                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold">Next Funding Round Ready</p>
                           </div>
                         </div>
                         <Button size="sm" onClick={handleNextYear} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
-                          Start Year {year + 1} <ChevronRight className="w-3 h-3" />
+                          Advance to Year {year + 1} <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
@@ -939,7 +883,7 @@ export default function SimulatorPage() {
                       <Legend verticalAlign="top" align="center" height={60} iconType="circle" />
                       <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} />
                       <Line isAnimationActive={false} type="monotone" dataKey="awareness" stroke="#fbbf24" strokeWidth={4} name="AWARENESS" dot={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST INDEX" dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST" dot={false} />
                       <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH SCORE" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -949,13 +893,13 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
-                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Strategic Opportunities</CardTitle></CardHeader>
+                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
                   {overallScore > 75 && scores.shortTermSales > 10 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Star className="w-5 h-5 text-green-500 shrink-0" />
-                        <span>Strong brand alignment detected between production and core values.</span>
+                        <span>High alignment detected between core values and production strategy.</span>
                       </div>
                       <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
                         <Zap className="w-3 h-3" /> Growth Multiplier Applied
@@ -965,19 +909,19 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Megaphone className="w-5 h-5 text-blue-500 shrink-0" />
-                        <span>Ethical core is world-class, but the brand remains a "Hidden Gem." Scale awareness to unlock growth!</span>
+                        <span>Ethical core is excellent, but the brand remains invisible. Scale awareness to unlock Year 2 growth.</span>
                       </div>
                     </div>
                   ) : scores.trust < 50 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
                       <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span>Market skepticism is rising. Your ingredient transparency might be insufficient.</span>
+                      <span>Market skepticism is rising. Transparency strategy requires immediate Laboratory revision.</span>
                     </div>
                   ) : null}
                   <div className="space-y-4 pt-4">
                     {[{ label: "Earth Score", val: scores.environmentalScore, color: "bg-emerald-500" },
                       { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
-                      { label: "Market Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
+                      { label: "Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
                       <div key={idx} className="space-y-2">
                         <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
                         <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
@@ -994,7 +938,7 @@ export default function SimulatorPage() {
                 </CardHeader>
                 <CardContent className="p-8 space-y-8">
                   {isAiLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="w-12 h-12 animate-spin text-accent" /><p className="text-slate-400 font-medium animate-pulse text-xs uppercase tracking-widest">Processing Data...</p></div>
+                    <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="w-12 h-12 animate-spin text-accent" /><p className="text-slate-400 font-medium animate-pulse text-xs uppercase tracking-widest">Compiling Year 1 Data...</p></div>
                   ) : aiFeedback ? (
                     <div className="space-y-8 animate-in fade-in duration-1000">
                       <p className="text-lg text-slate-200 leading-relaxed font-body italic">"{aiFeedback.feedbackText}"</p>
@@ -1011,7 +955,7 @@ export default function SimulatorPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-4">
                             <Label className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
-                              <ThumbsUp className="w-3 h-3" /> Strengths
+                              <ThumbsUp className="w-3 h-3" /> Success Signals
                             </Label>
                             {aiFeedback.positiveReviews.map((r, i) => (
                               <div key={i} className="text-xs p-4 bg-green-500/5 rounded-2xl border border-green-500/10 text-slate-300">
@@ -1021,7 +965,7 @@ export default function SimulatorPage() {
                           </div>
                           <div className="space-y-4">
                             <Label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center gap-2">
-                              <ThumbsDown className="w-3 h-3" /> Friction
+                              <ThumbsDown className="w-3 h-3" /> Friction Points
                             </Label>
                             {aiFeedback.negativeReviews.map((r, i) => (
                               <div key={i} className="space-y-2">
@@ -1042,7 +986,7 @@ export default function SimulatorPage() {
                       <div className="pt-6 border-t border-white/5">
                         <div className="p-6 bg-accent/10 rounded-3xl border border-accent/20 space-y-3">
                           <h4 className="text-xs font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                            <Lightbulb className="w-4 h-4" /> Recommended Adjustment
+                            <Lightbulb className="w-4 h-4" /> Strategic Adjustment
                           </h4>
                           <p className="text-sm text-slate-200 leading-relaxed font-body">
                             {aiFeedback.suggestion}
@@ -1051,7 +995,7 @@ export default function SimulatorPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-20 text-slate-500 italic">Complete a simulation to see the report.</div>
+                    <div className="text-center py-20 text-slate-500 italic">Launch Year 1 Strategy to receive the analysis.</div>
                   )}
                 </CardContent>
               </Card>
