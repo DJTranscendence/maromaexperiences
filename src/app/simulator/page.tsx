@@ -617,15 +617,15 @@ export default function SimulatorPage() {
           </p>
         </section>
 
-        {/* Phase Navigation Bar */}
-        <section className="mb-16 flex justify-center relative z-[50]">
+        {/* Phase Navigation Bar - Restored and Priority Fixed */}
+        <section className="mb-16 flex justify-center relative z-[100]">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full flex gap-1 shadow-2xl">
             <Button 
               variant="ghost"
               onClick={() => setPhase('intro')}
               className={cn(
                 "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
-                phase === 'intro' ? "bg-primary text-white shadow-lg pointer-events-none" : "text-slate-500"
+                phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-500"
               )}
             >
               <Users className="w-4 h-4" /> Join Game
@@ -636,7 +636,7 @@ export default function SimulatorPage() {
               disabled={!teamName.trim()}
               className={cn(
                 "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
-                phase === 'lab' ? "bg-primary text-white shadow-lg pointer-events-none" : "text-slate-500 disabled:opacity-30"
+                phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
               )}
             >
               <FlaskConical className="w-4 h-4" /> Laboratory
@@ -647,7 +647,7 @@ export default function SimulatorPage() {
               disabled={!aiFeedback && !viewingSessionId}
               className={cn(
                 "px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center gap-2 h-auto hover:bg-white/10 hover:text-white",
-                phase === 'market' ? "bg-primary text-white shadow-lg pointer-events-none" : "text-slate-500 disabled:opacity-30"
+                phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-500 disabled:opacity-30"
               )}
             >
               <TrendingUp className="w-4 h-4" /> Market Simulator
@@ -672,8 +672,8 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <div className="relative group/desc">
-                        <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 transition-all duration-300 group-hover/desc:line-clamp-none bg-slate-900/80 group-hover/desc:bg-slate-800 rounded px-1 -ml-1 group-hover/desc:z-20 group-hover/desc:relative cursor-help">
+                      <div className="relative">
+                        <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 transition-all duration-300 hover:line-clamp-none bg-slate-900/0 hover:bg-slate-800/90 hover:p-2 hover:-m-2 hover:rounded-xl hover:z-20 hover:relative cursor-help">
                           {s.status === 'playing' ? 'In Laboratory' : s.productType}
                         </p>
                       </div>
