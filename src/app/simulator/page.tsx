@@ -34,7 +34,10 @@ import {
   Wrench,
   Lightbulb,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Coins,
+  TrendingUp,
+  ArrowUpRight
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -89,6 +92,8 @@ const TEAM_EMBLEMS = [
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
 
+const STARTUP_BUDGET = 1000000;
+
 const capScore = (val: number) => Math.min(98, Math.max(0, val));
 
 export default function SimulatorPage() {
@@ -102,6 +107,10 @@ export default function SimulatorPage() {
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   
+  // Budget Logic
+  const [budget, setBudget] = useState(STARTUP_BUDGET);
+  const [lastYearProfit, setLastYearProfit] = useState(0);
+
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
@@ -232,14 +241,24 @@ export default function SimulatorPage() {
   const selectedPriceTier = useMemo(() => PRICE_TIERS.find(p => p.id === config.priceTier) || PRICE_TIERS[0], [config.priceTier]);
   const selectedValue = useMemo(() => CORE_VALUES.find(v => v.id === config.coreValue) || CORE_VALUES[0], [config.coreValue]);
 
-  const scores = useMemo(() => {
+  const investmentCost = useMemo(() => {
     const marketingCost = config.marketingChannels.reduce((acc, channelId) => {
       const channel = MARKETING_CHANNELS.find(c => c.id === channelId);
       return acc + (channel?.cost || 0);
     }, 0);
 
-    const productionCost = Math.max(10, (selectedBase?.cost || 0) + (selectedSourcing?.costDelta || 0) + (selectedPackaging?.cost || 0) + (selectedProduction?.costDelta || 0) + (marketingCost / 5));
-    const retailPrice = productionCost * (1 + (selectedPriceTier?.margin || 0));
+    return (
+      selectedBase.investmentCost +
+      selectedSourcing.investmentCost +
+      selectedPackaging.investmentCost +
+      selectedProduction.investmentCost +
+      marketingCost
+    );
+  }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction]);
+
+  const scores = useMemo(() => {
+    const unitCost = Math.max(10, selectedBase.unitCost + selectedSourcing.unitCostDelta + selectedPackaging.unitCost + selectedProduction.unitCostDelta);
+    const retailPrice = unitCost * (1 + (selectedPriceTier?.margin || 0));
     
     const baseEarth = selectedBase?.earthScore || 0;
     const environmentalScore = (baseEarth * (selectedPackaging?.envMultiplier || 1)) * 10;
@@ -280,7 +299,7 @@ export default function SimulatorPage() {
       trust: capScore(trust), 
       shortTermSales: capScore(resonance), 
       longevity: capScore(longevity), 
-      productionCost, 
+      unitCost, 
       retailPrice,
       consistency,
       socialImpact: capScore((selectedSourcing?.humanScore || 5) * 10)
@@ -408,6 +427,8 @@ export default function SimulatorPage() {
     setPhase('intro');
     setTeamName("");
     setYear(1);
+    setBudget(STARTUP_BUDGET);
+    setLastYearProfit(0);
     setAiFeedback(null);
     setLastEventId(null);
     setAnimationProgress(0);
@@ -431,6 +452,15 @@ export default function SimulatorPage() {
   };
 
   const launchSimulation = async () => {
+    if (investmentCost > budget) {
+      toast({ 
+        variant: "destructive", 
+        title: "Budget Overrun", 
+        description: "Your investment strategy exceeds current capital. Please compromise on laboratory settings." 
+      });
+      return;
+    }
+
     setPhase('market');
     setIsAnimating(false);
     setIsAiLoading(true);
@@ -467,6 +497,9 @@ export default function SimulatorPage() {
       setTimeout(() => setIsAnimating(true), 1500);
     }
 
+    const yearProfit = (chartData[11].profit * 1000) - investmentCost;
+    setLastYearProfit(yearProfit);
+
     if (firestore) {
       addDocumentNonBlocking(collection(firestore, "simulator_sessions"), {
         teamName,
@@ -488,6 +521,21 @@ export default function SimulatorPage() {
       });
       broadcastStatus('market');
     }
+  };
+
+  const handleNextYear = () => {
+    // Logic for next year budget: Profit reinvestment
+    const reinvestmentCapital = 800000 + (Math.max(0, lastYearProfit) * 0.8);
+    setBudget(Math.round(reinvestmentCapital));
+    setYear(prev => prev + 1);
+    setPhase('lab');
+    setIsAnimating(false);
+    setAnimationProgress(0);
+    setAiFeedback(null);
+    toast({
+      title: `Year ${year + 1} Capital Assigned`,
+      description: `Based on Year ${year} performance, your new budget is ₹${Math.round(reinvestmentCapital).toLocaleString()}.`
+    });
   };
 
   const displayVal = (val: number) => Math.round(val * animationProgress);
@@ -599,7 +647,7 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 group-hover:line-clamp-none transition-all duration-300 bg-slate-900/0 group-hover:bg-slate-800/90 group-hover:p-2 group-hover:-m-2 group-hover:rounded-xl group-hover:z-20 group-hover:relative cursor-help">
+                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 hover:line-clamp-none transition-all duration-300 bg-slate-900/0 hover:bg-slate-800/90 hover:p-2 hover:-m-2 hover:rounded-xl hover:z-20 hover:relative cursor-help">
                         {s.status === 'playing' ? 'In Laboratory' : s.productType}
                       </p>
                     </div>
@@ -651,11 +699,30 @@ export default function SimulatorPage() {
 
         {phase === 'lab' && (
           <div id="lab-header" className="animate-in fade-in duration-1000 mt-8 scroll-mt-24">
-            <div className="col-span-full mb-16 text-center space-y-4">
-              <div className="relative w-40 h-40 mx-auto mb-6 bg-white rounded-[2.5rem] p-2 shadow-xl">
-                <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
+            <div className="col-span-full mb-16 flex flex-col md:flex-row items-center justify-between gap-8 bg-slate-900/40 p-8 rounded-[3rem] border border-white/5 backdrop-blur-xl">
+              <div className="flex items-center gap-6">
+                <div className="relative w-32 h-32 bg-white rounded-[2rem] p-2 shadow-xl shrink-0">
+                  <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <Badge className="bg-primary text-white mb-2 font-bold uppercase tracking-widest">Year {year}</Badge>
+                  <h1 className="text-4xl font-headline font-bold text-white tracking-tight">{teamName}</h1>
+                </div>
               </div>
-              <h1 className="text-5xl font-headline font-bold text-white tracking-tight">Strategy Laboratory</h1>
+              
+              <div className="flex flex-col items-end gap-2">
+                <div className={cn(
+                  "p-6 rounded-[2rem] border transition-all flex flex-col items-end",
+                  investmentCost > budget ? "bg-rose-500/10 border-rose-500/50" : "bg-emerald-500/10 border-emerald-500/50"
+                )}>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <Coins className="w-3 h-3 text-accent" /> Available Capital
+                  </span>
+                  <div className="text-3xl font-headline font-bold text-white">₹{(budget - investmentCost).toLocaleString()}</div>
+                  <Progress value={(investmentCost / budget) * 100} className="h-1.5 w-40 mt-3" />
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-4">Startup Investment: ₹{budget.toLocaleString()}</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -681,7 +748,10 @@ export default function SimulatorPage() {
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Sparkles className="w-6 h-6 text-accent" /> 2. Ingredients</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Sparkles className="w-6 h-6 text-accent" /> 2. Ingredients</h3>
+                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Cost: ₹{selectedBase.investmentCost.toLocaleString()}</Badge>
+                  </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Base</Label>
@@ -694,14 +764,17 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name} (+₹{s.investmentCost/1000}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Package className="w-6 h-6 text-accent" /> 3. Packaging</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Package className="w-6 h-6 text-accent" /> 3. Packaging</h3>
+                    <Badge variant="outline" className="text-[10px] text-slate-400 border-white/10 uppercase font-bold">Cost: ₹{selectedPackaging.investmentCost.toLocaleString()}</Badge>
+                  </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Type</Label>
@@ -714,7 +787,7 @@ export default function SimulatorPage() {
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
                         <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (+₹{p.investmentCost/1000}k)</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -729,7 +802,10 @@ export default function SimulatorPage() {
                       {MARKETING_CHANNELS.map(channel => (
                         <div key={channel.id} className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer", config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent")} onClick={() => toggleMarketingChannel(channel.id)}>
                           <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30" />
-                          <span className="text-sm font-medium text-white">{channel.name}</span>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-white">{channel.name}</span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase">₹{(channel.cost/1000)}k</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -750,8 +826,15 @@ export default function SimulatorPage() {
                   </div>
                 </div>
 
-                <Button onClick={launchSimulation} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-20 text-xl font-bold shadow-xl transition-all active:scale-95">
-                  Launch Strategy <ArrowRight className="ml-2" />
+                <Button 
+                  onClick={launchSimulation} 
+                  disabled={investmentCost > budget}
+                  className={cn(
+                    "w-full rounded-full h-20 text-xl font-bold shadow-xl transition-all active:scale-95",
+                    investmentCost > budget ? "bg-slate-700 text-slate-500 cursor-not-allowed" : "bg-accent hover:bg-accent/90 text-white"
+                  )}
+                >
+                  {investmentCost > budget ? "Over Budget" : "Launch Strategy"} <ArrowRight className="ml-2" />
                 </Button>
               </div>
             </div>
@@ -776,9 +859,9 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 1000)}`, icon: Clock },
+                  { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 1000).toLocaleString()}`, icon: TrendingUp },
                   { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Retail Price", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
+                  { label: "Estimated Profit", val: `₹${displayVal(lastYearProfit).toLocaleString()}`, icon: ArrowUpRight, color: lastYearProfit > 0 ? "text-emerald-400" : "text-rose-400" },
                   { label: "Market Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
@@ -808,8 +891,8 @@ export default function SimulatorPage() {
                             <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold">Data Harvested</p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
-                          Improve Strategy <ChevronRight className="w-3 h-3" />
+                        <Button size="sm" onClick={handleNextYear} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
+                          Start Year {year + 1} <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
