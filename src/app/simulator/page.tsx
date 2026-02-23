@@ -94,7 +94,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
   { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
   { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
-  { id: 'brand-main', name: 'Main Logo', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FUntitled-1-01.png?alt=media&token=df177869-bca3-4454-b2d4-16e2570e2327' },
+  { id: 'brand-5', name: 'Brand 5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
   { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
   { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
   { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
@@ -103,7 +103,7 @@ const TEAM_EMBLEMS = [
   { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
   { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
   { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
+  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
 ];
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
@@ -219,14 +219,9 @@ export default function SimulatorPage() {
       const animate = () => {
         const now = Date.now();
         const progress = Math.min(1, (now - start) / duration);
-        
-        // Use linear progress for perfect synchronization with month thresholds
         setAnimationProgress(progress);
-
         if (progress < 1) {
           requestAnimationFrame(animate);
-        } else {
-          setAnimationProgress(1);
         }
       };
 
@@ -275,11 +270,10 @@ export default function SimulatorPage() {
     if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
     if (config.coreValue === 'len') consistency -= 0.7;
 
-    // --- GATEKEEPER MARKETING LOGIC ---
-    // If you have no channels and no message, your product is effectively invisible.
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 10;
     
+    // Rigorous failure detection: 0.001 multiplier if invisible
     const marketingMultiplier = hasChannels ? 1.5 : 0.001; 
     const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.4 : 0.001);
     
@@ -293,13 +287,11 @@ export default function SimulatorPage() {
     const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * marketingResonanceRaw;
     const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
     
-    // Revenue (Resonance) is a product of these multipliers. Failure in one sinks the ship.
     let resonance = ((appealScore * 0.5) + (accessibility * 2.5)) * marketingClarity * marketingMultiplier * 10;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
-    // Boycott effect for untrustworthy brands
     if (trust < 40) resonance *= 0.3; 
     if (trust < 30) resonance *= 0.1; 
 
@@ -390,15 +382,12 @@ export default function SimulatorPage() {
       }
 
       const noise = (Math.sin(i * 1.5) * 1.5);
-
-      // Revenue is now scaled by sales base. If resonance is low, growth is negligible.
       const baseSales = scores.shortTermSales * 1.2;
       const growthFactor = scores.shortTermSales < 10 
         ? 1.0 
         : Math.pow(1 + (scores.longevity / 1000), i);
       
       const revenue = baseSales * growthFactor * seasonalMultiplier;
-      
       const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty + noise);
       const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift + noise);
 
@@ -415,58 +404,14 @@ export default function SimulatorPage() {
 
   const animatedChartData = useMemo(() => {
     if (phase !== 'market') return chartData.map(d => ({ month: d.month }));
-    
-    if (!isAnimating && animationProgress === 0) {
-      return chartData.map(d => ({ month: d.month }));
-    }
+    if (!isAnimating && animationProgress === 0) return chartData.map(d => ({ month: d.month }));
     
     return chartData.map((d, index) => {
       const threshold = (index + 1) / chartData.length;
-      if (animationProgress >= threshold) {
-        return d;
-      }
+      if (animationProgress >= threshold) return d;
       return { month: d.month };
     });
   }, [chartData, animationProgress, phase, isAnimating]);
-
-  useEffect(() => {
-    if (phase === 'market' && (!aiFeedback || !aiFeedback.positiveReviews || aiFeedback.positiveReviews.length < 4 || !aiFeedback.negativeReviewFixes) && !isAiLoading && teamName && config.format) {
-      if (viewingSessionId && syncAttemptedRef.current === viewingSessionId) return;
-      
-      const syncFeedback = async () => {
-        setIsAiLoading(true);
-        if (viewingSessionId) syncAttemptedRef.current = viewingSessionId;
-        
-        try {
-          const feedback = await generateMarketFeedback({
-            teamName,
-            productName: config.format,
-            ingredients: [selectedBase.name, selectedSourcing.name, selectedPackaging.name],
-            earthScore: Math.round(scores.environmentalScore),
-            trustScore: Math.round(scores.trust),
-            pricePoint: Math.round(scores.retailPrice),
-            message: config.message,
-            targetAudience: selectedAudience.name,
-            coreValue: selectedValue.name,
-            year: year
-          });
-          setAiFeedback(feedback);
-          
-          if (viewingSessionId && firestore) {
-            updateDocumentNonBlocking(doc(firestore, "simulator_sessions", viewingSessionId), {
-              aiFeedback: feedback,
-              updatedAt: serverTimestamp()
-            });
-          }
-        } catch (err) {
-          console.error("Feedback synchronization failed:", err);
-        } finally {
-          setIsAiLoading(false);
-        }
-      };
-      syncFeedback();
-    }
-  }, [phase, aiFeedback, isAiLoading, teamName, config, selectedBase, selectedSourcing, selectedPackaging, scores, selectedAudience, selectedValue, viewingSessionId, firestore, year]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -522,22 +467,15 @@ export default function SimulatorPage() {
     setTeamName(session.teamName);
     setSelectedEmblem(session.emblem);
     setYear(session.year || 1);
-    if (session.config) {
-      setConfig(session.config);
-    }
-    if (session.aiFeedback) {
-      setAiFeedback(session.aiFeedback);
-    } else {
-      setAiFeedback(null);
-    }
+    if (session.config) setConfig(session.config);
+    if (session.aiFeedback) setAiFeedback(session.aiFeedback);
+    else setAiFeedback(null);
     setPhase('market');
     setIsAnimating(false);
     
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => setIsAnimating(true), 1500);
     }, 100);
   };
@@ -545,7 +483,7 @@ export default function SimulatorPage() {
   const handleDeleteEntry = (id: string, sourceCollection: string) => {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, sourceCollection, id));
-    toast({ title: "Team Entry Removed", description: "The entry has been removed from the dashboard." });
+    toast({ title: "Team Entry Removed" });
   };
 
   const launchSimulation = async () => {
@@ -560,6 +498,7 @@ export default function SimulatorPage() {
     }, 100);
 
     let generatedFeedback: MarketFeedbackOutput | null = null;
+    const richDescription = `${selectedBase.name} ${config.format}`;
 
     try {
       generatedFeedback = await generateMarketFeedback({
@@ -586,7 +525,7 @@ export default function SimulatorPage() {
       addDocumentNonBlocking(collection(firestore, "simulator_sessions"), {
         teamName,
         emblem: selectedEmblem,
-        productType: config.format,
+        productType: richDescription,
         ingredients: [selectedBase.name, selectedSourcing.name],
         config: config,
         aiFeedback: generatedFeedback,
@@ -605,13 +544,6 @@ export default function SimulatorPage() {
     }
   };
 
-  const scrollToJoinForm = () => {
-    const element = document.getElementById('join-form');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   const displayVal = (val: number) => Math.round(val * animationProgress);
 
   return (
@@ -620,22 +552,14 @@ export default function SimulatorPage() {
       
       <div className="fixed top-20 left-4 z-[100] flex flex-col gap-3">
         {phase !== 'intro' && (
-          <Button 
-            variant="outline" 
-            onClick={handleExitTeam}
-            className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl group"
-          >
+          <Button variant="outline" onClick={handleExitTeam} className="bg-slate-900/80 backdrop-blur-xl border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-full h-12 px-6 transition-all shadow-2xl group">
             <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> Exit Team
           </Button>
         )}
-
         {isAdmin && (
           <Dialog open={isAdminPanelOpen} onOpenChange={setIsAdminPanelOpen}>
             <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="bg-accent/20 backdrop-blur-xl border-accent/20 text-accent hover:text-white hover:bg-accent/40 rounded-full h-12 px-6 transition-all shadow-2xl"
-              >
+              <Button variant="outline" className="bg-accent/20 backdrop-blur-xl border-accent/20 text-accent hover:text-white hover:bg-accent/40 rounded-full h-12 px-6 transition-all shadow-2xl">
                 <Settings className="w-4 h-4 mr-2" /> Admin Tools
               </Button>
             </DialogTrigger>
@@ -644,11 +568,7 @@ export default function SimulatorPage() {
                 <DialogTitle className="text-2xl font-headline flex items-center gap-2">
                   <Activity className="w-6 h-6 text-accent" /> Game Management
                 </DialogTitle>
-                <DialogDescription className="text-slate-400">
-                  Manage live team sessions and current game metrics.
-                </DialogDescription>
               </DialogHeader>
-              
               <ScrollArea className="max-h-[60vh] mt-6 pr-4">
                 <div className="space-y-4">
                   {allWorkshopTeams?.map(s => (
@@ -662,29 +582,11 @@ export default function SimulatorPage() {
                           <p className="text-xs text-slate-400 uppercase tracking-widest">{s.status === 'playing' ? 'In Laboratory' : s.productType}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right hidden sm:block">
-                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Overall Score</p>
-                          <p className={cn("text-xl font-black", s.status === 'playing' ? 'text-blue-400' : 'text-accent')}>
-                            {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'LIVE'}
-                          </p>
-                        </div>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-full"
-                          onClick={() => handleDeleteEntry(s.id, s.sourceCollection)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <Button size="icon" variant="ghost" className="text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteEntry(s.id, s.sourceCollection)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   ))}
-                  {(!allWorkshopTeams || allWorkshopTeams.length === 0) && (
-                    <div className="text-center py-12 text-slate-500 italic font-body">
-                      No team sessions recorded in the database yet.
-                    </div>
-                  )}
                 </div>
               </ScrollArea>
             </DialogContent>
@@ -693,54 +595,20 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
-        
         <section className="mb-16 text-center space-y-8 animate-in fade-in duration-1000">
           <div className="relative h-48 w-full max-w-2xl mx-auto">
             <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
           </div>
           <p className="text-xl text-slate-300 font-body leading-relaxed max-w-3xl mx-auto px-4">
-            Based on what you have learned today about how Maroma makes its products, you will now create an imaginary product that we will run through a market simulator.
+            Create an imaginary product that we will run through a market simulator based on your strategic laboratory choices.
           </p>
         </section>
 
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-3xl font-headline font-bold text-white uppercase tracking-wider flex items-center gap-3">
-              <Activity className="w-8 h-8 text-accent" /> Team Scores
+              <Activity className="w-8 h-8 text-accent" /> Workshop Leaderboard
             </h2>
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="hidden sm:flex bg-accent text-white hover:bg-accent/90 rounded-full h-9 px-6 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-accent/20 transition-all active:scale-95"
-                onClick={() => {
-                  if (phase !== 'intro') {
-                    setPhase('intro');
-                    setTeamName("");
-                    setYear(1);
-                    setAiFeedback(null);
-                    setViewingSessionId(null);
-                  }
-                  setTimeout(scrollToJoinForm, 100);
-                }}
-              >
-                Join Game
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="hidden sm:flex bg-white text-accent hover:bg-white/90 rounded-full h-9 px-6 font-bold uppercase tracking-widest text-[10px] gap-2 transition-all active:scale-95 shadow-lg shadow-white/5"
-                onClick={() => {
-                  if (!teamName) setTeamName("Simulator Guest");
-                  setPhase('lab');
-                }}
-              >
-                <FlaskConical className="w-3 h-3" /> Simulator
-              </Button>
-              <Badge variant="outline" className="text-slate-400 border-white/10 uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full backdrop-blur-sm">
-                {allWorkshopTeams?.length || 0} Teams Competing
-              </Badge>
-            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -758,176 +626,78 @@ export default function SimulatorPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">
-                        {s.status === 'playing' ? 'Status' : 'Score'}
-                      </p>
-                      <p className={cn("text-3xl font-black font-headline", s.status === 'playing' ? 'text-blue-400' : 'text-white')}>
+                      <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
+                      <p className="text-3xl font-black font-headline text-white">
                         {s.scores ? Math.round((s.scores.earth + s.scores.trust + s.scores.resonance + s.scores.impact + s.scores.longevity) / 5) : 'IN LAB'}
                       </p>
                     </div>
                   </div>
-                  
-                  {s.scores && (
-                    <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
-                      <div className="flex justify-between items-center group/metric">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Earth</p>
-                        <p className="text-lg font-bold text-emerald-400">{s.scores.earth}%</p>
-                      </div>
-                      <div className="flex justify-between items-center group/metric">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Trust</p>
-                        <p className="text-lg font-bold text-blue-400">{s.scores.trust}%</p>
-                      </div>
-                      <div className="flex justify-between items-center group/metric">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Revenue</p>
-                        <p className="text-lg font-bold text-amber-400">₹{Math.round(s.scores.profit * 100)}</p>
-                      </div>
-                    </div>
-                  )}
-                  
                   {s.status === 'playing' && (
-                    <div className="mt-6 pt-6 border-t border-white/5 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-400/80">
-                        <AlertCircle className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Product Not Launched</span>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full text-white border-white/20 hover:bg-white/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px] transition-all py-6 h-auto flex flex-col items-center group/btn"
-                        onClick={() => {
-                          const currentName = s.teamName;
-                          const currentEmblem = s.emblem;
-                          setTeamName(currentName);
-                          setSelectedEmblem(currentEmblem);
-                          setPhase('lab');
-                          broadcastStatus('lab', currentName, currentEmblem);
-                          setTimeout(() => {
-                            const header = document.getElementById('lab-header');
-                            if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }, 150);
-                        }}
-                      >
-                        <span className="opacity-60">Click here to</span>
-                        <span className="text-accent group-hover/btn:scale-105 transition-transform flex items-center gap-2">
-                          <Edit2 className="w-3 h-3" /> Edit / Launch Product
-                        </span>
-                      </Button>
-                    </div>
+                    <Button variant="outline" className="w-full mt-6 text-white border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px] py-6 h-auto" onClick={() => {
+                      setTeamName(s.teamName); setSelectedEmblem(s.emblem); setPhase('lab');
+                    }}>
+                      Edit / Launch Product
+                    </Button>
                   )}
-
                   {s.status === 'complete' && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full mt-4 text-white border border-white/20 hover:bg-white/10 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px] transition-all"
-                      onClick={() => handleViewHistoricalSession(s)}
-                    >
-                      View Full Analysis <ArrowRight className="w-3 h-3" />
+                    <Button variant="ghost" className="w-full mt-4 text-white border border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={() => handleViewHistoricalSession(s)}>
+                      View Analysis <ArrowRight className="w-3 h-3 ml-2" />
                     </Button>
                   )}
                 </CardContent>
               </Card>
             ))}
-            {(!allWorkshopTeams || allWorkshopTeams.length === 0) && (
-              <div className="col-span-full py-20 text-center bg-white/5 rounded-[2rem] border border-dashed border-white/10">
-                <p className="text-slate-500 font-body italic">Awaiting the first team to join the game...</p>
-              </div>
-            )}
           </div>
         </section>
 
         {phase === 'intro' && (
-          <div className="w-full mb-8 animate-in fade-in slide-in-from-top-4 duration-1000 flex justify-center">
-            <Button 
-              onClick={scrollToJoinForm}
-              className="w-fit px-12 bg-accent text-white hover:bg-accent/90 rounded-[2rem] h-20 shadow-2xl shadow-accent/20 flex flex-col items-center justify-center gap-1 group transition-all active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-3">
-                <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
-                <span className="text-3xl font-headline font-bold uppercase tracking-widest">Join Game</span>
-              </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Enter your team name and company logo below</p>
-            </Button>
-          </div>
-        )}
-
-        {phase === 'intro' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="max-w-3xl mx-auto text-center space-y-8 mt-8">
-              <div id="join-form" className="scroll-mt-32 space-y-10 py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                
-                <div className="space-y-4 text-left relative z-10">
-                  <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Choose Your Team Name</Label>
-                  <Input 
-                    placeholder="e.g. The Eco-Warriors" 
-                    value={teamName} 
-                    onChange={e => setTeamName(e.target.value)}
-                    className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 focus-visible:ring-primary shadow-inner bg-slate-50"
-                  />
-                </div>
-
-                <div className="space-y-6 text-left relative z-10">
-                  <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Choose Your Logo Emblem</Label>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                    {TEAM_EMBLEMS.map((emblem) => (
-                      <button
-                        key={emblem.id}
-                        onClick={() => setSelectedEmblem(emblem.url)}
-                        className={cn(
-                          "relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md",
-                          selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30 hover:scale-105"
-                        )}
-                      >
-                        <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-0.5" />
-                        {selectedEmblem === emblem.url && (
-                          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                            <CheckCircle2 className="text-primary w-8 h-8 drop-shadow-md" />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Button onClick={handleJoinGame} className="w-fit mx-auto px-12 bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl shadow-primary/20 transition-all active:scale-95 gap-3 relative z-10">
-                  Join Game <ChevronRight className="w-8 h-8" />
-                </Button>
+          <div className="max-w-3xl mx-auto py-12 px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10">
+            <div className="space-y-4">
+              <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Team Name</Label>
+              <Input placeholder="e.g. The Eco-Warriors" value={teamName} onChange={e => setTeamName(e.target.value)} className="rounded-3xl h-20 text-center text-3xl font-headline border-primary/20 bg-slate-50" />
+            </div>
+            <div className="space-y-6">
+              <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                {TEAM_EMBLEMS.map((emblem) => (
+                  <button key={emblem.id} onClick={() => setSelectedEmblem(emblem.url)} className={cn("relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md", selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30")}>
+                    <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-0.5" />
+                    {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
+                  </button>
+                ))}
               </div>
             </div>
+            <Button onClick={handleJoinGame} className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-20 text-2xl font-bold shadow-2xl transition-all active:scale-95">
+              Enter Laboratory <ChevronRight className="w-8 h-8 ml-2" />
+            </Button>
           </div>
         )}
 
         {phase === 'lab' && (
           <div className="animate-in fade-in duration-1000 mt-8">
-            <div className="col-span-full mb-16 text-center space-y-4" id="lab-header">
+            <div className="col-span-full mb-16 text-center space-y-4">
               <div className="relative w-40 h-40 mx-auto mb-6 bg-white rounded-[2.5rem] p-2 shadow-xl">
                 <img src={selectedEmblem} alt="Team Logo" className="w-full h-full object-contain" />
               </div>
-              <h1 className="text-5xl md:text-7xl font-headline font-bold text-white tracking-tight">Let's Create Your Product</h1>
-              <p className="text-2xl md:text-3xl font-headline font-bold text-accent uppercase tracking-widest">
-                {year === 1 ? 'Year 1: Laboratory Phase' : `Year ${year}: Refinement Phase`}
-              </p>
+              <h1 className="text-5xl font-headline font-bold text-white tracking-tight">Strategy Laboratory</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div className="space-y-12 pb-20">
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <Award className="w-6 h-6 text-accent" /> 1. Choose Your Product
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Award className="w-6 h-6 text-accent" /> 1. The Product</h3>
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</Label>
                       <Select value={config.category} onValueChange={v => handleUpdateConfig('category', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Format</Label>
                       <Select value={config.format} onValueChange={v => handleUpdateConfig('format', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{selectedCategory.formats.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -935,21 +705,19 @@ export default function SimulatorPage() {
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-6 h-6 text-accent" /> 2. The Formula
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Sparkles className="w-6 h-6 text-accent" /> 2. Ingredients</h3>
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Ingredient Base</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Base</Label>
                       <Select value={config.ingredientBase} onValueChange={v => handleUpdateConfig('ingredientBase', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{INGREDIENT_BASES.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Where do we get our ingredients?</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Sourcing</Label>
                       <Select value={config.sourcingModel} onValueChange={v => handleUpdateConfig('sourcingModel', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{SOURCING_MODELS.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -957,21 +725,19 @@ export default function SimulatorPage() {
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <Package className="w-6 h-6 text-accent" /> 3. Packaging & Production
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Package className="w-6 h-6 text-accent" /> 3. Packaging</h3>
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Packaging Type</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Type</Label>
                       <Select value={config.packagingType} onValueChange={v => handleUpdateConfig('packagingType', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PACKAGING_TYPES.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production Method</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Production</Label>
                       <Select value={config.productionMethod} onValueChange={v => handleUpdateConfig('productionMethod', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none text-primary font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent>{PRODUCTION_METHODS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -981,105 +747,40 @@ export default function SimulatorPage() {
 
               <div className="space-y-12 pb-20">
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <Target className="w-6 h-6 text-accent" /> 4. Strategy
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Audience</Label>
-                      <Select value={config.targetAudience} onValueChange={v => handleUpdateConfig('targetAudience', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{TARGET_AUDIENCES.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Profit Margin Strategy</Label>
-                      <Select value={config.priceTier} onValueChange={v => handleUpdateConfig('priceTier', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PRICE_TIERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <Heart className="w-6 h-6 text-accent" /> 5. Brand Identity
-                  </h3>
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><Megaphone className="w-6 h-6 text-accent" /> 4. Marketing</h3>
                   <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Core Value Emphasis</Label>
-                      <Select value={config.coreValue} onValueChange={v => handleUpdateConfig('coreValue', v)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-white border-none shadow-lg text-primary font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent>{CORE_VALUES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
-                      </Select>
-                      <p className="text-[10px] text-slate-400 italic px-1">{selectedValue?.description || ''}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Marketing Message</Label>
-                      <Input placeholder="e.g., Purely Natural. Purely Maroma." value={config.message} onChange={e => handleUpdateConfig('message', e.target.value)} className="rounded-xl h-12 bg-white border-none shadow-lg text-primary font-medium" />
-                    </div>
-                  </div>
-                </section>
-
-                <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <Megaphone className="w-6 h-6 text-accent" /> 6. Marketing Strategy
-                  </h3>
-                  <div className="space-y-4 bg-white/5 p-6 rounded-2xl border border-white/10">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 block">Select Channels</Label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 bg-white/5 p-6 rounded-2xl border border-white/10">
                       {MARKETING_CHANNELS.map(channel => (
-                        <div key={channel.id} className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer", config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent hover:border-white/20")} onClick={() => toggleMarketingChannel(channel.id)}>
-                          <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30 data-[state=checked]:bg-accent data-[state=checked]:border-accent" />
+                        <div key={channel.id} className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer", config.marketingChannels.includes(channel.id) ? "bg-accent/20 border-accent" : "bg-white/5 border-transparent")} onClick={() => toggleMarketingChannel(channel.id)}>
+                          <Checkbox checked={config.marketingChannels.includes(channel.id)} onCheckedChange={() => toggleMarketingChannel(channel.id)} className="border-white/30" />
                           <span className="text-sm font-medium text-white">{channel.name}</span>
                         </div>
                       ))}
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Marketing Message</Label>
+                      <Input placeholder="e.g., Purely Natural. Purely Maroma." value={config.message} onChange={e => handleUpdateConfig('message', e.target.value)} className="rounded-xl h-12 bg-white border-none text-primary font-medium" />
+                    </div>
                   </div>
                 </section>
 
                 <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2">
-                    <MessageSquare className="w-6 h-6 text-accent" /> 7. Custom Specifications
-                  </h3>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Can't find the options you want?</Label>
-                    <Textarea 
-                      placeholder="Type in details to your product here (product type, marketing ideas, anything...)" 
-                      value={config.customDetails} 
-                      onChange={e => handleUpdateConfig('customDetails', e.target.value)}
-                      className="min-h-[100px] rounded-2xl bg-white border-none shadow-lg text-primary font-medium"
-                    />
-                  </div>
+                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><MessageSquare className="w-6 h-6 text-accent" /> 5. Custom Specs</h3>
+                  <Textarea placeholder="Type in extra details (product type, specific ideas...)" value={config.customDetails} onChange={e => handleUpdateConfig('customDetails', e.target.value)} className="min-h-[100px] rounded-2xl bg-white border-none text-primary font-medium" />
                 </section>
 
                 <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="font-bold uppercase tracking-widest text-slate-400">Ingredients & Sourcing</span>
-                      <span className="text-white font-mono">₹{Math.round((selectedBase?.cost || 0) + (selectedSourcing?.costDelta || 0))}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="font-bold uppercase tracking-widest text-slate-400">Packaging & Production</span>
-                      <span className="text-white font-mono">₹{Math.round((selectedPackaging?.cost || 0) + (selectedProduction?.costDelta || 0))}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Production Cost</span>
-                      <span className="text-xl font-bold text-white">₹{Math.round(scores.productionCost)}</span>
-                    </div>
-                  </div>
                   <div className="flex justify-between items-center pt-6 border-t-2 border-accent/20">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Calculated Retail Price</span>
-                      <span className="text-[10px] text-slate-500">Includes {Math.round((selectedPriceTier?.margin || 0) * 100)}% Profit Margin</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Calculated Price Point</span>
+                      <span className="text-[10px] text-slate-500">Retail Price Target</span>
                     </div>
                     <span className="text-4xl font-bold text-white font-headline">₹{Math.round(scores.retailPrice)}</span>
                   </div>
                 </div>
 
-                <Button onClick={launchSimulation} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-20 text-xl font-bold shadow-xl shadow-accent/20 transition-all active:scale-95">
-                  {year === 1 ? 'Launch to Market' : `Launch Year ${year} Strategy`} <ArrowRight className="ml-2" />
+                <Button onClick={launchSimulation} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-20 text-xl font-bold shadow-xl transition-all active:scale-95">
+                  Launch Strategy <ArrowRight className="ml-2" />
                 </Button>
               </div>
             </div>
@@ -1087,23 +788,21 @@ export default function SimulatorPage() {
         )}
 
         {phase === 'market' && (
-          <div id="analysis-dashboard" className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24 relative">
-            
+          <div id="analysis-dashboard" className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 mt-8 scroll-mt-24">
             <div className="text-center space-y-2">
-              <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold shadow-lg text-[10px] uppercase tracking-widest">Trajectory Year {year} Active</Badge>
-              <h2 className="text-4xl font-headline font-bold text-white">Simulation Analysis</h2>
+              <Badge className="bg-green-500 text-white px-4 py-1 rounded-full font-bold uppercase tracking-widest text-[10px]">Year {year} Analysis</Badge>
+              <h2 className="text-4xl font-headline font-bold text-white">Simulation Results</h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: `Year ${year} Revenue`, val: `₹${displayVal(chartData[11].profit * 100)}`, icon: Clock },
-                  { label: `Year ${year} Profit`, val: `₹${displayVal((chartData[11].profit * 100) * (selectedPriceTier?.margin || 0.1))}`, icon: TrendingUp, color: "text-emerald-400" },
-                  { label: "Final Trust Index", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Final Price Point", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
-                  { label: "Total Reach", val: displayVal(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
+                  { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 100)}`, icon: Clock },
+                  { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
+                  { label: "Price Strategy", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
+                  { label: "Awareness", val: displayVal(scores.shortTermSales * 500), icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
-                  <Card key={i} className="rounded-[1.5rem] border-none shadow-lg bg-slate-900/40 border border-white/5 backdrop-blur-md">
+                  <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
                     <CardContent className="p-6 flex items-center gap-5">
                       <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
                         <m.icon className={cn("w-6 h-6", m.color || "text-slate-400")} />
@@ -1117,306 +816,99 @@ export default function SimulatorPage() {
                 ))}
               </div>
 
-              <Card className="lg:col-span-3 rounded-[2.5rem] border-none shadow-2xl bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 h-full flex flex-col justify-between relative overflow-hidden">
+              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 relative overflow-hidden">
                 <CardHeader className="px-0 pt-0 flex flex-col gap-6">
                   <CardTitle className="font-headline text-3xl text-white">Trajectory Performance</CardTitle>
-                  
                   {animationProgress === 1 && (
                     <div className="w-full max-w-xl animate-in slide-in-from-top-4 duration-1000">
-                      <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-2xl backdrop-blur-2xl">
+                      <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-2xl">
                         <div className="flex items-center gap-3">
-                          <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0">
-                            <PartyPopper className="w-5 h-5 text-white" />
-                          </div>
+                          <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0"><PartyPopper className="w-5 h-5 text-white" /></div>
                           <div className="flex flex-col">
-                            <h3 className="text-sm font-headline font-bold text-white leading-tight">Stage {year} Complete!</h3>
-                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold mt-0.5">GROWTH CYCLE SIMULATED</p>
+                            <h3 className="text-sm font-headline font-bold text-white">Stage {year} Complete!</h3>
+                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold">GROWTH CYCLE SIMULATED</p>
                           </div>
                         </div>
-                        <Button 
-                          size="sm"
-                          onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }}
-                          className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 h-9 text-xs font-bold transition-all active:scale-95 gap-2 shrink-0"
-                        >
-                          Ready to improve for your second year?
-                          <ChevronRight className="w-3 h-3" />
+                        <Button size="sm" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
+                          Start Year {year + 1} Refinement <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
                   )}
                 </CardHeader>
                 
-                <div className="h-[500px] w-full mt-4 relative">
+                <div className="h-[500px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={animatedChartData} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                    <LineChart data={animatedChartData} key={`${teamName}-${phase}`} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                      <XAxis 
-                        dataKey="month" 
-                        stroke="rgba(255,255,255,0.3)" 
-                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }}
-                        label={{ value: 'Months Active', position: 'insideBottom', offset: -10, fill: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' }} 
-                      />
+                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }} />
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
-                      <Tooltip 
-                        content={({ active, payload, label }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                              <div className="bg-slate-950 border border-white/10 p-5 rounded-3xl shadow-2xl min-w-[240px] backdrop-blur-2xl">
-                                <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {label} Status</p>
-                                {data.marketNote && (
-                                  <div className={cn(
-                                    "text-xs font-bold mb-5 flex items-start gap-3 p-3 rounded-2xl border",
-                                    data.isNewsEvent ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-accent/10 border-accent/20 text-accent"
-                                  )}>
-                                    {data.isNewsEvent ? <Newspaper className="w-4 h-4 shrink-0 mt-0.5" /> : <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />}
-                                    <span className="leading-snug">{data.marketNote}</span>
+                      <Tooltip content={({ active, payload, label }) => {
+                        if (active && payload?.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-slate-950 border border-white/10 p-5 rounded-3xl shadow-2xl min-w-[240px] backdrop-blur-2xl">
+                              <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Month {label}</p>
+                              <div className="space-y-3">
+                                {payload.map((entry: any) => (
+                                  <div key={entry.name} className="flex justify-between gap-8 items-center">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: entry.color }}>{entry.name}</span>
+                                    <span className="text-base font-black text-white">{Math.round(entry.value)}</span>
                                   </div>
-                                )}
-                                <div className="space-y-3">
-                                  {payload.map((entry: any) => (
-                                    <div key={entry.name} className="flex justify-between gap-8 items-center">
-                                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: entry.color }}>{entry.name}</span>
-                                      <span className="text-base font-black text-white">{Math.round(entry.value)}</span>
-                                    </div>
-                                  ))}
-                                </div>
+                                ))}
                               </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Legend verticalAlign="top" align="center" height={60} iconType="circle" formatter={(value) => <span className="text-xs font-bold uppercase tracking-widest ml-1">{value}</span>} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} connectNulls={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST INDEX" dot={false} connectNulls={false} />
-                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH IMPACT" dot={false} connectNulls={false} />
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
+                      <Legend verticalAlign="top" align="center" height={60} iconType="circle" />
+                      <Line isAnimationActive={false} type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={4} name="REVENUE" dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="trust" stroke="#22c55e" strokeWidth={4} name="TRUST INDEX" dot={false} />
+                      <Line isAnimationActive={false} type="monotone" dataKey="impact" stroke="#ec4899" strokeWidth={4} name="EARTH IMPACT" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/5 backdrop-blur-sm text-white overflow-hidden relative border border-white/10">
-                <div className="absolute top-0 right-0 p-8 opacity-10"><Dna className="w-32 h-32" /></div>
-                <CardHeader className="pb-2"><CardTitle className="font-headline text-3xl">Scorecard Integrity</CardTitle></CardHeader>
-                <CardContent className="p-8 space-y-8">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Environmental Friendliness</span>
-                      <span className="text-2xl font-bold font-headline">{displayVal(scores.environmentalScore)}%</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto pb-20">
+              <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
+                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Scorecard Integrity</CardTitle></CardHeader>
+                <div className="space-y-6">
+                  {[{ label: "Environmental Score", val: scores.environmentalScore, color: "bg-emerald-500" },
+                    { label: "Trust Index", val: scores.trust, color: "bg-blue-500" },
+                    { label: "Market Resonance", val: scores.shortTermSales, color: "bg-amber-500" }].map((s, idx) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="flex justify-between items-end"><span className="text-xs font-bold uppercase tracking-widest opacity-60">{s.label}</span><span className="text-2xl font-bold font-headline">{displayVal(s.val)}%</span></div>
+                      <Progress value={s.val * animationProgress} className={cn("h-3 bg-white/10", `[&>div]:${s.color}`)} />
                     </div>
-                    <Progress value={scores.environmentalScore * animationProgress} className="h-3 bg-white/10 [&>div]:bg-emerald-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Public Trust Index</span>
-                      <span className="text-2xl font-bold font-headline">{displayVal(scores.trust)}%</span>
-                    </div>
-                    <Progress value={scores.trust * animationProgress} className="h-3 bg-white/10 [&>div]:bg-blue-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">Market Resonance</span>
-                      <span className="text-2xl font-bold font-headline">{displayVal(scores.shortTermSales)}%</span>
-                    </div>
-                    <Progress value={scores.shortTermSales * animationProgress} className="h-3 bg-white/10 [&>div]:bg-amber-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Human & Social Impact</span>
-                      <span className="text-2xl font-bold font-headline">{displayVal(scores.socialImpact)}%</span>
-                    </div>
-                    <Progress value={scores.socialImpact * animationProgress} className="h-3 bg-white/10 [&>div]:bg-purple-500" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400">Brand Longevity</span>
-                      <span className="text-2xl font-bold font-headline">{displayVal(scores.longevity)}%</span>
-                    </div>
-                    <Progress value={scores.longevity * animationProgress} className="h-3 bg-white/10 [&>div]:bg-rose-500" />
-                  </div>
-                  <div className="pt-8 border-t border-white/10 flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-white/50">Overall Brand Score</span>
-                    <span className="text-5xl font-bold font-headline text-accent">{displayVal(overallScore)}%</span>
-                  </div>
-                </CardContent>
+                  ))}
+                </div>
               </Card>
 
-              <Card className="rounded-[2.5rem] border-none shadow-2xl bg-slate-900/60 backdrop-blur-xl text-white overflow-hidden border border-white/10 flex flex-col">
-                <CardHeader className="bg-white/5 border-b border-white/5 py-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-accent/20 rounded-xl">
-                        <BrainCircuit className="w-6 h-6 text-accent" />
-                      </div>
-                      <CardTitle className="font-headline text-2xl tracking-wide uppercase">Market Analyst Report</CardTitle>
-                    </div>
-                    {isAiLoading ? (
-                      <Badge variant="outline" className="animate-pulse text-slate-400 border-white/20">Analyzing Year {year}...</Badge>
-                    ) : aiFeedback && (
-                      <Badge className={cn(
-                        "uppercase tracking-widest font-bold",
-                        aiFeedback.analystTone === 'enthusiastic' ? "bg-emerald-500" : 
-                        aiFeedback.analystTone === 'cynical' ? "bg-rose-500" : "bg-amber-500"
-                      )}>
-                        {aiFeedback.analystTone}
-                      </Badge>
-                    )}
-                  </div>
+              <Card className="rounded-[2.5rem] bg-slate-900/60 backdrop-blur-xl text-white border border-white/10">
+                <CardHeader className="bg-white/5 border-b border-white/5 py-6 flex flex-row items-center justify-between">
+                  <CardTitle className="font-headline text-2xl uppercase">Market Report</CardTitle>
+                  {aiFeedback && <Badge className="bg-accent text-white uppercase font-bold tracking-widest">{aiFeedback.analystTone}</Badge>}
                 </CardHeader>
-                <CardContent className="p-8 flex-grow space-y-8">
+                <CardContent className="p-8 space-y-8">
                   {isAiLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4">
-                      <Loader2 className="w-12 h-12 animate-spin text-accent" />
-                      <p className="text-slate-400 font-medium animate-pulse uppercase tracking-[0.2em] text-xs">Simulating Year {year} Variables</p>
-                    </div>
+                    <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="w-12 h-12 animate-spin text-accent" /><p className="text-slate-400 font-medium animate-pulse text-xs uppercase tracking-widest">Processing Data...</p></div>
                   ) : aiFeedback ? (
                     <div className="space-y-8 animate-in fade-in duration-1000">
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Summary Analysis</Label>
-                        <p className="text-lg text-slate-200 leading-relaxed font-body italic">
-                          "{aiFeedback.feedbackText}"
-                        </p>
-                      </div>
-
-                      <div className="p-6 bg-white/5 rounded-3xl border border-white/5 relative">
-                        <MessageSquareQuote className="absolute -top-3 -left-3 w-10 h-10 text-white/10" />
-                        <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 block mb-3">Customer Sentiment</Label>
-                        <p className="text-xl font-headline font-bold text-white">
-                          "{aiFeedback.customerQuote}"
-                        </p>
-                      </div>
-
-                      <div className="space-y-3 p-6 bg-accent/5 rounded-3xl border border-accent/10">
-                        <div className="flex items-center gap-2 mb-1">
-                          <TrendingUp className="w-4 h-4 text-accent" />
-                          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Strategic Pivot</Label>
-                        </div>
-                        <p className="text-sm text-slate-300">
-                          {aiFeedback.suggestion}
-                        </p>
+                      <p className="text-lg text-slate-200 leading-relaxed font-body italic">"{aiFeedback.feedbackText}"</p>
+                      <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-3">Customer Voice</Label>
+                        <p className="text-xl font-headline font-bold text-white">"{aiFeedback.customerQuote}"</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-20">
-                      <p className="text-slate-500 italic">Analysis results are being synchronized...</p>
-                    </div>
+                    <div className="text-center py-20 text-slate-500 italic">Analysis complete. Click View Analysis on the leaderboard to refresh.</div>
                   )}
                 </CardContent>
               </Card>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
-              <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
-                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><CircleCheck className="w-5 h-5 text-green-400" /> Market Opportunities</CardTitle></CardHeader>
-                <CardContent className="space-y-6">
-                  {config.category === 'hf' && (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <Gift className="w-5 h-5 text-amber-500 shrink-0" />
-                        <span>The Festive Season (Months 10-12) is projected to boost Home Fragrance revenue by 40%.</span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Switch Category to 'Gifting Item' or upgrade 'Price Tier' to 'Luxury' to capture premium festive value.
-                      </div>
-                    </div>
-                  )}
-                  {config.category === 'bc' && (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <Sun className="w-5 h-5 text-amber-500 shrink-0" />
-                        <span>The Summer Peak (Months 3-6) will drive a 25% surge in Body Care demand.</span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-amber-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Change 'Format' to 'Body Mist' or 'Roll-on' and add 'Influencer' to 'Marketing Channels'.
-                      </div>
-                    </div>
-                  )}
-                  {scores.consistency >= 0.8 && (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <Star className="w-5 h-5 text-green-500 shrink-0" />
-                        <span>Strong brand alignment detected between production and core values.</span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-green-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Lightbulb className="w-3 h-3" /> Suggested Action: Add 'Instagram' or 'Facebook' to broadcast this alignment.
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              <Card className="rounded-3xl border-none shadow-xl bg-white/5 border border-white/10">
-                <CardHeader><CardTitle className="font-headline flex items-center gap-2 text-white"><AlertCircle className="w-5 h-5 text-red-400" /> Market Risks</CardTitle></CardHeader>
-                <CardContent className="space-y-6">
-                  {config.sourcingModel === 'lsf' && (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <CloudRain className="w-5 h-5 text-blue-500 shrink-0" />
-                        <span>Monsoon Risk (Months 7-9): Supply chain vulnerability during heavy rain.</span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-blue-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Pivot 'Sourcing Model' to 'Fair Trade Cooperative' or 'Imported Bulk' for seasonal stability.
-                      </div>
-                    </div>
-                  )}
-                  {scores.consistency < 0.8 && (
-                    <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-red-500 text-slate-200 space-y-3">
-                      <div className="flex gap-3">
-                        <Trash2 className="w-5 h-5 text-red-500 shrink-0" />
-                        <span>Strategic mismatch: Your marketing message isn't backed by production reality.</span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2 text-red-400/80 font-bold uppercase tracking-widest text-[10px]">
-                        <Wrench className="w-3 h-3" /> Suggested Action: Change 'Packaging Type' to 'Glass' or 'Refillable Metal' to restore integrity.
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <section className="space-y-8 max-w-7xl mx-auto pb-20">
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-accent" />
-                <h3 className="text-3xl font-headline font-bold text-white uppercase tracking-wider">Customer Feedback</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 px-2 flex items-center gap-2"><ThumbsUp className="w-3 h-3" /> Positive Voices</Label>
-                  <div className="grid gap-4">
-                    {aiFeedback?.positiveReviews?.map((review, i) => (
-                      <div key={i} className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex gap-4">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0"><User className="w-5 h-5 text-emerald-400" /></div>
-                        <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400 px-2 flex items-center gap-2"><ThumbsDown className="w-3 h-3" /> Critical Voices</Label>
-                  <div className="grid gap-4">
-                    {aiFeedback?.negativeReviews?.map((review, i) => (
-                      <div key={i} className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 flex flex-col gap-4">
-                        <div className="flex gap-4">
-                          <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0"><User className="w-5 h-5 text-rose-400" /></div>
-                          <p className="text-slate-300 italic font-body leading-relaxed">"{review}"</p>
-                        </div>
-                        {aiFeedback.negativeReviewFixes?.[i] && (
-                          <div className="ml-14 mt-1 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
-                            <div className="p-1.5 bg-rose-500/20 rounded-lg"><Wrench className="w-3 h-3 text-rose-400" /></div>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Suggested Setting Adjustment</span>
-                              <span className="text-xs text-slate-400">{aiFeedback.negativeReviewFixes[i]}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
           </div>
         )}
       </main>
