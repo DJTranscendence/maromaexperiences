@@ -73,24 +73,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TEAM_EMBLEMS = [
-  { id: 'brand-10', name: 'Brand 10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e' },
-  { id: 'brand-11', name: 'Brand 11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
-  { id: 'brand-12', name: 'Brand 12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
-  { id: 'brand-13', name: 'Brand 13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
-  { id: 'brand-14', name: 'Brand 14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
-  { id: 'brand-16', name: 'Brand 16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
-  { id: 'brand-17', name: 'Brand 17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
-  { id: 'brand-18', name: 'Brand 18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1' },
-  { id: 'brand-19', name: 'Brand 19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
-  { id: 'brand-2', name: 'Brand 2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
-  { id: 'brand-3', name: 'Brand 3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
-  { id: 'brand-4', name: 'Brand 4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
-  { id: 'brand-5', name: 'Brand 5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=986c6d33-6c6d-42a1-8cfe-91129dcc553f' },
-  { id: 'brand-6', name: 'Brand 6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
-  { id: 'brand-7', name: 'Brand 7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
-  { id: 'brand-8', name: 'Brand 8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
-  { id: 'brand-9', name: 'Brand 9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
-  { id: 'brand-main', name: 'Game Logo', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2' },
+  { id: 'brand-10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e' },
+  { id: 'brand-11', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F11-01.png?alt=media&token=eb2cfcfa-7a1e-4097-9bf3-6c9b38d0d885' },
+  { id: 'brand-12', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F12-01.png?alt=media&token=4ff97d12-c967-4e32-be10-49bfa6dc68f5' },
+  { id: 'brand-13', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F13-01.png?alt=media&token=7b4e1e0d-f9be-4758-9eb8-51678eadcc31' },
+  { id: 'brand-14', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F14-01.png?alt=media&token=883ae152-fea5-40c3-9cb5-20d73a0e1f60' },
+  { id: 'brand-16', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F16-01.png?alt=media&token=60b457b6-ad41-4544-b124-bd93055c4f55' },
+  { id: 'brand-17', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F17-01.png?alt=media&token=bdf30366-24cb-4d7a-be14-f8f2b2f9ccf3' },
+  { id: 'brand-18', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F18-01.png?alt=media&token=a649f0b5-c642-4bfb-a467-a05de4a09cc1' },
+  { id: 'brand-19', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F19-01.png?alt=media&token=05bdc083-e465-4c82-b42e-cc94aadba5d8' },
+  { id: 'brand-2', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F2-01.png?alt=media&token=4c94e823-4cc3-43c3-bd2f-393b7ef69123' },
+  { id: 'brand-3', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F3-01.png?alt=media&token=242a85c4-c6bd-4cf4-856b-9763f375db9f' },
+  { id: 'brand-4', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F4-01.png?alt=media&token=24c47a94-c6a3-4da4-ba42-adeedad88e96' },
+  { id: 'brand-5', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F5-01.png?alt=media&token=986c6d33-6c6d-42a1-8cfe-91129dcc553f' },
+  { id: 'brand-6', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F6-01.png?alt=media&token=0f067a3a-ddd5-418f-b714-e714efd7282c' },
+  { id: 'brand-7', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F7-01.png?alt=media&token=23f53117-a9d8-4907-964e-9281c41dfb86' },
+  { id: 'brand-8', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F8-01.png?alt=media&token=535b652d-ecad-4390-a1c0-eebada8459d6' },
+  { id: 'brand-9', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F9-01.png?alt=media&token=41665223-538c-482e-ac5e-45835a6d8557' },
+  { id: 'brand-main', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2FGame%20Logos-01.png?alt=media&token=be0a96fc-03fc-4e8d-bc3b-b4c9f5f374a2' },
 ];
 
 const TITLE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
@@ -294,77 +294,23 @@ export default function SimulatorPage() {
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier]);
 
-  const overallScore = useMemo(() => {
-    return Math.round((
-      scores.environmentalScore + 
-      scores.trust + 
-      scores.shortTermSales + 
-      scores.socialImpact + 
-      scores.longevity
-    ) / 5);
-  }, [scores]);
-
   const chartData = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => {
       const month = i + 1;
       let seasonalMultiplier = 1.0;
-      let marketNote = "Standard Market Demand";
-      let trustVolatilty = 0;
-      let impactDrift = 0;
       let newsNote = "";
       
       if (month >= 3 && month <= 6) {
-        if (config.category === 'bc') {
-          seasonalMultiplier = 1.25;
-          marketNote = "Summer heat surges Body Care demand";
-        }
-        if (config.category === 'hf') {
-          seasonalMultiplier = 0.85;
-          marketNote = "Heat reduces indoor candle demand";
-        }
+        if (config.category === 'bc') seasonalMultiplier = 1.25;
+        if (config.category === 'hf') seasonalMultiplier = 0.85;
       }
       
       if (month >= 7 && month <= 9) {
-        if (config.category === 'hf') {
-          seasonalMultiplier = 0.7;
-          marketNote = "Monsoon humidity slows incense interest";
-        }
-        if (config.sourcingModel === 'lsf') {
-          seasonalMultiplier *= 0.9;
-          trustVolatilty = -8;
-          marketNote = "Rain impacts local small farmer supply";
-        } else {
-          marketNote = "Monsoon rains affect general footfall";
-        }
+        if (config.category === 'hf') seasonalMultiplier = 0.7;
+        if (config.sourcingModel === 'lsf') seasonalMultiplier *= 0.9;
       }
       
-      if (month >= 10 && month <= 12) {
-        seasonalMultiplier = 1.45;
-        impactDrift = -5;
-        marketNote = "Diwali & Wedding season demand peak";
-      }
-
-      if (month === 2) {
-        const jitter = selectedBase.earthScore > 6 ? 6 : -10;
-        trustVolatilty += jitter;
-        newsNote = selectedBase.earthScore > 6 
-          ? "REPORT: Viral social post praises your ingredient transparency!" 
-          : "REPORT: Blog post questions your ingredient purity.";
-      }
-      if (month === 5) {
-        const jitter = scores.consistency > 0.8 ? 5 : -12;
-        impactDrift += (jitter / 2);
-        newsNote = scores.consistency > 0.8 
-          ? "HEADLINE: Local NGO commends your low-waste production ethics." 
-          : "HEADLINE: Report highlights excessive waste in your packaging chain.";
-      }
-      if (month === 8) {
-        const jitter = scores.trust > 60 ? 4 : -8;
-        trustVolatilty += jitter;
-        newsNote = scores.trust > 60 
-          ? "NEWS: Consumer survey ranks your brand as 'Most Trusted' in category." 
-          : "NEWS: Competitor launch challenges your brand's market position.";
-      }
+      if (month >= 10 && month <= 12) seasonalMultiplier = 1.45;
 
       const noise = (Math.sin(i * 1.5) * 1.5);
       const baseSales = scores.shortTermSales * 1.2;
@@ -373,27 +319,22 @@ export default function SimulatorPage() {
         : Math.pow(1 + (scores.longevity / 1000), i);
       
       const revenue = baseSales * growthFactor * seasonalMultiplier;
-      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + trustVolatilty + noise);
-      const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + impactDrift + noise);
-      const baseAwareness = scores.shortTermSales;
-      const awareness = Math.min(98, baseAwareness + (i * (baseAwareness > 5 ? 3 : 0.2)) + noise);
+      const trust = Math.min(98, scores.trust + (i * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + noise);
+      const impact = Math.min(98, scores.environmentalScore + (i * 0.1) + noise);
+      const awareness = Math.min(98, scores.shortTermSales + (i * (scores.shortTermSales > 5 ? 3 : 0.2)) + noise);
 
       return {
         month,
         profit: Math.round(revenue),
         trust: Math.round(trust),
         impact: Math.round(impact),
-        awareness: Math.round(awareness),
-        marketNote: newsNote ? `${newsNote} | ${marketNote}` : marketNote,
-        isNewsEvent: !!newsNote
+        awareness: Math.round(awareness)
       };
     });
-  }, [scores, config.category, config.sourcingModel, selectedBase.earthScore]);
+  }, [scores, config.category, config.sourcingModel]);
 
   const animatedChartData = useMemo(() => {
-    if (phase !== 'market') return chartData.map(d => ({ month: d.month }));
-    if (!isAnimating && animationProgress === 0) return chartData.map(d => ({ month: d.month }));
-    
+    if (phase !== 'market' || !isAnimating) return chartData.map(d => ({ month: d.month }));
     return chartData.map((d, index) => {
       const threshold = (index + 1) / chartData.length;
       if (animationProgress >= threshold) return d;
@@ -453,10 +394,7 @@ export default function SimulatorPage() {
     setViewingSessionId(null);
     setAnimationProgress(0);
     setIsAnimating(false);
-    toast({
-      title: "Team Session Ended",
-      description: "You have been removed from the session. A new team can now join.",
-    });
+    toast({ title: "Team Session Ended" });
   };
 
   const handleViewHistoricalSession = (session: any) => {
@@ -466,21 +404,13 @@ export default function SimulatorPage() {
     setYear(session.year || 1);
     if (session.config) setConfig(session.config);
     if (session.aiFeedback) setAiFeedback(session.aiFeedback);
-    else setAiFeedback(null);
     setPhase('market');
     setIsAnimating(false);
-    
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => setIsAnimating(true), 1500);
     }, 100);
-  };
-
-  const handleDeleteEntry = (id: string, sourceCollection: string) => {
-    if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, sourceCollection, id));
-    toast({ title: "Team Entry Removed" });
   };
 
   const launchSimulation = async () => {
@@ -581,7 +511,7 @@ export default function SimulatorPage() {
                           <p className="text-xs text-slate-400 uppercase tracking-widest">{s.status === 'playing' ? 'In Laboratory' : s.productType}</p>
                         </div>
                       </div>
-                      <Button size="icon" variant="ghost" className="text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteEntry(s.id, s.sourceCollection)}>
+                      <Button size="icon" variant="ghost" className="text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-full" onClick={() => deleteDocumentNonBlocking(doc(firestore!, s.sourceCollection, s.id))}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -594,43 +524,6 @@ export default function SimulatorPage() {
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative">
-        {/* Phase Navigation links */}
-        <div className="flex justify-center mb-12 relative z-[100]">
-          <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
-            <button
-              onClick={() => setPhase('intro')}
-              className={cn(
-                "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
-                phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
-              )}
-            >
-              Join Game
-            </button>
-            <button
-              onClick={() => teamName && setPhase('lab')}
-              disabled={!teamName}
-              className={cn(
-                "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
-                phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
-                !teamName && "opacity-20 cursor-not-allowed"
-              )}
-            >
-              Laboratory
-            </button>
-            <button
-              onClick={() => (aiFeedback || viewingSessionId) && setPhase('market')}
-              disabled={!aiFeedback && !viewingSessionId}
-              className={cn(
-                "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
-                phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
-                (!aiFeedback && !viewingSessionId) && "opacity-20 cursor-not-allowed"
-              )}
-            >
-              Market Simulator
-            </button>
-          </div>
-        </div>
-
         <section className="mb-12 text-center space-y-8 animate-in fade-in duration-1000">
           <div className="relative h-48 w-full max-w-2xl mx-auto">
             <Image src={TITLE_IMAGE_URL} alt="The Maroma Product Game" fill className="object-contain" priority />
@@ -638,6 +531,42 @@ export default function SimulatorPage() {
           <p className="text-xl text-slate-300 font-body leading-relaxed max-w-3xl mx-auto px-4">
             Create an imaginary product that we will run through a market simulator based on your strategic laboratory choices.
           </p>
+
+          <div className="flex justify-center relative z-[100] mt-12">
+            <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
+              <button
+                onClick={() => setPhase('intro')}
+                className={cn(
+                  "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
+                  phase === 'intro' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
+                )}
+              >
+                Join Game
+              </button>
+              <button
+                onClick={() => teamName && setPhase('lab')}
+                disabled={!teamName}
+                className={cn(
+                  "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
+                  phase === 'lab' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
+                  !teamName && "opacity-20 cursor-not-allowed"
+                )}
+              >
+                Laboratory
+              </button>
+              <button
+                onClick={() => (aiFeedback || viewingSessionId) && setPhase('market')}
+                disabled={!aiFeedback && !viewingSessionId}
+                className={cn(
+                  "px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all",
+                  phase === 'market' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white",
+                  (!aiFeedback && !viewingSessionId) && "opacity-20 cursor-not-allowed"
+                )}
+              >
+                Market Simulator
+              </button>
+            </div>
+          </div>
         </section>
 
         <section className="space-y-8 mb-16 animate-in fade-in duration-1000 delay-300">
@@ -657,11 +586,9 @@ export default function SimulatorPage() {
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="text-xl font-bold text-white truncate">{s.teamName}</h3>
-                      <div className="relative">
-                        <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 transition-all duration-300 hover:line-clamp-none bg-slate-900/0 hover:bg-slate-800/90 hover:p-2 hover:-m-2 hover:rounded-xl hover:z-20 hover:relative cursor-help">
-                          {s.status === 'playing' ? 'In Laboratory' : s.productType}
-                        </p>
-                      </div>
+                      <p className="text-xs text-slate-400 uppercase tracking-widest line-clamp-2 hover:line-clamp-none transition-all duration-300 bg-slate-900/0 hover:bg-slate-800/90 hover:p-2 hover:-m-2 hover:rounded-xl hover:z-20 hover:relative cursor-help">
+                        {s.status === 'playing' ? 'In Laboratory' : s.productType}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] text-accent font-bold uppercase tracking-tighter">Score</p>
@@ -671,10 +598,7 @@ export default function SimulatorPage() {
                     </div>
                   </div>
                   {s.status === 'playing' && (
-                    <Button variant="outline" className="w-full mt-6 text-white border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px] py-6 h-auto" onClick={() => {
-                      setTeamName(s.teamName); setSelectedEmblem(s.emblem); setPhase('lab');
-                      setTimeout(() => document.getElementById('lab-header')?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    }}>
+                    <Button variant="outline" className="w-full mt-6 text-white border-white/20 hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-[10px] py-6 h-auto" onClick={() => { setTeamName(s.teamName); setSelectedEmblem(s.emblem); setPhase('lab'); }}>
                       Edit / Launch Product
                     </Button>
                   )}
@@ -699,8 +623,8 @@ export default function SimulatorPage() {
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                 {TEAM_EMBLEMS.map((emblem) => (
-                  <button key={emblem.id} onClick={() => handleEmblemSelect(emblem.url)} className={cn("relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 group bg-white shadow-md", selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30")}>
-                    <img src={emblem.url} alt={emblem.name} className="w-full h-full object-contain p-0.5" />
+                  <button key={emblem.id} onClick={() => handleEmblemSelect(emblem.url)} className={cn("relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 bg-white shadow-md", selectedEmblem === emblem.url ? "border-primary scale-110 z-10 shadow-xl" : "border-transparent hover:border-muted-foreground/30")}>
+                    <img src={emblem.url} alt="Logo" className="w-full h-full object-contain p-0.5" />
                     {selectedEmblem === emblem.url && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
                   </button>
                 ))}
@@ -803,19 +727,11 @@ export default function SimulatorPage() {
                   </div>
                 </section>
 
-                <section className="space-y-6">
-                  <h3 className="text-2xl font-headline font-bold text-white flex items-center gap-2"><MessageSquare className="w-6 h-6 text-accent" /> 5. Custom Specs</h3>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Can't find options? Describe unique details here.</Label>
-                    <Textarea placeholder="Type in extra details (product quirks, specific marketing ideas...)" value={config.customDetails} onChange={e => handleUpdateConfig('customDetails', e.target.value)} className="min-h-[100px] rounded-2xl bg-white border-none text-primary font-medium" />
-                  </div>
-                </section>
-
                 <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl">
                   <div className="flex justify-between items-center pt-6 border-t-2 border-accent/20">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Calculated Price Point</span>
-                      <span className="text-[10px] text-slate-500">Retail Price Target</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Target Price Point</span>
+                      <span className="text-[10px] text-slate-500">Retail Target</span>
                     </div>
                     <span className="text-4xl font-bold text-white font-headline">₹{Math.round(scores.retailPrice)}</span>
                   </div>
@@ -841,8 +757,8 @@ export default function SimulatorPage() {
                 {[
                   { label: "Final Revenue", val: `₹${displayVal(chartData[11].profit * 1000)}`, icon: Clock },
                   { label: "Market Trust", val: `${displayVal(chartData[11].trust)}%`, icon: ShieldCheck, color: "text-green-400" },
-                  { label: "Price Strategy", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
-                  { label: "Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
+                  { label: "Retail Price", val: `₹${displayVal(scores.retailPrice)}`, icon: Zap, color: "text-amber-400" },
+                  { label: "Market Awareness", val: `${displayVal(chartData[11].awareness)}%`, icon: Users, color: "text-blue-400" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
                     <CardContent className="p-6 flex items-center gap-5">
@@ -860,19 +776,19 @@ export default function SimulatorPage() {
 
               <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-8 md:p-12 relative overflow-hidden">
                 <CardHeader className="px-0 pt-0 flex flex-col gap-6">
-                  <CardTitle className="font-headline text-3xl text-white">Trajectory Performance</CardTitle>
+                  <CardTitle className="font-headline text-3xl text-white">Growth Trajectory</CardTitle>
                   {animationProgress === 1 && (
                     <div className="w-full max-w-xl animate-in slide-in-from-top-4 duration-1000">
                       <div className="bg-accent/20 border border-accent/30 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-2xl">
                         <div className="flex items-center gap-3">
                           <div className="bg-accent p-2 rounded-xl shadow-lg shrink-0"><PartyPopper className="w-5 h-5 text-white" /></div>
                           <div className="flex flex-col">
-                            <h3 className="text-sm font-headline font-bold text-white">Stage {year} Complete!</h3>
-                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold">GROWTH CYCLE SIMULATED</p>
+                            <h3 className="text-sm font-headline font-bold text-white">Year {year} Cycle Complete!</h3>
+                            <p className="text-[10px] text-slate-300 font-body uppercase tracking-[0.2em] font-bold">Data Harvested</p>
                           </div>
                         </div>
                         <Button size="sm" onClick={() => { setPhase('lab'); setYear(prev => prev + 1); setIsAnimating(false); }} className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 text-xs font-bold gap-2">
-                          Ready to improve for your second year? <ChevronRight className="w-3 h-3" />
+                          Improve Strategy <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
@@ -881,7 +797,7 @@ export default function SimulatorPage() {
                 
                 <div className="h-[500px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={animatedChartData} key={`${teamName}-${phase}`} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                    <LineChart data={animatedChartData} key={`${teamName}-${phase}-${animationProgress === 1}`} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                       <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }} />
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
@@ -916,7 +832,7 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <Card className="rounded-[2.5rem] bg-white/5 backdrop-blur-sm text-white border border-white/10 p-8 space-y-8">
-                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Opportunities</CardTitle></CardHeader>
+                <CardHeader className="p-0"><CardTitle className="font-headline text-3xl">Strategic Opportunities</CardTitle></CardHeader>
                 <div className="space-y-6">
                   {overallScore > 75 && scores.shortTermSales > 10 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-green-500 text-slate-200 space-y-3">
@@ -932,13 +848,13 @@ export default function SimulatorPage() {
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-blue-500 text-slate-200 space-y-3">
                       <div className="flex gap-3">
                         <Megaphone className="w-5 h-5 text-blue-500 shrink-0" />
-                        <span>Your ethical core is world-class, but the brand remains a "Hidden Gem." Scale awareness to unlock growth!</span>
+                        <span>Ethical core is world-class, but the brand remains a "Hidden Gem." Scale awareness to unlock growth!</span>
                       </div>
                     </div>
                   ) : scores.trust < 50 ? (
                     <div className="p-5 bg-white/5 rounded-2xl text-sm border-l-4 border-amber-500 text-slate-200 flex gap-3">
                       <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span>Market skepticism is rising. Your ingredient transparency might be insufficient for your target audience.</span>
+                      <span>Market skepticism is rising. Your ingredient transparency might be insufficient.</span>
                     </div>
                   ) : null}
                   <div className="space-y-4 pt-4">
@@ -978,7 +894,7 @@ export default function SimulatorPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-4">
                             <Label className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
-                              <ThumbsUp className="w-3 h-3" /> What Worked
+                              <ThumbsUp className="w-3 h-3" /> Strengths
                             </Label>
                             {aiFeedback.positiveReviews.map((r, i) => (
                               <div key={i} className="text-xs p-4 bg-green-500/5 rounded-2xl border border-green-500/10 text-slate-300">
@@ -988,7 +904,7 @@ export default function SimulatorPage() {
                           </div>
                           <div className="space-y-4">
                             <Label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center gap-2">
-                              <ThumbsDown className="w-3 h-3" /> What Didn't
+                              <ThumbsDown className="w-3 h-3" /> Friction
                             </Label>
                             {aiFeedback.negativeReviews.map((r, i) => (
                               <div key={i} className="space-y-2">
@@ -997,7 +913,7 @@ export default function SimulatorPage() {
                                 </div>
                                 {aiFeedback.negativeReviewFixes[i] && (
                                   <div className="text-[9px] px-3 font-bold text-accent uppercase tracking-wider flex items-center gap-1.5">
-                                    <Wrench className="w-3 h-3" /> Adjustment: {aiFeedback.negativeReviewFixes[i]}
+                                    <Wrench className="w-3 h-3" /> Fix: {aiFeedback.negativeReviewFixes[i]}
                                   </div>
                                 )}
                               </div>
@@ -1009,7 +925,7 @@ export default function SimulatorPage() {
                       <div className="pt-6 border-t border-white/5">
                         <div className="p-6 bg-accent/10 rounded-3xl border border-accent/20 space-y-3">
                           <h4 className="text-xs font-bold uppercase tracking-widest text-accent flex items-center gap-2">
-                            <Lightbulb className="w-4 h-4" /> Strategic Recommendation
+                            <Lightbulb className="w-4 h-4" /> Recommended Adjustment
                           </h4>
                           <p className="text-sm text-slate-200 leading-relaxed font-body">
                             {aiFeedback.suggestion}
@@ -1018,28 +934,10 @@ export default function SimulatorPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-20 text-slate-500 italic">Analysis complete. Launch a strategy or view a historical result to see details.</div>
+                    <div className="text-center py-20 text-slate-500 italic">Complete a simulation to see the report.</div>
                   )}
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Duplicate Navigation links for bottom visibility */}
-            <div className="flex justify-center pt-12 pb-20 relative z-[100]">
-              <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex items-center shadow-2xl">
-                <button
-                  onClick={() => { setPhase('intro'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
-                >
-                  Return to Join Game
-                </button>
-                <button
-                  onClick={() => { setPhase('lab'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white"
-                >
-                  Adjust Laboratory
-                </button>
-              </div>
             </div>
           </div>
         )}
