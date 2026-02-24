@@ -46,14 +46,16 @@ Audience: {{{targetAudience}}}
 Awareness: {{{awarenessScore}}}%
 Earth/Trust: {{{earthScore}}}/{{{trustScore}}}
 Price: ₹{{{pricePoint}}}
-Marketing: {{{message}}} via {{#each marketingChannels}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+Marketing Message: "{{{message}}}"
+Channels: {{#each marketingChannels}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
 CRITICAL - ALIGNMENT & LOGIC:
-1. AWARENESS LOGIC: If Awareness is ABOVE 50%, you MUST NOT say "I haven't seen it". Instead, talk about why people who HAVE seen it are buying or ignoring it.
-2. INVISIBILITY: Only if awareness is BELOW 30% should you focus on "the brand is invisible". 
-3. GREENWASHING: If ingredients are synthetic but message is "sustainable/pure", be 'cynical' and call out the disconnect.
-4. ETHICAL MASTERPIECE: If Earth/Trust > 80 but Awareness < 30, use 'concerned' and call it a "hidden gem that needs a megaphone".
-5. REPETITION: Avoid boilerplate. Use vivid, organic language.
+1. AWARENESS SYNC: If Awareness is ABOVE 50%, you MUST NOT say "I haven't seen it". Instead, critique WHY people who see it aren't buying (e.g., price is too high, message is confusing).
+2. HIGH AWARENESS (80%+): Acknowledge the "Massive Visibility" but focus on "Conversion Efficiency". If awareness is 90%+ but profit is low, call out the "Expensive but shallow reach".
+3. INVISIBILITY: Only if awareness is BELOW 30% should you focus on "the brand is invisible". 
+4. GREENWASHING: If ingredients are synthetic (e.g. Paraffin, Synthetic Fragrance) but message uses words like "sustainable/pure/ethical", be 'cynical' and call out the disconnect.
+5. ETHICAL MASTERPIECE: If Earth/Trust > 80 but Awareness < 30, use 'concerned' and call it a "hidden gem that needs a megaphone".
+6. REPETITION: Avoid boilerplate. Use vivid, organic language. Be educational.
 
 Generate EXACTLY 4 positive and 4 negative customer reviews. 
 For EACH negative review, provide a matching "Suggested Action" that is a specific setting change in the laboratory.`,

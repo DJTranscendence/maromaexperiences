@@ -48,7 +48,8 @@ import {
   Quote,
   TrendingDown,
   ExternalLink,
-  Wand2
+  Wand2,
+  Search
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -340,6 +341,21 @@ export default function SimulatorPage() {
 
     const longevity = (trust * 0.6) + ((selectedPriceTier?.margin || 0) * 40);
 
+    // SEO Score Logic
+    let seo = 20;
+    if (config.message) {
+      const msg = config.message.toLowerCase();
+      const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
+      const isHandcrafted = config.productionMethod === 'hsb';
+      
+      if (isEthical && (msg.includes('ethical') || msg.includes('sustainable') || msg.includes('pure') || msg.includes('natural'))) seo += 30;
+      if (isHandcrafted && (msg.includes('artisan') || msg.includes('handcrafted') || msg.includes('batch'))) seo += 30;
+      if (msg.length > 20) seo += 10;
+      
+      const isExactMatch = SEO_PHRASES.some(p => p.text.toLowerCase() === msg);
+      if (isExactMatch) seo = Math.max(seo, 92);
+    }
+
     return { 
       environmentalScore: capScore(environmentalScore), 
       trust: capScore(trust), 
@@ -348,7 +364,8 @@ export default function SimulatorPage() {
       unitCost, 
       retailPrice,
       consistency,
-      socialImpact: capScore((selectedSourcing?.humanScore || 5) * 10)
+      socialImpact: capScore((selectedSourcing?.humanScore || 5) * 10),
+      seoScore: capScore(seo)
     };
   }, [config, selectedBase, selectedSourcing, selectedPackaging, selectedProduction, selectedAudience, selectedPriceTier]);
 
@@ -676,7 +693,8 @@ export default function SimulatorPage() {
           profit: Math.round(getStatsAtMonth(11).profit),
           totalRevenue: totalRevenue,
           netProfit: yearProfit,
-          longevity: Math.round(scores.longevity)
+          longevity: Math.round(scores.longevity),
+          seoScore: Math.round(scores.seoScore)
         },
         createdAt: serverTimestamp()
       });
@@ -1085,7 +1103,8 @@ export default function SimulatorPage() {
                   { label: "Annual Revenue", val: `₹${displayVal(lastYearRevenue).toLocaleString()}`, icon: TrendingUp, color: "text-blue-400" },
                   { label: "Market Trust", val: `${displayVal(getStatsAtMonth(11).trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Net Profit", val: `₹${displayVal(lastYearProfit).toLocaleString()}`, icon: ArrowUpRight, color: lastYearProfit > 0 ? "text-emerald-400" : "text-rose-400" },
-                  { label: "Awareness", val: `${displayVal(getStatsAtMonth(11).awareness)}%`, icon: Users, color: "text-blue-400" }
+                  { label: "Awareness", val: `${displayVal(getStatsAtMonth(11).awareness)}%`, icon: Users, color: "text-blue-400" },
+                  { label: "SEO Power", val: `${displayVal(scores.seoScore)}%`, icon: Search, color: "text-accent" }
                 ].map((m, i) => (
                   <Card key={i} className="rounded-[1.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
                     <CardContent className="p-6 flex items-center gap-5">
