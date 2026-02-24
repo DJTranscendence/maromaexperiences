@@ -280,39 +280,39 @@ export default function SimulatorPage() {
 
   const scores = useMemo(() => {
     const unitCost = Math.max(10, (selectedBase?.unitCost || 0) + (selectedSourcing?.unitCostDelta || 0) + (selectedPackaging?.unitCost || 0) + (selectedProduction?.unitCostDelta || 0));
-    const retailPrice = unitCost * (1 + (selectedPriceTier?.margin || 0));
+    const retailPrice = unitCost * (1 + (selectedPriceTier?.margin || 0.3));
     
-    const baseEarth = selectedBase?.earthScore || 0;
+    const baseEarth = selectedBase?.earthScore || 5;
     const environmentalScore = (baseEarth * (selectedPackaging?.envMultiplier || 1)) * 10;
 
     let consistency = 1.0;
-    if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') consistency -= 0.5;
-    if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.5;
-    if (config.coreValue === 'len') consistency -= 0.7;
+    if ((config.coreValue === 'zw' || config.coreValue === 'lcf') && config.packagingType === 'plastic') consistency -= 0.4;
+    if (config.coreValue === 'fts' && config.sourcingModel === 'is') consistency -= 0.4;
 
     const hasChannels = config.marketingChannels.length > 0;
-    const hasMessage = config.message.trim().length > 10;
+    const hasMessage = config.message.trim().length > 5;
     
-    const marketingMultiplier = hasChannels ? 1.5 : 0.001; 
-    const marketingClarity = hasMessage ? 1.2 : (config.message.length > 0 ? 0.05 : 0.001);
+    // Revenue Easing: Higher marketing impact
+    const marketingMultiplier = hasChannels ? 2.2 : 0.05; 
+    const marketingClarity = hasMessage ? 1.4 : 0.6;
     
     const marketingResonanceRaw = hasChannels
       ? config.marketingChannels.reduce((acc, channelId) => {
           const channel = MARKETING_CHANNELS.find(c => channelId === c.id);
-          return acc + (channel?.resonance[config.targetAudience] || 1);
+          return acc + (channel?.resonance[config.targetAudience || 'fam'] || 1);
         }, 0) / config.marketingChannels.length
-      : 0.01;
+      : 0.1;
 
     const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * marketingResonanceRaw;
     const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
     
-    let resonance = ((appealScore * 0.5) + (accessibility * 2.5)) * marketingClarity * marketingMultiplier * 10;
+    // Revenue Easing: Increased base resonance multiplier
+    let resonance = ((appealScore * 0.8) + (accessibility * 3.0)) * marketingClarity * marketingMultiplier * 35;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
     let trust = (trustBase * 10) + (selectedSourcing?.trustBonus || 0) + (selectedProduction?.trustBonus || 0);
 
-    if (trust < 40) resonance *= 0.3; 
-    if (trust < 30) resonance *= 0.1; 
+    if (trust < 30) resonance *= 0.4; 
 
     const longevity = (trust * 0.6) + ((selectedPriceTier?.margin || 0) * 40);
 
@@ -338,35 +338,38 @@ export default function SimulatorPage() {
     
     // Summer (Month 3-5)
     if (month >= 3 && month <= 5) {
-      if (config.category === 'bc') seasonalMultiplier = 1.3; 
-      if (config.category === 'hf') seasonalMultiplier = 0.8; 
+      if (config.category === 'bc') seasonalMultiplier = 1.4; 
+      if (config.category === 'hf') seasonalMultiplier = 0.7; 
     }
     
     // Monsoon (Month 6-8)
     if (month >= 6 && month <= 8) {
-      if (config.sourcingModel === 'lsf') seasonalMultiplier = 0.75; 
-      if (config.category === 'hf') seasonalMultiplier = 1.15; 
+      if (config.sourcingModel === 'lsf') seasonalMultiplier = 0.7; 
+      if (config.category === 'hf') seasonalMultiplier = 1.25; 
     }
     
-    if (month >= 10 && month <= 12) seasonalMultiplier = 1.45;
+    // Festive (Month 10-12)
+    if (month >= 10 && month <= 12) seasonalMultiplier = 1.6;
 
     const noise = (Math.sin(mIndex * 1.5) * 1.5);
-    const baseSales = scores.shortTermSales * 1.2;
+    
+    // Revenue Easing: Increased growth factors
+    const baseSales = scores.shortTermSales * 2.5;
     const growthFactor = scores.shortTermSales < 1 
       ? 1.0 
-      : Math.pow(1 + (scores.longevity / 1000), mIndex);
+      : Math.pow(1 + (scores.longevity / 600), mIndex);
     
     const revenue = baseSales * growthFactor * seasonalMultiplier;
     
     let trustModifier = 0;
     if (month >= 4) {
       const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
-      trustModifier = isEthical ? 5 : -15;
+      trustModifier = isEthical ? 10 : -20;
     }
 
-    const trust = Math.min(98, scores.trust + trustModifier + (mIndex * (scores.environmentalScore > 65 ? 0.6 : -1.2)) + noise);
+    const trust = Math.min(98, scores.trust + trustModifier + (mIndex * (scores.environmentalScore > 65 ? 0.8 : -1.5)) + noise);
     const impact = Math.min(98, scores.environmentalScore + (mIndex * 0.1) + noise);
-    const awareness = Math.min(98, scores.shortTermSales + (mIndex * (scores.shortTermSales > 5 ? 3 : 0.2)) + noise);
+    const awareness = Math.min(98, scores.shortTermSales + (mIndex * (scores.shortTermSales > 5 ? 4 : 0.5)) + noise);
 
     return {
       month,
@@ -416,36 +419,36 @@ export default function SimulatorPage() {
     list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters.", icon: PlayCircle });
     
     if (config.category === 'bc') {
-      list.push({ month: 3, title: "Summer Demand", desc: "Soaring temperatures drive 30% spike in body care sales.", icon: Sun });
+      list.push({ month: 3, title: "Summer Demand", desc: "Soaring temperatures drive 40% spike in body care sales.", icon: Sun });
     } else if (config.category === 'hf') {
-      list.push({ month: 3, title: "Seasonal Slump", desc: "Summer heat reduces interest in candles and heavy fragrances.", icon: Sun });
+      list.push({ month: 3, title: "Summer Slump", desc: "Heat reduces interest in indoor fragrance stability.", icon: Sun });
     }
 
     const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
     list.push({ 
       month: 4, 
-      title: "News Feature", 
+      title: "News Cycle", 
       desc: isEthical 
-        ? "Viral story highlights your clean ingredient base as 'The Future of Ethical Craft'." 
-        : "Skeptical investigative piece questions the hidden environmental cost of your ingredients.", 
+        ? "Viral story highlights your clean ingredients as 'The Future of Ethical Craft'." 
+        : "Investigative piece questions the hidden environmental cost of your synthetics.", 
       icon: Newspaper 
     });
 
     if (config.marketingChannels.length > 0) {
-      list.push({ month: 5, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is starting to take root.`, icon: Megaphone });
+      list.push({ month: 5, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is taking root.`, icon: Megaphone });
     }
 
     if (config.sourcingModel === 'lsf') {
       list.push({ month: 7, title: "Monsoon Supply Lag", desc: "Heavy rains disrupt local farm logistics, leading to inventory gaps.", icon: CloudRain });
     } else {
-      list.push({ month: 7, title: "Monsoon Stability", desc: "Industrial sourcing avoids weather-related delays, maintaining consistent stock.", icon: Package });
+      list.push({ month: 7, title: "Monsoon Stability", desc: "Bulk sourcing avoids weather-related delays.", icon: Package });
     }
 
     if (scores.trust > 70) {
       list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations.", icon: ShieldCheck });
     }
 
-    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the campus network.", icon: PartyPopper });
+    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the network.", icon: PartyPopper });
     list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2.", icon: Clock });
 
     return list;
@@ -563,7 +566,6 @@ export default function SimulatorPage() {
       setYear(team.year || 1);
       setAiFeedback(team.aiFeedback);
       
-      // Animation Guard: Only play if not played before for this team
       if (!playedAnimations.includes(team.teamName)) {
         setIsAnimating(true);
         setAnimationProgress(0);
@@ -589,7 +591,6 @@ export default function SimulatorPage() {
     setPhase('market');
     setIsAiLoading(true);
     
-    // Mobile optimization: Jump to graph immediately
     const isMobile = window.innerWidth < 768;
     setTimeout(() => {
       const el = document.getElementById('analysis-dashboard');
@@ -620,7 +621,6 @@ export default function SimulatorPage() {
     } finally {
       setIsAiLoading(false);
       
-      // Animation Guard: Only play once per team
       if (!playedAnimations.includes(teamName)) {
         setAnimationProgress(0);
         setTimeout(() => setIsAnimating(true), 1500);
@@ -664,7 +664,7 @@ export default function SimulatorPage() {
     setPhase('lab');
     setIsAnimating(false);
     setAiFeedback(null);
-    setConfig(DEFAULT_CONFIG); // Reset choices for the new budget cycle
+    setConfig(DEFAULT_CONFIG); 
     toast({
       title: `Year ${year + 1} Capital Assigned`,
       description: `New budget: ₹${Math.round(reinvestmentCapital).toLocaleString()}.`
@@ -1103,7 +1103,6 @@ export default function SimulatorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
               <div className="space-y-8">
-                {/* News Article Component */}
                 <Card className={cn(
                   "rounded-[2.5rem] p-8 border-l-8 overflow-hidden relative group animate-in slide-in-from-left duration-1000",
                   newsArticle.type === 'positive' ? "bg-emerald-950/20 border-emerald-500" : 
