@@ -48,7 +48,8 @@ import {
   Newspaper,
   Quote,
   TrendingDown,
-  ExternalLink
+  ExternalLink,
+  Wand2
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -80,6 +81,14 @@ import { useToast } from "@/hooks/use-toast";
 import { generateMarketFeedback, type MarketFeedbackOutput } from "@/ai/flows/market-feedback";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TEAM_EMBLEMS = [
   { id: 'brand-10', url: 'https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Game%20Brand%20Logos%2F10-01.png?alt=media&token=fa6aee12-86a5-4cf2-bd0c-2b18f822d65e' },
@@ -120,6 +129,23 @@ const DEFAULT_CONFIG = {
   message: "",
   customDetails: ""
 };
+
+const SEO_PHRASES = [
+  { text: "Ethically Sourced. Purely Natural.", tags: ["ethical", "natural"] },
+  { text: "Conscious Craft. Zero Compromise.", tags: ["ethical", "handcrafted"] },
+  { text: "Sustainable Luxury for Mindful Living.", tags: ["ethical", "luxury"] },
+  { text: "Artisan Handcrafted. Heritage Quality.", tags: ["handcrafted", "traditional"] },
+  { text: "Authentic Maroma Traditions.", tags: ["traditional"] },
+  { text: "Slow Crafted. Pure Intent.", tags: ["handcrafted"] },
+  { text: "Precision Performance. Mass Appeal.", tags: ["industrial", "modern"] },
+  { text: "Efficient Quality. Modern Value.", tags: ["industrial", "budget"] },
+  { text: "Elevate Your Space with Pure Scent.", tags: ["hf"] },
+  { text: "Nourish Your Skin. Naturally.", tags: ["bc"] },
+  { text: "Zero Waste. Maximum Impact.", tags: ["zw", "ethical"] },
+  { text: "Handmade with Love in Maroma.", tags: ["handcrafted"] },
+  { text: "The Future of Ethical Beauty.", tags: ["bc", "ethical"] },
+  { text: "Bespoke Aromatherapy for the Home.", tags: ["hf", "luxury"] },
+];
 
 const capScore = (val: number) => Math.min(98, Math.max(0, val));
 
@@ -676,6 +702,23 @@ export default function SimulatorPage() {
 
   const displayVal = (val: number) => Math.round(val * animationProgress);
 
+  const filteredSuggestions = useMemo(() => {
+    return SEO_PHRASES.filter(phrase => {
+      // Return suggestions relevant to current category or ingredient base tags
+      const currentTags = [config.category, config.ingredientBase, config.sourcingModel, config.productionMethod];
+      const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
+      const isHandcrafted = config.productionMethod === 'hsb';
+      const isIndustrial = config.productionMethod === 'mip';
+      
+      const tagsToMatch = [...currentTags];
+      if (isEthical) tagsToMatch.push('ethical');
+      if (isHandcrafted) tagsToMatch.push('handcrafted');
+      if (isIndustrial) tagsToMatch.push('industrial');
+
+      return phrase.tags.some(tag => tagsToMatch.includes(tag));
+    });
+  }, [config]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#1e293b] flex flex-col transition-colors duration-1000 relative overflow-x-hidden">
       <Navbar />
@@ -945,7 +988,56 @@ export default function SimulatorPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Brand Positioning Message</Label>
-                      <Input placeholder="e.g., Authentic Craft. Sustainable Impact." value={config.message} onChange={e => handleUpdateConfig('message', e.target.value)} className="rounded-xl h-12 bg-white border-none text-primary font-medium" />
+                      <div className="relative group">
+                        <Input 
+                          placeholder="e.g., Authentic Craft. Sustainable Impact." 
+                          value={config.message} 
+                          onChange={e => handleUpdateConfig('message', e.target.value)} 
+                          className="rounded-xl h-14 bg-white border-none text-primary font-medium pr-12 text-lg shadow-inner" 
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="icon" variant="ghost" className="rounded-full hover:bg-slate-100 text-accent h-10 w-10">
+                                <Wand2 className="w-5 h-5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-80 rounded-2xl p-2 border-none shadow-2xl bg-white">
+                              <DropdownMenuLabel className="flex items-center gap-2 text-primary font-headline">
+                                <Sparkles className="w-4 h-4 text-accent" /> SEO Powerful Phrases
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <ScrollArea className="h-64">
+                                {filteredSuggestions.length > 0 ? (
+                                  filteredSuggestions.map((phrase, i) => (
+                                    <DropdownMenuItem 
+                                      key={i} 
+                                      onClick={() => handleUpdateConfig('message', phrase.text)}
+                                      className="rounded-xl p-3 cursor-pointer hover:bg-accent/5 focus:bg-accent/5 transition-colors group"
+                                    >
+                                      <div className="flex flex-col gap-1">
+                                        <span className="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors line-clamp-2">
+                                          {phrase.text}
+                                        </span>
+                                        <div className="flex gap-1">
+                                          {phrase.tags.map(tag => (
+                                            <span key={tag} className="text-[8px] uppercase font-bold tracking-widest text-slate-400">#{tag}</span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  ))
+                                ) : (
+                                  <div className="p-4 text-center text-xs text-slate-400 italic font-body">
+                                    Select ingredients to unlock suggestions.
+                                  </div>
+                                )}
+                              </ScrollArea>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-2">Click the wand for strategy-aligned SEO phrases.</p>
                     </div>
                   </div>
                 </section>
