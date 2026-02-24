@@ -443,7 +443,7 @@ export default function SimulatorPage() {
       list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations.", icon: ShieldCheck });
     }
 
-    list.push({ month: 10, title: "Festive Spike", desc: "Holiday season triples organic gifting demand across the network.", icon: PartyPopper });
+    list.push({ month: 10, title: "Diwali Gifting Surge", desc: "Holiday season triples organic gifting demand across the network.", icon: PartyPopper });
     list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2.", icon: Clock });
 
     return list;
@@ -1048,15 +1048,37 @@ export default function SimulatorPage() {
                       <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
                       
                       {animationProgress >= 0.08 && (
-                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 'bold' }} />
+                        <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'top', value: 'Market Entry', fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 'bold' }} />
                       )}
                       
                       {animationProgress >= 0.33 && (
-                        <ReferenceLine x={4} stroke="#ec4899" strokeDasharray="3 3" label={{ position: 'top', value: 'News cycle', fill: '#ec4899', fontSize: 9, fontWeight: 'bold' }} />
+                        <ReferenceLine 
+                          x={4} 
+                          stroke="#ec4899" 
+                          strokeDasharray="3 3" 
+                          label={{ 
+                            position: 'top', 
+                            value: newsArticle.headline.length > 20 ? newsArticle.headline.substring(0, 17) + '...' : newsArticle.headline, 
+                            fill: '#ec4899', 
+                            fontSize: 9, 
+                            fontWeight: 'bold' 
+                          }} 
+                        />
                       )}
 
                       {animationProgress >= 0.5 && (
-                        <ReferenceLine x={6} stroke="#3b82f6" strokeDasharray="3 3" label={{ position: 'top', value: 'Monsoon', fill: '#3b82f6', fontSize: 9, fontWeight: 'bold' }} />
+                        <ReferenceLine 
+                          x={6} 
+                          stroke="#3b82f6" 
+                          strokeDasharray="3 3" 
+                          label={{ 
+                            position: 'top', 
+                            value: config.sourcingModel === 'lsf' ? 'Monsoon Supply Lag' : 'Monsoon Stability', 
+                            fill: '#3b82f6', 
+                            fontSize: 9, 
+                            fontWeight: 'bold' 
+                          }} 
+                        />
                       )}
 
                       {animationProgress >= 0.83 && (
@@ -1066,7 +1088,7 @@ export default function SimulatorPage() {
                           strokeDasharray="3 3" 
                           label={{ 
                             position: 'top', 
-                            value: 'Festive Spike', 
+                            value: 'Diwali Gifting Surge', 
                             fill: '#fbbf24', 
                             fontSize: 9, 
                             fontWeight: 'bold',
