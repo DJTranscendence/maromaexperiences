@@ -136,6 +136,7 @@ export default function SimulatorPage() {
   
   const [budget, setBudget] = useState(STARTUP_BUDGET);
   const [lastYearProfit, setLastYearProfit] = useState(0);
+  const [lastYearRevenue, setLastYearRevenue] = useState(0);
 
   const [aiFeedback, setAiFeedback] = useState<MarketFeedbackOutput | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -292,7 +293,6 @@ export default function SimulatorPage() {
     const hasChannels = config.marketingChannels.length > 0;
     const hasMessage = config.message.trim().length > 5;
     
-    // Revenue Easing: Higher marketing impact
     const marketingMultiplier = hasChannels ? 2.2 : 0.05; 
     const marketingClarity = hasMessage ? 1.4 : 0.6;
     
@@ -306,7 +306,6 @@ export default function SimulatorPage() {
     const appealScore = (selectedBase?.appeal || 1) * (selectedProduction?.authenticity || 1) * (selectedAudience?.baseAppeal || 1) * marketingResonanceRaw;
     const accessibility = (selectedPriceTier?.accessibility || 1) / (selectedAudience?.priceSensitivity || 1);
     
-    // Revenue Easing: Increased base resonance multiplier
     let resonance = ((appealScore * 0.8) + (accessibility * 3.0)) * marketingClarity * marketingMultiplier * 35;
 
     const trustBase = (environmentalScore * 0.05) + (consistency * 3) + ((selectedPriceTier?.fairness || 1) * 2);
@@ -336,24 +335,20 @@ export default function SimulatorPage() {
     const month = mIndex + 1;
     let seasonalMultiplier = 1.0;
     
-    // Summer (Month 3-5)
     if (month >= 3 && month <= 5) {
       if (config.category === 'bc') seasonalMultiplier = 1.4; 
       if (config.category === 'hf') seasonalMultiplier = 0.7; 
     }
     
-    // Monsoon (Month 6-8)
     if (month >= 6 && month <= 8) {
       if (config.sourcingModel === 'lsf') seasonalMultiplier = 0.7; 
       if (config.category === 'hf') seasonalMultiplier = 1.25; 
     }
     
-    // Festive (Month 10-12)
     if (month >= 10 && month <= 12) seasonalMultiplier = 1.6;
 
     const noise = (Math.sin(mIndex * 1.5) * 1.5);
     
-    // Revenue Easing: Increased growth factors
     const baseSales = scores.shortTermSales * 2.5;
     const growthFactor = scores.shortTermSales < 1 
       ? 1.0 
@@ -494,6 +489,7 @@ export default function SimulatorPage() {
     setYear(1);
     setBudget(STARTUP_BUDGET);
     setLastYearProfit(0);
+    setLastYearRevenue(0);
     setAiFeedback(null);
     setAnimationProgress(0);
     setIsAnimating(false);
@@ -565,6 +561,8 @@ export default function SimulatorPage() {
       setConfig(team.config || DEFAULT_CONFIG);
       setYear(team.year || 1);
       setAiFeedback(team.aiFeedback);
+      setLastYearRevenue(team.scores?.totalRevenue || (team.scores?.profit * 12 * 1000) || 0);
+      setLastYearProfit(team.scores?.netProfit || ((team.scores?.profit * 12 * 1000) - (team.investmentCost || 500000)) || 0);
       
       if (!playedAnimations.includes(team.teamName)) {
         setIsAnimating(true);
@@ -631,7 +629,9 @@ export default function SimulatorPage() {
       }
     }
 
-    const yearProfit = (getStatsAtMonth(11).profit * 1000) - investmentCost;
+    const totalRevenue = Array.from({ length: 12 }).reduce((acc, _, i) => acc + getStatsAtMonth(i).profit, 0) * 1000;
+    const yearProfit = totalRevenue - investmentCost;
+    setLastYearRevenue(totalRevenue);
     setLastYearProfit(yearProfit);
 
     if (firestore) {
@@ -643,12 +643,15 @@ export default function SimulatorPage() {
         config: config,
         aiFeedback: generatedFeedback,
         year: year,
+        investmentCost: investmentCost,
         scores: {
           earth: Math.round(scores.environmentalScore),
           trust: Math.round(scores.trust),
           resonance: Math.round(scores.shortTermSales),
           impact: Math.round(scores.socialImpact),
           profit: Math.round(getStatsAtMonth(11).profit),
+          totalRevenue: totalRevenue,
+          netProfit: yearProfit,
           longevity: Math.round(scores.longevity)
         },
         createdAt: serverTimestamp()
@@ -990,7 +993,7 @@ export default function SimulatorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               <div className="lg:col-span-1 space-y-4">
                 {[
-                  { label: "Revenue", val: `₹${displayVal(getStatsAtMonth(11).profit * 1000).toLocaleString()}`, icon: TrendingUp },
+                  { label: "Annual Revenue", val: `₹${displayVal(lastYearRevenue).toLocaleString()}`, icon: TrendingUp, color: "text-blue-400" },
                   { label: "Market Trust", val: `${displayVal(getStatsAtMonth(11).trust)}%`, icon: ShieldCheck, color: "text-green-400" },
                   { label: "Net Profit", val: `₹${displayVal(lastYearProfit).toLocaleString()}`, icon: ArrowUpRight, color: lastYearProfit > 0 ? "text-emerald-400" : "text-rose-400" },
                   { label: "Awareness", val: `${displayVal(getStatsAtMonth(11).awareness)}%`, icon: Users, color: "text-blue-400" }
@@ -1009,7 +1012,7 @@ export default function SimulatorPage() {
                 ))}
               </div>
 
-              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-4 sm:p-8 md:p-12 relative overflow-hidden">
+              <Card className="lg:col-span-3 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-xl p-4 sm:p-8 relative overflow-hidden">
                 <CardHeader className="px-0 pt-0 flex flex-col gap-6">
                   <CardTitle className="font-headline text-3xl text-white">Market Trajectory</CardTitle>
                   {animationProgress === 1 && (
