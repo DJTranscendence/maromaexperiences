@@ -434,46 +434,6 @@ export default function SimulatorPage() {
     });
   }, [chartData, animationProgress, phase]);
 
-  const milestones = useMemo(() => {
-    const list = [];
-    list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters.", icon: PlayCircle });
-    
-    if (config.category === 'bc') {
-      list.push({ month: 3, title: "Summer Demand", desc: "Soaring temperatures drive 40% spike in body care sales.", icon: Sun });
-    } else if (config.category === 'hf') {
-      list.push({ month: 3, title: "Summer Slump", desc: "Heat reduces interest in indoor fragrance stability.", icon: Sun });
-    }
-
-    const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
-    list.push({ 
-      month: 4, 
-      title: "News Cycle", 
-      desc: isEthical 
-        ? "Viral story highlights your clean ingredients as 'The Future of Ethical Craft'." 
-        : "Investigative piece questions the hidden environmental cost of your synthetics.", 
-      icon: Newspaper 
-    });
-
-    if (config.marketingChannels.length > 0) {
-      list.push({ month: 5, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is taking root.`, icon: Megaphone });
-    }
-
-    if (config.sourcingModel === 'lsf') {
-      list.push({ month: 7, title: "Monsoon Supply Lag", desc: "Heavy rains disrupt local farm logistics, leading to inventory gaps.", icon: CloudRain });
-    } else {
-      list.push({ month: 7, title: "Monsoon Stability", desc: "Bulk sourcing avoids weather-related delays.", icon: Package });
-    }
-
-    if (scores.trust > 70) {
-      list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations.", icon: ShieldCheck });
-    }
-
-    list.push({ month: 10, title: "Diwali Gifting Surge", desc: "Holiday season triples organic gifting demand across the network.", icon: PartyPopper });
-    list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2.", icon: Clock });
-
-    return list;
-  }, [scores, config]);
-
   const newsArticle = useMemo(() => {
     const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
     const isLocal = config.sourcingModel === 'lsf';
@@ -502,6 +462,43 @@ export default function SimulatorPage() {
       type: 'neutral'
     };
   }, [config]);
+
+  const milestones = useMemo(() => {
+    const list = [];
+    list.push({ month: 1, title: "Market Entry", desc: "First batch released to early adopters.", icon: PlayCircle });
+    
+    if (config.category === 'bc') {
+      list.push({ month: 3, title: "Summer Demand", desc: "Soaring temperatures drive 40% spike in body care sales.", icon: Sun });
+    } else if (config.category === 'hf') {
+      list.push({ month: 3, title: "Summer Slump", desc: "Heat reduces interest in indoor fragrance stability.", icon: Sun });
+    }
+
+    list.push({ 
+      month: 4, 
+      title: newsArticle.headline, 
+      desc: newsArticle.snippet, 
+      icon: Newspaper 
+    });
+
+    if (config.marketingChannels.length > 0) {
+      list.push({ month: 5, title: "Channel Resonance", desc: `Initial data from ${config.marketingChannels.length} channels shows targeted branding is taking root.`, icon: Megaphone });
+    }
+
+    if (config.sourcingModel === 'lsf') {
+      list.push({ month: 7, title: "Monsoon Supply Lag", desc: "Heavy rains disrupt local farm logistics, leading to inventory gaps.", icon: CloudRain });
+    } else {
+      list.push({ month: 7, title: "Monsoon Stability", desc: "Bulk sourcing avoids weather-related delays.", icon: Package });
+    }
+
+    if (scores.trust > 70) {
+      list.push({ month: 9, title: "Brand Authority", desc: "High ethical scores translating into strong secondary recommendations.", icon: ShieldCheck });
+    }
+
+    list.push({ month: 10, title: "Diwali Gifting Surge", desc: scores.shortTermSales > 40 ? "Massive holiday demand nearly triples Q4 revenue." : "Gifting seasonal boost noticed, though growth limited by low awareness.", icon: PartyPopper });
+    list.push({ month: 12, title: "Year End Retention", desc: scores.longevity > 60 ? "Strong repeat purchase intent for Year 2." : "Initial novelty wearing off; pivot required for Year 2.", icon: Clock });
+
+    return list;
+  }, [scores, config, newsArticle]);
 
   const handleUpdateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -620,6 +617,7 @@ export default function SimulatorPage() {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'center' });
     }, 100);
 
+    const awarenessVal = Math.round(getStatsAtMonth(11).awareness);
     let generatedFeedback: MarketFeedbackOutput | null = null;
     const richDescription = `${selectedBase?.name || "Standard"} ${config.format || "Product"}`;
     const channelNames = config.marketingChannels.map(id => MARKETING_CHANNELS.find(c => c.id === id)?.name || id);
@@ -632,6 +630,7 @@ export default function SimulatorPage() {
         marketingChannels: channelNames,
         earthScore: Math.round(scores.environmentalScore),
         trustScore: Math.round(scores.trust),
+        awarenessScore: awarenessVal,
         pricePoint: Math.round(scores.retailPrice),
         message: config.message,
         targetAudience: selectedAudience?.name || "General",
@@ -703,7 +702,6 @@ export default function SimulatorPage() {
 
   const filteredSuggestions = useMemo(() => {
     return SEO_PHRASES.filter(phrase => {
-      // Return suggestions relevant to current category or ingredient base tags
       const currentTags = [config.category, config.ingredientBase, config.sourcingModel, config.productionMethod];
       const isEthical = ['eo', 'hi', 'co', 'pw', 'an'].includes(config.ingredientBase);
       const isHandcrafted = config.productionMethod === 'hsb';

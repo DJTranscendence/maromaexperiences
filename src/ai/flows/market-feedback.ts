@@ -13,6 +13,7 @@ const MarketFeedbackInputSchema = z.object({
   marketingChannels: z.array(z.string()).describe('The channels used to promote the product.'),
   earthScore: z.number(),
   trustScore: z.number(),
+  awarenessScore: z.number().describe('0-100 percentage of market awareness.'),
   pricePoint: z.number(),
   message: z.string(),
   targetAudience: z.string(),
@@ -22,13 +23,13 @@ const MarketFeedbackInputSchema = z.object({
 export type MarketFeedbackInput = z.infer<typeof MarketFeedbackInputSchema>;
 
 const MarketFeedbackOutputSchema = z.object({
-  analystTone: z.enum(['cynical', 'enthusiastic', 'concerned']),
-  feedbackText: z.string().describe('A 2-3 sentence analysis of the product performance, specifically mentioning marketing effectiveness.'),
+  analystTone: z.enum(['cynical', 'enthusiastic', 'concerned', 'neutral']),
+  feedbackText: z.string().describe('A 2-3 sentence analysis of the product performance, specifically acknowledging awareness vs effectiveness.'),
   customerQuote: z.string().describe('A "voice of the customer" snippet.'),
   suggestion: z.string().describe('A specific suggestion for Year 2 improvement.'),
-  positiveReviews: z.array(z.string()).describe('Exactly 4 short positive customer reviews (one sentence each).'),
-  negativeReviews: z.array(z.string()).describe('Exactly 4 short negative customer reviews (one sentence each).'),
-  negativeReviewFixes: z.array(z.string()).describe('Exactly 4 short, actionable suggestions matching each negative review that MUST be a specific change to the Laboratory settings.'),
+  positiveReviews: z.array(z.string()).describe('Exactly 4 unique, fun, and specific customer reviews.'),
+  negativeReviews: z.array(z.string()).describe('Exactly 4 unique customer friction points.'),
+  negativeReviewFixes: z.array(z.string()).describe('Exactly 4 actionable suggestions linked to Laboratory settings.'),
 });
 export type MarketFeedbackOutput = z.infer<typeof MarketFeedbackOutputSchema>;
 
@@ -39,61 +40,61 @@ const marketFeedbackPrompt = ai.definePrompt({
   prompt: `You are a Senior Maroma Market Analyst evaluating a student team's product prototype.
       
 Team: {{{teamName}}}
-Current Year: Year {{{year}}}
-Product: {{{productName}}} (Targeting {{{targetAudience}}})
-Core Value: {{{coreValue}}}
-Earth Score: {{{earthScore}}}/100
-Trust Score: {{{trustScore}}}%
+Year: {{{year}}}
+Product: {{{productName}}}
+Audience: {{{targetAudience}}}
+Awareness: {{{awarenessScore}}}%
+Earth/Trust: {{{earthScore}}}/{{{trustScore}}}
 Price: ₹{{{pricePoint}}}
-Marketing Message: "{{{message}}}"
-Marketing Channels: {{#each marketingChannels}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-Ingredients: {{#each ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+Marketing: {{{message}}} via {{#each marketingChannels}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
-Provide a "Year {{{year}}}" simulation summary. 
-
-CRITICAL - MARKETING EVALUATION:
-- If they have marketing channels selected, do NOT say "I've never seen it". Instead, critique if the MESSAGE matches the TARGET AUDIENCE.
-- If they have NO marketing channels selected, use a 'concerned' tone. 
-- IMPORTANT: If Earth and Trust scores are HIGH (above 70) but marketing is missing, do NOT say "alignment needs refinement". Instead, say the product is an "ethical masterpiece that is unfortunately invisible to the market". Focus the critique ONLY on the lack of visibility.
-- REVIEWS FOR NO MARKETING: If channels are empty, reviews MUST NOT mention the "message" or "vibe". Instead, reviews should say things like: "Found this by total accident in a shop", "Never seen an ad for this", "I wish they advertised more so I could find it easily", or "Stumbled upon it in a cafe".
-- If they used synthetic base but claimed sustainability, use a 'cynical' tone and call out "Greenwashing".
-- If they hit the sweet spot of ethics, resonance, and strong marketing, be 'enthusiastic'.
+CRITICAL - ALIGNMENT & LOGIC:
+1. AWARENESS LOGIC: If Awareness is ABOVE 50%, you MUST NOT say "I haven't seen it". Instead, talk about why people who HAVE seen it are buying or ignoring it.
+2. INVISIBILITY: Only if awareness is BELOW 30% should you focus on "the brand is invisible". 
+3. GREENWASHING: If ingredients are synthetic but message is "sustainable/pure", be 'cynical' and call out the disconnect.
+4. ETHICAL MASTERPIECE: If Earth/Trust > 80 but Awareness < 30, use 'concerned' and call it a "hidden gem that needs a megaphone".
+5. REPETITION: Avoid boilerplate. Use vivid, organic language.
 
 Generate EXACTLY 4 positive and 4 negative customer reviews. 
-For EACH negative review, provide a matching "Suggested Action" (one short sentence) that MUST BE a specific setting change available in the laboratory (e.g., "Add 'Instagram' to 'Marketing Channels'").`,
+For EACH negative review, provide a matching "Suggested Action" that is a specific setting change in the laboratory.`,
 });
 
 export async function generateMarketFeedback(input: MarketFeedbackInput): Promise<MarketFeedbackOutput> {
   try {
     const { output } = await marketFeedbackPrompt(input);
-    if (!output || !output.positiveReviews || output.positiveReviews.length === 0) {
-      throw new Error("Invalid model output");
-    }
+    if (!output) throw new Error("Invalid model output");
     return output;
   } catch (err) {
     console.warn("Market Feedback Generation failed, using robust fallback:", err);
+    
+    const isVisible = input.awarenessScore > 50;
+    
     return {
-      analystTone: 'concerned',
-      feedbackText: `The Year ${input.year || 1} market response was limited. While the concept shows promise, the brand currently lacks the visibility required to reach your target audience.`,
-      customerQuote: "I like the idea, but I've never actually seen this in any of the shops I visit.",
-      suggestion: 'Expand your marketing channels to increase brand awareness.',
+      analystTone: isVisible ? 'neutral' : 'concerned',
+      feedbackText: isVisible 
+        ? `Year ${input.year || 1} saw high market visibility. While many people encountered the brand, conversion was mixed based on your pricing and core value alignment.`
+        : `The Year ${input.year || 1} market response was limited. Your ethical foundation is solid, but the brand currently lacks the visibility required to reach your target audience.`,
+      customerQuote: isVisible 
+        ? "I see this brand everywhere on social media, but I'm not sure if the price matches the handcrafted claims."
+        : "I love the idea of local sourcing, but I've actually never seen this in the shops I visit.",
+      suggestion: isVisible ? 'Refine your pricing strategy or message clarity.' : 'Expand your marketing channels to increase visibility.',
       positiveReviews: [
         "The scent is unique and feels very natural.", 
-        "I love the mission of this brand and what it stands for.",
-        "Beautifully presented, you can really feel the handcrafted quality.",
-        "Finally, a product that doesn't trigger my allergies with synthetic chemicals."
+        "Beautifully presented, you can really feel the quality.",
+        "Finally, a product that doesn't trigger my allergies.",
+        "Love the local sourcing story behind this."
       ],
       negativeReviews: [
-        "I found this by accident, they should really advertise more.", 
-        "I can't find any information about where this is made.",
-        "The price is a bit high for a brand I've never heard of before.",
-        "Sustainability claims are great but I never see this brand anywhere."
+        isVisible ? "I see the ads constantly but the price feels a bit high for what it is." : "I found this by accident, they should really advertise more.",
+        "I can't find enough info about the ingredients.",
+        "The packaging feels a bit industrial for an artisan brand.",
+        "Sustainability claims are great but I'm skeptical of the base oils used."
       ],
       negativeReviewFixes: [
-        "Add 'Instagram' or 'Facebook' to 'Marketing Channels'.",
-        "Clarify your 'Marketing Message' in the laboratory.",
-        "Change 'Price Tier' to 'Accessible' strategy.",
-        "Add more 'Marketing Channels' to increase visibility."
+        isVisible ? "Lower 'Price Tier' to increase accessible conversion." : "Add 'Instagram' to 'Marketing Channels'.",
+        "Improve your 'Brand Positioning Message' to be more transparent.",
+        "Switch 'Packaging Type' to 'Recycled Paper' or 'Glass'.",
+        "Upgrade your 'Ingredient Base' to 'Essential Oils' in the lab."
       ]
     };
   }
