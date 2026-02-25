@@ -1,10 +1,26 @@
+"use client";
+
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import Image from "next/image";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 export default function Footer() {
+  const firestore = useFirestore();
+
+  // Load Brand Identity Settings
+  const brandSettingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, "settings", "brand_layout");
+  }, [firestore]);
+  const { data: brandSettings } = useDoc(brandSettingsRef);
+
+  const kerning = brandSettings?.navbarKerning ?? 0.7;
+  const offset = brandSettings?.navbarOffset ?? -0.7;
+
   return (
     <footer className="bg-white border-t border-border mt-20">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -22,7 +38,15 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-                <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5 leading-none">Experiences</span>
+                <span 
+                  className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all"
+                  style={{ 
+                    letterSpacing: `${kerning}em`,
+                    marginRight: `${offset}em`
+                  }}
+                >
+                  Experiences
+                </span>
               </div>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">

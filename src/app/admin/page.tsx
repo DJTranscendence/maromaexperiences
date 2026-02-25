@@ -12,12 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useMemo, useRef } from "react";
+import { Slider } from "@/components/ui/slider";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, Grid, FileText, CheckCircle, Clock,
-  Trophy, Activity, AlertCircle, LogIn
+  Trophy, Activity, AlertCircle, LogIn, Palette, Type
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -120,6 +121,40 @@ export default function AdminPage() {
   }, [firestore, user]);
   const { data: adminDoc, isLoading: isAdminDocLoading } = useDoc(adminRef);
   const isAdmin = !!adminDoc;
+
+  // --- BRAND SETTINGS ---
+  const brandSettingsRef = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return doc(firestore, "settings", "brand_layout");
+  }, [firestore, isAdmin]);
+  const { data: brandSettings } = useDoc(brandSettingsRef);
+
+  const [localBrandSettings, setLocalBrandSettings] = useState({
+    navbarKerning: 0.7,
+    navbarOffset: -0.7,
+    loadingKerning: 1.05,
+    loadingOffset: -1.05
+  });
+
+  useEffect(() => {
+    if (brandSettings) {
+      setLocalBrandSettings({
+        navbarKerning: brandSettings.navbarKerning ?? 0.7,
+        navbarOffset: brandSettings.navbarOffset ?? -0.7,
+        loadingKerning: brandSettings.loadingKerning ?? 1.05,
+        loadingOffset: brandSettings.loadingOffset ?? -1.05
+      });
+    }
+  }, [brandSettings]);
+
+  const handleSaveBrandSettings = () => {
+    if (!brandSettingsRef) return;
+    setDocumentNonBlocking(brandSettingsRef, {
+      ...localBrandSettings,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    toast({ title: "Brand Settings Saved", description: "Logo kerning updated across all platforms." });
+  };
 
   // --- TOUR STATE & QUERIES ---
   const toursQuery = useMemoFirebase(() => {
@@ -355,6 +390,8 @@ export default function AdminPage() {
     );
   }
 
+  const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -371,6 +408,9 @@ export default function AdminPage() {
               <TabsTrigger value="proposals" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <FileText className="w-5 h-5" /> Proposals
               </TabsTrigger>
+              <TabsTrigger value="brand" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                <Palette className="w-5 h-5" /> Brand
+              </TabsTrigger>
               <TabsTrigger value="media" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <ImageIcon className="w-5 h-5" /> Media
               </TabsTrigger>
@@ -382,6 +422,123 @@ export default function AdminPage() {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          {/* BRAND TAB */}
+          <TabsContent value="brand" className="m-0 focus-visible:ring-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
+                <CardHeader className="bg-primary/5 border-b border-primary/10">
+                  <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    <Type className="w-6 h-6 text-accent" /> Kerning Adjustments
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">Fine-tune the "EXPERIENCES" typography spacing.</p>
+                </CardHeader>
+                <CardContent className="p-8 space-y-10">
+                  {/* Navbar Control */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-bold uppercase tracking-widest text-primary">Header / Footer Layout</Label>
+                      <Badge variant="outline" className="text-[10px] font-bold">{localBrandSettings.navbarKerning}em</Badge>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Letter Spacing (Kerning)</span>
+                        <Slider 
+                          value={[localBrandSettings.navbarKerning]} 
+                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarKerning: v})}
+                          max={2} 
+                          step={0.01}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Centering Offset (Negative Margin)</span>
+                        <Slider 
+                          value={[Math.abs(localBrandSettings.navbarOffset)]} 
+                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: -v})}
+                          max={2} 
+                          step={0.01}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Loading Screen Control */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-bold uppercase tracking-widest text-primary">Loading Screen Layout</Label>
+                      <Badge variant="outline" className="text-[10px] font-bold">{localBrandSettings.loadingKerning}em</Badge>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Letter Spacing (Kerning)</span>
+                        <Slider 
+                          value={[localBrandSettings.loadingKerning]} 
+                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingKerning: v})}
+                          max={2} 
+                          step={0.01}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Centering Offset (Negative Margin)</span>
+                        <Slider 
+                          value={[Math.abs(localBrandSettings.loadingOffset)]} 
+                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: -v})}
+                          max={2} 
+                          step={0.01}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button onClick={handleSaveBrandSettings} className="w-full bg-primary rounded-full h-12 font-bold shadow-lg gap-2">
+                    <Save className="w-4 h-4" /> Save Brand Layout
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Preview Card */}
+              <div className="space-y-8">
+                <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden p-12 flex flex-col items-center justify-center min-h-[300px]">
+                  <div className="flex flex-col items-center mb-10 text-center">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <img src={LOGO_URL} alt="Maroma" className="w-12 h-12 object-contain" />
+                      <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+                    </div>
+                    <span 
+                      className="text-[10px] font-body font-medium text-accent uppercase leading-none transition-all"
+                      style={{ 
+                        letterSpacing: `${localBrandSettings.navbarKerning}em`,
+                        marginRight: `${localBrandSettings.navbarOffset}em`,
+                        marginTop: '4px'
+                      }}
+                    >
+                      Experiences
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] opacity-50">Header Preview</p>
+                </Card>
+
+                <Card className="rounded-[2rem] border-none shadow-xl bg-primary overflow-hidden p-12 flex flex-col items-center justify-center min-h-[300px]">
+                  <div className="flex flex-col items-center text-center">
+                    <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
+                    <span 
+                      className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all"
+                      style={{ 
+                        letterSpacing: `${localBrandSettings.loadingKerning}em`,
+                        marginRight: `${localBrandSettings.loadingOffset}em`,
+                        marginTop: '8px'
+                      }}
+                    >
+                      Experiences
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-white/30 uppercase font-bold tracking-[0.2em] mt-8">Loading Screen Preview</p>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
           {/* PROPOSALS TAB */}
           <TabsContent value="proposals" className="m-0 focus-visible:ring-0">

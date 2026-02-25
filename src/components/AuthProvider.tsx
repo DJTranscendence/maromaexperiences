@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, setDocumentNonBlocking, useMemoFirebase, useDoc } from "@/firebase";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { doc, serverTimestamp } from "firebase/firestore";
@@ -15,6 +15,16 @@ export default function AuthProvider({
 }) {
   const { user, isUserLoading, userError } = useUser();
   const firestore = useFirestore();
+
+  // Load Brand Identity Settings
+  const brandSettingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, "settings", "brand_layout");
+  }, [firestore]);
+  const { data: brandSettings } = useDoc(brandSettingsRef);
+
+  const loadingKerning = brandSettings?.loadingKerning ?? 1.05;
+  const loadingOffset = brandSettings?.loadingOffset ?? -1.05;
 
   useEffect(() => {
     if (user && firestore) {
@@ -42,7 +52,15 @@ export default function AuthProvider({
       <div className="flex flex-col items-center justify-center h-screen bg-background text-primary">
         <div className="flex flex-col items-center mb-10 text-center">
           <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-          <span className="text-[10px] font-body font-medium text-accent uppercase tracking-[1.05em] mt-1 mr-[-1.05em] leading-none">Experiences</span>
+          <span 
+            className="text-[10px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all"
+            style={{ 
+              letterSpacing: `${loadingKerning}em`,
+              marginRight: `${loadingOffset}em`
+            }}
+          >
+            Experiences
+          </span>
         </div>
         
         <div className="flex items-center gap-3">

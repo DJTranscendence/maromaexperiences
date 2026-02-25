@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -34,6 +33,16 @@ export default function Navbar() {
   const router = useRouter();
 
   const isHomePage = pathname === "/";
+
+  // Load Brand Identity Settings
+  const brandSettingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, "settings", "brand_layout");
+  }, [firestore]);
+  const { data: brandSettings } = useDoc(brandSettingsRef);
+
+  const kerning = brandSettings?.navbarKerning ?? 0.7;
+  const offset = brandSettings?.navbarOffset ?? -0.7;
 
   const handleScrollToWorkshops = (e: React.MouseEvent) => {
     if (isHomePage) {
@@ -114,7 +123,15 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-              <span className="text-[8px] font-body font-medium text-accent uppercase tracking-[0.7em] mr-[-0.7em] mt-0.5 leading-none">Experiences</span>
+              <span 
+                className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all"
+                style={{ 
+                  letterSpacing: `${kerning}em`,
+                  marginRight: `${offset}em`
+                }}
+              >
+                Experiences
+              </span>
             </div>
           </Link>
 
