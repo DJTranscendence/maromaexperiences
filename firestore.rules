@@ -4,10 +4,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Helper functions
     function isSignedIn() { return request.auth != null; }
-    function isAdmin() { return request.auth != null && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)); }
+    
+    // Admin check with specific email override for the workshop owner
+    function isAdmin() { 
+      return request.auth != null && (
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
+        request.auth.token.email == "indispirit@gmail.com"
+      ); 
+    }
 
     // App Settings (Brand, Layout, etc.)
-    // These must be public so the logo and layout can render correctly for all visitors
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -15,13 +21,13 @@ service cloud.firestore {
 
     // User profiles
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
     }
     match /users {
       allow list: if isAdmin();
     }
     
-    // Simulator Game Sessions (Completed Results)
+    // Simulator Game Sessions
     match /simulator_sessions/{sessionId} {
       allow read: if true;
       allow create: if true;
@@ -31,7 +37,7 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Simulator Game Events (Real-time Joins/Phase Changes)
+    // Simulator Game Events
     match /simulator_events/{eventId} {
       allow read, create: if true;
       allow update, delete: if isAdmin();
@@ -44,6 +50,9 @@ service cloud.firestore {
     match /tours/{tourId} { 
       allow read: if true; 
       allow write: if isAdmin(); 
+    }
+    match /tours {
+      allow list: if true;
     }
     
     // Corporate Proposals
@@ -69,7 +78,7 @@ service cloud.firestore {
     // Role Management
     match /roles_admin/{userId} { 
       allow read: if isSignedIn(); 
-      allow write: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
     }
     match /roles_admin {
       allow list: if isAdmin();
@@ -92,6 +101,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.0.7 - Reinforced public read for brand settings to fix hydration/loading errors
+    // Deployment trigger comment: v1.0.8 - Enhanced admin permissions and user listing access
   }
 }

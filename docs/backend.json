@@ -25,6 +25,34 @@
         "loadingOffset": { "type": "number" }
       }
     },
+    "Booking": {
+      "title": "Booking",
+      "type": "object",
+      "description": "A customer reservation for a tour or workshop.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "tourId": { "type": "string" },
+        "tourName": { "type": "string" },
+        "tourDate": { "type": "string" },
+        "numberOfAttendees": { "type": "number" },
+        "totalPrice": { "type": "number" },
+        "bookingStatus": { "type": "string", "enum": ["confirmed", "pending", "cancelled"] },
+        "bookedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "CorporateProposal": {
+      "title": "CorporateProposal",
+      "type": "object",
+      "description": "A custom itinerary request for corporate teams.",
+      "properties": {
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "approved", "sent"] },
+        "itinerary": { "type": "array", "items": { "type": "object" } }
+      }
+    },
     "SimulatorSession": {
       "title": "SimulatorSession",
       "type": "object",
@@ -35,31 +63,9 @@
         "emblem": { "type": "string" },
         "productType": { "type": "string" },
         "ingredients": { "type": "array", "items": { "type": "string" } },
-        "config": { "type": "object", "description": "The full strategic configuration used for the simulation." },
-        "aiFeedback": { "type": "object", "description": "The generated analyst report and reviews." },
-        "scores": {
-          "type": "object",
-          "properties": {
-            "earth": { "type": "number" },
-            "trust": { "type": "number" },
-            "resonance": { "type": "number" },
-            "impact": { "type": "number" },
-            "profit": { "type": "number" },
-            "longevity": { "type": "number" }
-          }
-        },
+        "config": { "type": "object" },
+        "scores": { "type": "object" },
         "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "SimulatorEvent": {
-      "title": "SimulatorEvent",
-      "type": "object",
-      "description": "Real-time game events such as team joins and phase changes.",
-      "properties": {
-        "teamName": { "type": "string" },
-        "emblem": { "type": "string" },
-        "type": { "type": "string", "enum": ["join", "lab", "market"] },
-        "timestamp": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -85,19 +91,27 @@
         }
       },
       {
+        "path": "/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": { "$ref": "#/backend/entities/Booking" },
+          "description": "Customer bookings. Owners and Admins can read."
+        }
+      },
+      {
+        "path": "/proposals/{proposalId}",
+        "definition": {
+          "entityName": "CorporateProposal",
+          "schema": { "$ref": "#/backend/entities/CorporateProposal" },
+          "description": "Corporate requests. Admins can manage."
+        }
+      },
+      {
         "path": "/simulator_sessions/{sessionId}",
         "definition": {
           "entityName": "SimulatorSession",
           "schema": { "$ref": "#/backend/entities/SimulatorSession" },
-          "description": "Stores game results for the leaderboard. Public read/create."
-        }
-      },
-      {
-        "path": "/simulator_events/{eventId}",
-        "definition": {
-          "entityName": "SimulatorEvent",
-          "schema": { "$ref": "#/backend/entities/SimulatorEvent" },
-          "description": "Broadcasts real-time events to all players. Public read/create."
+          "description": "Stores game results for the leaderboard."
         }
       }
     ]

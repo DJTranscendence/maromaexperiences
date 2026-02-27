@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -19,7 +20,8 @@ import {
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, Grid, FileText, CheckCircle, Clock,
-  Trophy, Activity, AlertCircle, LogIn, Palette, Type
+  Trophy, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
+  CreditCard, ExternalLink
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -38,6 +40,17 @@ interface UserProfile {
   lastName?: string;
   email: string;
   accountType?: string;
+}
+
+interface BookingRecord {
+  id: string;
+  userId: string;
+  tourName: string;
+  tourDate: string;
+  numberOfAttendees: number;
+  totalPrice: number;
+  bookingStatus: string;
+  bookedAt: any;
 }
 
 interface MediaItem {
@@ -116,12 +129,15 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- AUTH GUARD ---
+  // Allow indispirit@gmail.com override just like in security rules
+  const isWorkshopOwner = user?.email === "indispirit@gmail.com";
+  
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, "roles_admin", user.uid);
   }, [firestore, user]);
   const { data: adminDoc, isLoading: isAdminDocLoading } = useDoc(adminRef);
-  const isAdmin = !!adminDoc;
+  const isAdmin = isWorkshopOwner || !!adminDoc;
 
   // --- BRAND SETTINGS ---
   const brandSettingsRef = useMemoFirebase(() => {
@@ -182,6 +198,13 @@ export default function AdminPage() {
     status: "live" as 'live' | 'coming-soon',
     imageUrls: [] as string[]
   });
+
+  // --- BOOKINGS QUERIES ---
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
+  }, [firestore, isAdmin]);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
 
   // --- PROPOSAL STATE & QUERIES ---
   const proposalsQuery = useMemoFirebase(() => {
@@ -406,6 +429,9 @@ export default function AdminPage() {
             </div>
             
             <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50">
+              <TabsTrigger value="bookings" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                <CalendarDays className="w-5 h-5" /> Bookings
+              </TabsTrigger>
               <TabsTrigger value="proposals" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <FileText className="w-5 h-5" /> Proposals
               </TabsTrigger>
@@ -423,6 +449,56 @@ export default function AdminPage() {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          {/* BOOKINGS TAB */}
+          <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
+            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b px-8 py-6">
+                <CardTitle className="font-headline text-2xl text-primary">Customer Bookings</CardTitle>
+                <p className="text-sm text-muted-foreground">Real-time view of individual workshop and tour reservations.</p>
+              </CardHeader>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/30">
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Attendees</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {isBookingsLoading ? (
+                    <TableRow><TableCell colSpan={6} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                  ) : bookings?.map(b => (
+                    <TableRow key={b.id}>
+                      <TableCell className="font-bold text-primary">{b.tourName}</TableCell>
+                      <TableCell>{b.numberOfAttendees} Person(s)</TableCell>
+                      <TableCell className="font-medium">₹{b.totalPrice}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-green-100 text-green-700 capitalize border-none px-3">{b.bookingStatus}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {b.bookedAt?.toDate?.()?.toLocaleDateString() || "Recent"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="icon" variant="ghost" className="rounded-full hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "bookings", b.id))}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(!bookings || bookings.length === 0) && !isBookingsLoading && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
+                        <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        No customer bookings found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
 
           {/* BRAND TAB */}
           <TabsContent value="brand" className="m-0 focus-visible:ring-0">
@@ -801,7 +877,9 @@ export default function AdminPage() {
                   <TableHead className="text-right pr-8 font-bold">Management</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {filteredUsers?.map(u => {
+                  {isUsersLoading ? (
+                    <TableRow><TableCell colSpan={3} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                  ) : filteredUsers?.map(u => {
                     const isAdm = adminIds.has(u.id);
                     const isFac = facilitatorIds.has(u.id);
                     return (
