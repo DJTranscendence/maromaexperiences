@@ -821,7 +821,7 @@ export default function AdminPage() {
                       onClick={handleSaveTour}
                       disabled={isProcessing || isSuccess}
                     >
-                      {isProcessing ? <Loader2 className="animate-spin" /> : <Check /> : <Save className="mr-2 h-4 w-4" />}
+                      {isProcessing ? <Loader2 className="animate-spin" /> : isSuccess ? <Check /> : <Save className="mr-2 h-4 w-4" />}
                       {editingId ? "Save Changes" : "Publish Experience"}
                     </Button>
                   </CardContent>
