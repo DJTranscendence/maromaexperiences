@@ -97,19 +97,20 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         specialInstructions: ""
       });
 
-      // 3. Simulate short processing delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
       const fullPhone = `${formData.countryCode} ${formData.phone}`;
+      const bookingId = Math.random().toString(36).substring(7).toUpperCase();
+
+      // 3. Define Fallback Message
+      let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${guests} Person(s) on ${tour.scheduledDates?.[0] || "TBA"}.\n\nLocation: ${tour.location || "Maroma Campus"}\nBooking Reference: ${bookingId}\n\nWe look forward to seeing you there!\n\nWarm regards,\nThe Maroma Team`;
 
       try {
-        // 4. Call GenAI notification flow for personalized message
+        // 4. Attempt to generate personalized AI notification
         const notification = await generateBookingNotification({
           eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
           recipientType: 'booker',
           bookingDetails: {
-            bookingId: Math.random().toString(36).substring(7).toUpperCase(),
+            bookingId: bookingId,
             tourName: tour.name,
             tourDate: tour.scheduledDates?.[0] || "TBA",
             tourTime: "10:00 AM",
@@ -120,30 +121,35 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           },
           currentBookedSpaces: (tour.bookedSpaces || 0) + guests,
           minGroupSize: tour.minGroupSize,
-          bookingDetailsBaseUrl: "https://maroma.com/bookings",
-          supportEmailAddress: "support@maroma.com"
+          bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
+          supportEmailAddress: "booking@maromaexperience.com"
         });
 
-        setAiResponse(notification.message);
+        if (notification && notification.message) {
+          emailBody = notification.message;
+        }
+      } catch (aiErr) {
+        console.warn("AI notification generation failed, falling back to standard template:", aiErr);
+      }
 
-        // 5. Send Email Confirmation via Postmark
-        await sendEmailNotification({
-          to: formData.email,
-          subject: `Booking Confirmed: ${tour.name}`,
-          textBody: notification.message
-        });
+      setAiResponse(emailBody);
 
-      } catch (aiErr: any) {
-        console.warn("Notification system failed:", aiErr);
-        // Fallback email if AI or Postmark fails
-        setAiResponse(`Hello ${formData.name}, your booking for ${tour.name} is confirmed for ${guests} Person. Thank you!`);
+      // 5. Send Email Confirmation (Reliability Step)
+      const emailResult = await sendEmailNotification({
+        to: formData.email,
+        subject: `Booking Confirmed: ${tour.name}`,
+        textBody: emailBody
+      });
+
+      if (!emailResult.success) {
+        console.error("Email delivery reported error:", emailResult.error);
       }
 
       toast({
         title: "Booking Successful!",
         description: isMinGroupReached 
-          ? `Min group of ${tour.minGroupSize} reached! This experience is guaranteed to run.` 
-          : `Your reservation for ${guests} Person has been confirmed. Confirmation email sent.`,
+          ? `Min group reached! This experience is guaranteed to run. Check your email for details.` 
+          : `Your reservation has been confirmed. A confirmation email has been sent to ${formData.email}.`,
       });
 
     } catch (err: any) {

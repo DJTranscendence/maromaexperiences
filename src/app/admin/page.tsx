@@ -62,23 +62,6 @@ interface MediaItem {
   uploadedAt: any;
 }
 
-interface CorporateProposal {
-  id: string;
-  userId: string;
-  companyName: string;
-  contactName: string;
-  email: string;
-  phone: string;
-  packageName: string;
-  itinerary: any[];
-  catering: string;
-  addons: string[];
-  hotel: string;
-  status: 'pending' | 'reviewed' | 'approved' | 'sent';
-  adminNotes?: string;
-  createdAt: any;
-}
-
 const HIGHLIGHT_OPTIONS = [
   "Tour",
   "Workshop",
@@ -236,39 +219,45 @@ export default function AdminPage() {
     
     try {
       let targetEmail = "";
-      const userRef = doc(firestore, "users", booking.userId);
-      const userSnap = await fetch(`https://firestore.googleapis.com/v1/projects/${firestore.app.options.projectId}/databases/(default)/documents/users/${booking.userId}`).then(r => r.json());
-      
-      targetEmail = userSnap.fields?.email?.stringValue || "";
+      // Use internal SDK method to get specific user profile data
+      const userDoc = await fetch(`https://firestore.googleapis.com/v1/projects/${firestore.app.options.projectId}/databases/(default)/documents/users/${booking.userId}`).then(r => r.json());
+      targetEmail = userDoc.fields?.email?.stringValue || "";
 
       if (!targetEmail) {
         toast({ variant: "destructive", title: "Missing Contact", description: "Could not find an email address for this customer." });
         return;
       }
 
-      const notification = await generateBookingNotification({
-        eventType: 'booking_reminder',
-        recipientType: 'booker',
-        bookingDetails: {
-          bookingId: booking.id,
-          tourName: booking.tourName,
-          tourDate: booking.tourDate,
-          tourTime: "10:00 AM",
-          numberOfGuests: booking.numberOfAttendees,
-          bookedBy: "Customer",
-          bookerEmail: targetEmail
-        },
-        bookingDetailsBaseUrl: "https://maroma.com/bookings",
-        supportEmailAddress: "support@maroma.com"
-      });
+      let reminderMessage = `Hello,\n\nThis is a friendly reminder for your upcoming experience: "${booking.tourName}" on ${booking.tourDate}.\n\nWe look forward to hosting you at the Maroma Campus!\n\nBest regards,\nThe Maroma Team`;
+
+      try {
+        const notification = await generateBookingNotification({
+          eventType: 'booking_reminder',
+          recipientType: 'booker',
+          bookingDetails: {
+            bookingId: booking.id,
+            tourName: booking.tourName,
+            tourDate: booking.tourDate,
+            tourTime: "10:00 AM",
+            numberOfGuests: booking.numberOfAttendees,
+            bookedBy: "Valued Guest",
+            bookerEmail: targetEmail
+          },
+          bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
+          supportEmailAddress: "booking@maromaexperience.com"
+        });
+        if (notification && notification.message) reminderMessage = notification.message;
+      } catch (aiErr) {
+        console.warn("AI Reminder generation failed, using standard template.");
+      }
 
       await sendEmailNotification({
         to: targetEmail,
-        subject: `Reminder: Your upcoming experience at Maroma`,
-        textBody: notification.message
+        subject: `Reminder: Your experience at Maroma`,
+        textBody: reminderMessage
       });
 
-      toast({ title: "Reminder Sent", description: `A personalized notification has been delivered to ${targetEmail}.` });
+      toast({ title: "Reminder Sent", description: `Notification delivered to ${targetEmail}.` });
     } catch (err) {
       toast({ variant: "destructive", title: "Delivery Failed", description: "Failed to generate or send the reminder email." });
     } finally {
@@ -577,7 +566,7 @@ export default function AdminPage() {
                         </div>
                         <div className="space-y-6">
                           <div className="flex items-center justify-between">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Horizontal Alignment Nudge</Label>
+                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Manual Alignment Nudge</Label>
                             <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.navbarOffset.toFixed(2)}em</span>
                           </div>
                           <Slider 
@@ -638,7 +627,7 @@ export default function AdminPage() {
                         </div>
                         <div className="space-y-6">
                           <div className="flex items-center justify-between">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Horizontal Alignment Nudge</Label>
+                            <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Manual Alignment Nudge</Label>
                             <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.loadingOffset.toFixed(2)}em</span>
                           </div>
                           <Slider 

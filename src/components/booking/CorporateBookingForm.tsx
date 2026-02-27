@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -78,11 +77,15 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
       });
 
       // Send Customer Notification
-      await sendEmailNotification({
+      const emailResult = await sendEmailNotification({
         to: formData.email,
         subject: `Proposal Received: ${tour.name}`,
-        textBody: `Hello ${formData.contactName},\n\nThank you for choosing Maroma Experiences for your corporate retreat. We have received your request for "${tour.name}" for ${formData.participants} participants.\n\nOur event design team is currently reviewing your custom itinerary and add-ons. We will contact you within 24 hours with a formal proposal and quote.\n\nWarm regards,\nThe Maroma Team`
+        textBody: `Hello ${formData.contactName},\n\nThank you for choosing Maroma Experiences for your corporate retreat. We have received your request for "${tour.name}" for ${formData.participants} participants.\n\nOur event design team is currently reviewing your custom itinerary and add-ons. We will contact you within 24 hours with a formal proposal and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
       });
+
+      if (!emailResult.success) {
+        console.error("Email delivery reported error:", emailResult.error);
+      }
 
       toast({
         title: "Proposal Requested",

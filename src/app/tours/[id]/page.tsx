@@ -88,7 +88,7 @@ export default function TourDetailsPage() {
       await sendEmailNotification({
         to: notifyEmail,
         subject: `Registry Confirmed: ${tour.name}`,
-        textBody: `Hello! You have successfully registered to be notified when the "${tour.name}" experience goes live at Maroma Experiences. We will contact you as soon as dates are confirmed and booking opens.`
+        textBody: `Hello!\n\nYou have successfully registered to be notified when the "${tour.name}" experience goes live at Maroma Experiences. We will contact you as soon as dates are confirmed and booking opens.\n\nThank you for your interest!\nThe Maroma Team\nhttps://maromaexperience.com`
       });
 
       toast({
