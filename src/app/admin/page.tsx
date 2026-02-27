@@ -18,9 +18,8 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
-  User, Edit2, Upload, Grid, FileText, CheckCircle, Clock,
-  Trophy, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  CreditCard, ExternalLink, Wand2, MoveHorizontal, Bell
+  User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
+  Bell
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -31,7 +30,7 @@ import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 
@@ -150,7 +149,6 @@ export default function AdminPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [priceMode, setPriceMode] = useState<"preset" | "custom">("preset");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTour, setNewTour] = useState({
     name: "",
@@ -173,14 +171,6 @@ export default function AdminPage() {
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
   }, [firestore, isAdmin]);
   const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
-
-  // --- PROPOSAL STATE & QUERIES ---
-  const proposalsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
-  }, [firestore, isAdmin]);
-  const { data: proposals, isLoading: isProposalsLoading } = useCollection<CorporateProposal>(proposalsQuery);
-  const [viewingProposal, setViewingProposal] = useState<CorporateProposal | null>(null);
 
   // --- USER STATE & QUERIES ---
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -245,7 +235,6 @@ export default function AdminPage() {
     setIsSendingReminder(booking.id);
     
     try {
-      // Find the user email if not in booking record
       let targetEmail = "";
       const userRef = doc(firestore, "users", booking.userId);
       const userSnap = await fetch(`https://firestore.googleapis.com/v1/projects/${firestore.app.options.projectId}/databases/(default)/documents/users/${booking.userId}`).then(r => r.json());
@@ -257,7 +246,6 @@ export default function AdminPage() {
         return;
       }
 
-      // Generate AI Reminder Message
       const notification = await generateBookingNotification({
         eventType: 'booking_reminder',
         recipientType: 'booker',
@@ -265,7 +253,7 @@ export default function AdminPage() {
           bookingId: booking.id,
           tourName: booking.tourName,
           tourDate: booking.tourDate,
-          tourTime: "10:00 AM", // Standard workshop time
+          tourTime: "10:00 AM",
           numberOfGuests: booking.numberOfAttendees,
           bookedBy: "Customer",
           bookerEmail: targetEmail
@@ -274,7 +262,6 @@ export default function AdminPage() {
         supportEmailAddress: "support@maroma.com"
       });
 
-      // Send Email
       await sendEmailNotification({
         to: targetEmail,
         subject: `Reminder: Your upcoming experience at Maroma`,
@@ -293,7 +280,6 @@ export default function AdminPage() {
 
   const resetTourForm = () => {
     setEditingId(null);
-    setPriceMode("preset");
     setNewTour({
       name: "",
       highlights: [],
@@ -312,8 +298,6 @@ export default function AdminPage() {
 
   const handleEditTour = (tour: Tour) => {
     setEditingId(tour.id);
-    const presets = [500, 1000, 1500, 2000];
-    setPriceMode(presets.includes(tour.price) ? "preset" : "custom");
     setNewTour({
       name: tour.name,
       highlights: tour.highlights || [],
@@ -354,32 +338,55 @@ export default function AdminPage() {
     setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
   };
 
-  const handleUpdateProposalStatus = async (proposal: CorporateProposal, status: CorporateProposal['status']) => {
-    if (!firestore) return;
-    
-    updateDocumentNonBlocking(doc(firestore, "proposals", proposal.id), {
-      status,
-      updatedAt: serverTimestamp()
-    });
-
-    if (status === 'approved' || status === 'sent') {
-      await sendEmailNotification({
-        to: proposal.email,
-        subject: `Update on your proposal: ${proposal.packageName}`,
-        textBody: `Hello ${proposal.contactName},\n\nWe have updated the status of your corporate proposal for "${proposal.packageName}" to: ${status.toUpperCase()}.\n\nOur team will be in touch shortly with next steps.`
-      });
-    }
-
-    toast({ title: `Proposal marked as ${status}` });
-    setViewingProposal(null);
-  };
-
   const handleToggleAdmin = (userId: string, email: string, current: boolean) => {
     if (!firestore) return;
     const ref = doc(firestore, "roles_admin", userId);
     if (current) deleteDocumentNonBlocking(ref);
     else setDocumentNonBlocking(ref, { email, activatedAt: serverTimestamp(), role: "admin" }, { merge: true });
     toast({ title: current ? "Admin Removed" : "Admin Added" });
+  };
+
+  const handleToggleFacilitator = (userId: string, email: string, current: boolean) => {
+    if (!firestore) return;
+    const ref = doc(firestore, "roles_facilitator", userId);
+    if (current) deleteDocumentNonBlocking(ref);
+    else setDocumentNonBlocking(ref, { email, activatedAt: serverTimestamp(), role: "facilitator" }, { merge: true });
+    toast({ title: current ? "Facilitator Removed" : "Facilitator Added" });
+  };
+
+  const handleBatchUpload = async () => {
+    if (!firestore || !user || selectedFiles.length === 0) return;
+    setIsMediaUploading(true);
+    setUploadProgress(0);
+
+    try {
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+
+        addDocumentNonBlocking(collection(firestore, "media"), {
+          url: dataUrl,
+          type: 'image',
+          altText: file.name,
+          uploadedAt: serverTimestamp()
+        });
+        
+        setUploadProgress(((i + 1) / selectedFiles.length) * 100);
+      }
+
+      toast({ title: "Upload Complete", description: `Successfully added ${selectedFiles.length} assets.` });
+      setSelectedFiles([]);
+      setIsUploadDialogOpen(false);
+    } catch (err) {
+      toast({ variant: "destructive", title: "Upload Failed", description: "Could not process one or more files." });
+    } finally {
+      setIsMediaUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   if (isUserLoading || isAdminDocLoading) {
@@ -435,9 +442,6 @@ export default function AdminPage() {
               <TabsTrigger value="bookings" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <CalendarDays className="w-5 h-5" /> Bookings
               </TabsTrigger>
-              <TabsTrigger value="proposals" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <FileText className="w-5 h-5" /> Proposals
-              </TabsTrigger>
               <TabsTrigger value="brand" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Palette className="w-5 h-5" /> Brand
               </TabsTrigger>
@@ -453,7 +457,6 @@ export default function AdminPage() {
             </TabsList>
           </div>
 
-          {/* BOOKINGS TAB */}
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b px-8 py-6">
@@ -515,7 +518,6 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          {/* BRAND TAB */}
           <TabsContent value="brand" className="m-0 focus-visible:ring-0">
             <div className="grid grid-cols-1 gap-12">
               <section className="space-y-8">
@@ -530,7 +532,6 @@ export default function AdminPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Navbar Station */}
                   <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden flex flex-col">
                     <CardHeader className="bg-slate-50 border-b p-8">
                       <div className="flex items-center justify-between mb-2">
@@ -550,7 +551,7 @@ export default function AdminPage() {
                           <div className="flex flex-col items-center">
                             <span className="text-3xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
                             <span 
-                              className="text-[8px] font-body font-medium text-accent uppercase leading-none transition-all block relative"
+                              className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all block relative"
                               style={{ 
                                 letterSpacing: `${localBrandSettings.navbarKerning}em`,
                                 left: `${localBrandSettings.navbarOffset}em`
@@ -591,7 +592,6 @@ export default function AdminPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Loading Station */}
                   <Card className="rounded-[2.5rem] border-none shadow-xl bg-slate-900 overflow-hidden flex flex-col">
                     <CardHeader className="bg-white/5 border-b border-white/5 p-8">
                       <div className="flex items-center justify-between mb-2">
@@ -614,7 +614,6 @@ export default function AdminPage() {
                               className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all block relative mt-2"
                               style={{ 
                                 letterSpacing: `${localBrandSettings.loadingKerning}em`,
-                                // Apply the base 1.5mm corrected nudge (+0.47em) to the preview as well
                                 left: `${localBrandSettings.loadingOffset + 0.47}em`
                               }}
                             >
@@ -659,7 +658,6 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* EXPERIENCES TAB */}
           <TabsContent value="admin" className="m-0 focus-visible:ring-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
@@ -796,7 +794,6 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* USERS TAB */}
           <TabsContent value="users" className="m-0 focus-visible:ring-0">
             <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b flex flex-row items-center justify-between p-6">
@@ -851,7 +848,6 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          {/* MEDIA TAB */}
           <TabsContent value="media" className="m-0 focus-visible:ring-0">
             <div className="space-y-8">
               <div className="flex items-center justify-between">
