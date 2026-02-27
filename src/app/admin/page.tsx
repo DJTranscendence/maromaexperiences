@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -20,7 +21,7 @@ import {
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, Grid, FileText, CheckCircle, Clock,
   Trophy, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  CreditCard, ExternalLink, Wand2
+  CreditCard, ExternalLink, Wand2, MoveHorizontal
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -500,123 +501,140 @@ export default function AdminPage() {
 
           {/* BRAND TAB */}
           <TabsContent value="brand" className="m-0 focus-visible:ring-0">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
-                <CardHeader className="bg-primary/5 border-b border-primary/10">
-                  <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                    <Type className="w-6 h-6 text-accent" /> Brand Layout Controls
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">Fine-tune the "EXPERIENCES" typography and centering.</p>
-                </CardHeader>
-                <CardContent className="p-8 space-y-10">
-                  {/* Navbar Control */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-bold uppercase tracking-widest text-primary">Header / Footer Layout</Label>
-                      <Badge variant="outline" className="text-[10px] font-bold">{localBrandSettings.navbarKerning}em</Badge>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Letter Spacing (Kerning)</span>
-                        <Slider 
-                          value={[localBrandSettings.navbarKerning]} 
-                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarKerning: v})}
-                          max={2} 
-                          step={0.01}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Manual Alignment Nudge</span>
-                        <Slider 
-                          value={[localBrandSettings.navbarOffset]} 
-                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: v})}
-                          min={-5}
-                          max={5} 
-                          step={0.01}
-                        />
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 gap-12">
+              <section className="space-y-8">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-2">
+                  <div>
+                    <h2 className="text-3xl font-headline font-bold text-primary">Brand Identity Studio</h2>
+                    <p className="text-muted-foreground">Dial in the perfect tracking and alignment for "EXPERIENCES".</p>
                   </div>
-
-                  <Separator />
-
-                  {/* Loading Screen Control */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-bold uppercase tracking-widest text-primary">Loading Screen Layout</Label>
-                      <Badge variant="outline" className="text-[10px] font-bold">{localBrandSettings.loadingKerning}em</Badge>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Letter Spacing (Kerning)</span>
-                        <Slider 
-                          value={[localBrandSettings.loadingKerning]} 
-                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingKerning: v})}
-                          max={2} 
-                          step={0.01}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Manual Alignment Nudge</span>
-                        <Slider 
-                          value={[localBrandSettings.loadingOffset]} 
-                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: v})}
-                          min={-5}
-                          max={5} 
-                          step={0.01}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button onClick={handleSaveBrandSettings} className="w-full bg-primary rounded-full h-12 font-bold shadow-lg gap-2">
-                    <Save className="w-4 h-4" /> Save Brand Layout
+                  <Button onClick={handleSaveBrandSettings} className="bg-primary rounded-full px-10 h-14 font-bold shadow-xl gap-2 text-lg">
+                    <Save className="w-5 h-5" /> Save Global Brand Layout
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Preview Card */}
-              <div className="space-y-8">
-                <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden p-12 flex flex-col items-center justify-center min-h-[300px]">
-                  <div className="flex flex-col items-center mb-10 text-center">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <img src={LOGO_URL} alt="Maroma" className="w-12 h-12 object-contain" />
-                      <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-                    </div>
-                    <span 
-                      className="text-[10px] font-body font-medium text-accent uppercase leading-none transition-all"
-                      style={{ 
-                        letterSpacing: `${localBrandSettings.navbarKerning}em`,
-                        marginLeft: `${localBrandSettings.navbarOffset}em`,
-                        marginTop: '4px'
-                      }}
-                    >
-                      Experiences
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] opacity-50">Header Preview</p>
-                </Card>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Navbar Station */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden flex flex-col">
+                    <CardHeader className="bg-slate-50 border-b p-8">
+                      <div className="flex items-center justify-between mb-2">
+                        <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                          <Type className="w-6 h-6 text-accent" /> Navbar & Footer Layout
+                        </CardTitle>
+                        <Badge className="bg-accent text-white rounded-full">Light Mode</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Standard Header Spacing</p>
+                    </CardHeader>
+                    <CardContent className="p-0 flex-grow flex flex-col">
+                      <div className="p-12 flex flex-col items-center justify-center bg-white min-h-[240px] border-b">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="flex items-center space-x-3 mb-4">
+                            <img src={LOGO_URL} alt="Maroma" className="w-10 h-10 object-contain" />
+                            <span className="text-3xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+                          </div>
+                          <span 
+                            className="text-[8px] font-body font-medium text-accent uppercase leading-none transition-all block relative"
+                            style={{ 
+                              letterSpacing: `${localBrandSettings.navbarKerning}em`,
+                              left: `${localBrandSettings.navbarOffset}em`
+                            }}
+                          >
+                            Experiences
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-8 space-y-8 bg-slate-50/50">
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Letter Spacing (Kerning)</Label>
+                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.navbarKerning.toFixed(2)}em</span>
+                          </div>
+                          <Slider 
+                            value={[localBrandSettings.navbarKerning]} 
+                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarKerning: v})}
+                            max={2} 
+                            step={0.01}
+                          />
+                        </div>
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Horizontal Alignment Nudge</Label>
+                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.navbarOffset.toFixed(2)}em</span>
+                          </div>
+                          <Slider 
+                            value={[localBrandSettings.navbarOffset]} 
+                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: v})}
+                            min={-5}
+                            max={5} 
+                            step={0.01}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                <Card className="rounded-[2rem] border-none shadow-xl bg-primary overflow-hidden p-12 flex flex-col items-center justify-center min-h-[300px]">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="relative w-16 h-16 mb-6">
-                      <img src={LOGO_URL} alt="Maroma Logo" className="w-full h-full object-contain brightness-0 invert" />
-                    </div>
-                    <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
-                    <span 
-                      className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all"
-                      style={{ 
-                        letterSpacing: `${localBrandSettings.loadingKerning}em`,
-                        marginLeft: `${localBrandSettings.loadingOffset}em`,
-                        marginTop: '8px'
-                      }}
-                    >
-                      Experiences
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-white/30 uppercase font-bold tracking-[0.2em] mt-8">Loading Screen Preview</p>
-                </Card>
-              </div>
+                  {/* Loading Station */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl bg-slate-900 overflow-hidden flex flex-col">
+                    <CardHeader className="bg-white/5 border-b border-white/5 p-8">
+                      <div className="flex items-center justify-between mb-2">
+                        <CardTitle className="font-headline text-2xl text-white flex items-center gap-2">
+                          <Activity className="w-6 h-6 text-accent" /> Loading Screen Layout
+                        </CardTitle>
+                        <Badge className="bg-accent text-white rounded-full">Dark Mode</Badge>
+                      </div>
+                      <p className="text-xs text-white/40 uppercase tracking-widest font-bold">App Boot Screen Spacing</p>
+                    </CardHeader>
+                    <CardContent className="p-0 flex-grow flex flex-col">
+                      <div className="p-12 flex flex-col items-center justify-center bg-primary min-h-[240px] border-b border-white/5">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="relative w-16 h-16 mb-6">
+                            <img src={LOGO_URL} alt="Maroma Logo" className="w-full h-full object-contain brightness-0 invert" />
+                          </div>
+                          <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
+                          <span 
+                            className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all block relative mt-2"
+                            style={{ 
+                              letterSpacing: `${localBrandSettings.loadingKerning}em`,
+                              left: `${localBrandSettings.loadingOffset}em`
+                            }}
+                          >
+                            Experiences
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-8 space-y-8 bg-white/5">
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Letter Spacing (Kerning)</Label>
+                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.loadingKerning.toFixed(2)}em</span>
+                          </div>
+                          <Slider 
+                            value={[localBrandSettings.loadingKerning]} 
+                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingKerning: v})}
+                            max={2} 
+                            step={0.01}
+                            className="[&>span:first-child]:bg-white/20"
+                          />
+                        </div>
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Horizontal Alignment Nudge</Label>
+                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.loadingOffset.toFixed(2)}em</span>
+                          </div>
+                          <Slider 
+                            value={[localBrandSettings.loadingOffset]} 
+                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: v})}
+                            min={-5}
+                            max={5} 
+                            step={0.01}
+                            className="[&>span:first-child]:bg-white/20"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </section>
             </div>
           </TabsContent>
 

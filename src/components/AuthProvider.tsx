@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, setDocumentNonBlocking, useMemoFirebase, useDoc } from "@/firebase";
@@ -65,10 +66,10 @@ export default function AuthProvider({
           </div>
           <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
           <span 
-            className="text-[10px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all"
+            className="text-[10px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all block relative"
             style={{ 
               letterSpacing: `${loadingKerning}em`,
-              marginLeft: `${loadingOffset}em`
+              left: `${loadingOffset}em`
             }}
           >
             Experiences

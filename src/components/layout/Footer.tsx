@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -39,10 +40,10 @@ export default function Footer() {
               <div className="flex flex-col items-center">
                 <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
                 <span 
-                  className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all"
+                  className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all block relative"
                   style={{ 
                     letterSpacing: `${kerning}em`,
-                    marginLeft: `${offset}em`
+                    left: `${offset}em`
                   }}
                 >
                   Experiences
