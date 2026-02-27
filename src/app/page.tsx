@@ -100,9 +100,9 @@ export default function Home() {
                     <PlayCircle className="w-6 h-6" /> Join Game
                   </Link>
                 </Button>
-                <p className="flex items-center gap-2 text-slate-500 text-sm font-bold uppercase tracking-widest mt-2 sm:mt-0 sm:ml-4">
+                <div className="flex items-center gap-2 text-slate-500 text-sm font-bold uppercase tracking-widest mt-2 sm:mt-0 sm:ml-4">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Workshop Connection
-                </p>
+                </div>
               </div>
             </div>
           </div>
