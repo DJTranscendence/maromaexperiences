@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,14 +21,7 @@ import {
   ExternalLink,
   Loader2
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { sendEmailNotification } from "@/app/actions/notifications";
 
 interface CorporateBookingFormProps {
   tour: Tour;
@@ -40,12 +32,6 @@ const ADD_ONS = [
   { id: "coffee", label: "Premium Coffee Service", icon: Coffee, price: 15 },
   { id: "accommodation", label: "Accommodation", icon: Hotel, price: 250 },
   { id: "photo", label: "Event Photographer", icon: Camera, price: 200 },
-];
-
-const LOCAL_HOTELS = [
-  { name: "Maroma Resort & Spa", url: "https://www.belmond.com/hotels/north-america/mexico/riviera-maya/belmond-maroma-resort-and-spa/" },
-  { name: "Secrets Maroma Beach", url: "https://www.amrcollection.com/en/resorts-hotels/secrets/mexico/maroma-beach-riviera-cancun/" },
-  { name: "Catalonia Playa Maroma", url: "https://www.cataloniahotels.com/en/hotel/catalonia-playa-maroma" },
 ];
 
 export default function CorporateBookingForm({ tour }: CorporateBookingFormProps) {
@@ -91,9 +77,16 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
         updatedAt: serverTimestamp()
       });
 
+      // Send Customer Notification
+      await sendEmailNotification({
+        to: formData.email,
+        subject: `Proposal Received: ${tour.name}`,
+        textBody: `Hello ${formData.contactName},\n\nThank you for choosing Maroma Experiences for your corporate retreat. We have received your request for "${tour.name}" for ${formData.participants} participants.\n\nOur event design team is currently reviewing your custom itinerary and add-ons. We will contact you within 24 hours with a formal proposal and quote.\n\nWarm regards,\nThe Maroma Team`
+      });
+
       toast({
         title: "Proposal Requested",
-        description: "Your request has been sent to our admin team for review and approval.",
+        description: "Your request has been sent. Check your email for a confirmation receipt.",
       });
     } catch (err) {
       toast({ variant: "destructive", title: "Error", description: "Could not submit proposal request." });

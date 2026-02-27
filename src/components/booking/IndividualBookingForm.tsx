@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, ChevronRight, MessageSquare, AlertCircle, Phone } from "lucide-react";
+import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2 } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, increment, collection, serverTimestamp } from "firebase/firestore";
+import { sendEmailNotification } from "@/app/actions/notifications";
 
 interface IndividualBookingFormProps {
   tour: Tour;
@@ -100,11 +101,10 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
-      
       const fullPhone = `${formData.countryCode} ${formData.phone}`;
 
       try {
-        // 4. Call GenAI notification flow
+        // 4. Call GenAI notification flow for personalized message
         const notification = await generateBookingNotification({
           eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
           recipientType: 'booker',
@@ -125,9 +125,17 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         });
 
         setAiResponse(notification.message);
+
+        // 5. Send Email Confirmation via Postmark
+        await sendEmailNotification({
+          to: formData.email,
+          subject: `Booking Confirmed: ${tour.name}`,
+          textBody: notification.message
+        });
+
       } catch (aiErr: any) {
-        console.warn("AI Notification failed:", aiErr);
-        // Fallback message if AI fails
+        console.warn("Notification system failed:", aiErr);
+        // Fallback email if AI or Postmark fails
         setAiResponse(`Hello ${formData.name}, your booking for ${tour.name} is confirmed for ${guests} Person. Thank you!`);
       }
 
@@ -135,7 +143,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         title: "Booking Successful!",
         description: isMinGroupReached 
           ? `Min group of ${tour.minGroupSize} reached! This experience is guaranteed to run.` 
-          : `Your reservation for ${guests} Person has been confirmed.`,
+          : `Your reservation for ${guests} Person has been confirmed. Confirmation email sent.`,
       });
 
     } catch (err: any) {
@@ -251,7 +259,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           disabled={loading}
           className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95 font-bold"
         >
-          {loading ? "Processing..." : "Complete Booking"}
+          {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Complete Booking"}
           <ChevronRight className="w-4 h-4" />
         </Button>
       </form>

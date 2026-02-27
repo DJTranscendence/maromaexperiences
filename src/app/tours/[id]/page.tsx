@@ -44,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { sendEmailNotification } from "@/app/actions/notifications";
 
 const getHighlightIcon = (text: string) => {
   const t = text.toLowerCase();
@@ -67,6 +68,7 @@ export default function TourDetailsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [notifyEmail, setNotifyEmail] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const tourRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -75,13 +77,34 @@ export default function TourDetailsPage() {
 
   const { data: tour, isLoading } = useDoc<Tour>(tourRef);
 
-  const handleNotifyMe = (e: React.FormEvent) => {
+  const handleNotifyMe = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Registration Successful",
-      description: "We'll let you know as soon as this experience goes live!",
-    });
-    setNotifyEmail("");
+    if (!tour) return;
+    
+    setIsRegistering(true);
+    
+    try {
+      // Send automatic notification email
+      await sendEmailNotification({
+        to: notifyEmail,
+        subject: `Registry Confirmed: ${tour.name}`,
+        textBody: `Hello! You have successfully registered to be notified when the "${tour.name}" experience goes live at Maroma Experiences. We will contact you as soon as dates are confirmed and booking opens.`
+      });
+
+      toast({
+        title: "Registration Successful",
+        description: "We've sent a confirmation email. We'll let you know when this goes live!",
+      });
+      setNotifyEmail("");
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: "Could not add you to the list. Please try again.",
+      });
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   const DIRECTIONS_URL = "https://www.google.com/maps/search/?api=1&query=Maroma+Aspiration+Campus";
@@ -263,8 +286,9 @@ export default function TourDetailsPage() {
                             required
                           />
                         </div>
-                        <Button className="w-full bg-amber-500 hover:bg-amber-600 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-amber-500/20">
-                          <Send className="w-4 h-4" /> Notify Me
+                        <Button className="w-full bg-amber-500 hover:bg-amber-600 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-amber-500/20" disabled={isRegistering}>
+                          {isRegistering ? <Loader2 className="animate-spin w-4 h-4" /> : <Send className="w-4 h-4" />}
+                          Notify Me
                         </Button>
                       </form>
                       <p className="text-[10px] text-center text-amber-700/80 font-medium">
