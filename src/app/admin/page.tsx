@@ -27,7 +27,7 @@ import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBl
 import { collection, serverTimestamp, doc, query, orderBy } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
-import NextImage from "image";
+import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
