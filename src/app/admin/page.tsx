@@ -129,7 +129,6 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- AUTH GUARD ---
-  // Allow indispirit@gmail.com override just like in security rules
   const isWorkshopOwner = user?.email === "indispirit@gmail.com";
   
   const adminRef = useMemoFirebase(() => {
@@ -507,7 +506,7 @@ export default function AdminPage() {
                 <CardHeader className="bg-primary/5 border-b border-primary/10">
                   <CardTitle className="font-headline text-2xl flex items-center gap-2">
                     <Type className="w-6 h-6 text-accent" /> Kerning Adjustments
-                  </CardTitle>
+                  </Type>
                   <p className="text-sm text-muted-foreground">Fine-tune the "EXPERIENCES" typography spacing.</p>
                 </CardHeader>
                 <CardContent className="p-8 space-y-10">
