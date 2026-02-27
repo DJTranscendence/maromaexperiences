@@ -17,7 +17,7 @@
     "AppSetting": {
       "title": "AppSetting",
       "type": "object",
-      "description": "Global configuration for brand layout and UI parameters.",
+      "description": "Global configuration for brand layout and UI parameters. Publicly readable.",
       "properties": {
         "navbarKerning": { "type": "number" },
         "navbarOffset": { "type": "number" },
@@ -73,7 +73,7 @@
         "definition": {
           "entityName": "AppSetting",
           "schema": { "$ref": "#/backend/entities/AppSetting" },
-          "description": "Global application configuration."
+          "description": "Global application configuration. Read access is public."
         }
       },
       {
@@ -81,7 +81,7 @@
         "definition": {
           "entityName": "User",
           "schema": { "$ref": "#/backend/entities/User" },
-          "description": "User profiles."
+          "description": "User profiles. Owners can read/write."
         }
       },
       {
@@ -89,7 +89,7 @@
         "definition": {
           "entityName": "SimulatorSession",
           "schema": { "$ref": "#/backend/entities/SimulatorSession" },
-          "description": "Stores game results for the leaderboard."
+          "description": "Stores game results for the leaderboard. Public read/create."
         }
       },
       {
@@ -97,7 +97,7 @@
         "definition": {
           "entityName": "SimulatorEvent",
           "schema": { "$ref": "#/backend/entities/SimulatorEvent" },
-          "description": "Broadcasts real-time events to all players."
+          "description": "Broadcasts real-time events to all players. Public read/create."
         }
       }
     ]
