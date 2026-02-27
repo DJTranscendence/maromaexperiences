@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -28,7 +27,7 @@ import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBl
 import { collection, serverTimestamp, doc, query, orderBy } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
-import NextImage from "next/image";
+import NextImage from "image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -598,7 +597,8 @@ export default function AdminPage() {
                               className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all block relative mt-2"
                               style={{ 
                                 letterSpacing: `${localBrandSettings.loadingKerning}em`,
-                                left: `${localBrandSettings.loadingOffset}em`
+                                // Apply the base 1.5mm corrected nudge (+0.47em) to the preview as well
+                                left: `${localBrandSettings.loadingOffset + 0.47}em`
                               }}
                             >
                               Experiences

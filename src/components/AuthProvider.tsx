@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, setDocumentNonBlocking, useMemoFirebase, useDoc } from "@/firebase";
@@ -28,7 +27,8 @@ export default function AuthProvider({
   const { data: brandSettings } = useDoc(brandSettingsRef);
 
   const loadingKerning = brandSettings?.loadingKerning ?? 1.05;
-  const loadingOffset = brandSettings?.loadingOffset ?? 0;
+  // Apply a base 1.5mm (approx 0.47em at 12px) nudge to correct for letter-spacing visual weight
+  const loadingOffset = (brandSettings?.loadingOffset ?? 0) + 0.47;
 
   useEffect(() => {
     if (user && firestore) {
