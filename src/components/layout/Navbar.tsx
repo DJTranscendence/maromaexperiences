@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Sprout } from "lucide-react";
-import { useState } from "react";
+import { User, Menu, X, Settings, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Sprout, Edit2, Save, MoveHorizontal, Type } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { initiateSignOut } from "@/firebase/non-blocking-login";
@@ -19,12 +19,15 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditingBrand, setIsEditingBrand] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
@@ -41,8 +44,15 @@ export default function Navbar() {
   }, [firestore]);
   const { data: brandSettings } = useDoc(brandSettingsRef);
 
-  const kerning = brandSettings?.navbarKerning ?? 0.7;
-  const offset = brandSettings?.navbarOffset ?? 0;
+  const [localKerning, setLocalKerning] = useState(0.7);
+  const [localOffset, setLocalOffset] = useState(0);
+
+  useEffect(() => {
+    if (brandSettings) {
+      setLocalKerning(brandSettings.navbarKerning ?? 0.7);
+      setLocalOffset(brandSettings.navbarOffset ?? 0);
+    }
+  }, [brandSettings]);
 
   const handleScrollToWorkshops = (e: React.MouseEvent) => {
     if (isHomePage) {
@@ -75,7 +85,19 @@ export default function Navbar() {
   }, [firestore, user]);
 
   const { data: adminDoc } = useDoc(adminRef);
-  const isAdmin = !!adminDoc;
+  const isWorkshopOwner = user?.email === "indispirit@gmail.com";
+  const isAdmin = isWorkshopOwner || !!adminDoc;
+
+  const handleSaveBrand = () => {
+    if (!brandSettingsRef) return;
+    setDocumentNonBlocking(brandSettingsRef, {
+      navbarKerning: localKerning,
+      navbarOffset: localOffset,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    setIsEditingBrand(false);
+    toast({ title: "Header Updated", description: "Branding layout saved successfully." });
+  };
 
   const handleSignOut = () => {
     initiateSignOut(auth);
@@ -110,30 +132,84 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[4px]">
-              <Image 
-                src={LOGO_URL}
-                alt="Maroma Logo"
-                width={32}
-                height={32}
-                className="object-contain transition-transform group-hover:scale-110"
-                priority
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-              <span 
-                className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all"
-                style={{ 
-                  letterSpacing: `${kerning}em`,
-                  marginLeft: `${offset}em`
-                }}
-              >
-                Experiences
-              </span>
-            </div>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[4px]">
+                <Image 
+                  src={LOGO_URL}
+                  alt="Maroma Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain transition-transform group-hover:scale-110"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+                <span 
+                  className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all whitespace-nowrap"
+                  style={{ 
+                    letterSpacing: `${localKerning}em`,
+                    marginLeft: `${localOffset}em`
+                  }}
+                >
+                  Experiences
+                </span>
+              </div>
+            </Link>
+
+            {isAdmin && (
+              <Popover open={isEditingBrand} onOpenChange={setIsEditingBrand}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-muted-foreground/40 hover:text-accent hover:bg-accent/5 -mt-4">
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="start" className="w-80 rounded-2xl shadow-2xl border-none p-6 space-y-6">
+                  <div className="space-y-1">
+                    <h4 className="font-headline font-bold text-lg text-primary">Layout Editor</h4>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Adjust Live Header Spacing</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase text-slate-500 flex items-center gap-1.5"><Type className="w-3 h-3" /> Kerning</span>
+                        <span className="text-[10px] font-mono text-accent">{localKerning.toFixed(2)}em</span>
+                      </div>
+                      <Slider 
+                        value={[localKerning]} 
+                        onValueChange={([v]) => setLocalKerning(v)}
+                        max={2} 
+                        step={0.01}
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase text-slate-500 flex items-center gap-1.5"><MoveHorizontal className="w-3 h-3" /> Alignment Nudge</span>
+                        <span className="text-[10px] font-mono text-accent">{localOffset.toFixed(2)}em</span>
+                      </div>
+                      <Slider 
+                        value={[localOffset]} 
+                        onValueChange={([v]) => setLocalOffset(v)}
+                        min={-5}
+                        max={5} 
+                        step={0.01}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex-1 rounded-full text-[10px] font-bold uppercase" onClick={() => setIsEditingBrand(false)}>Cancel</Button>
+                    <Button size="sm" className="flex-1 bg-primary rounded-full text-[10px] font-bold uppercase gap-2" onClick={handleSaveBrand}>
+                      <Save className="w-3 h-3" /> Save Layout
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
 
           <div className="hidden md:flex items-center space-x-8">
             <Link href="/" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/" && "text-accent")}>Home</Link>
