@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -528,7 +527,7 @@ export default function AdminPage() {
                     <CardContent className="p-0 flex-grow flex flex-col">
                       <div className="p-12 flex flex-col items-center justify-center bg-white min-h-[240px] border-b">
                         <div className="flex flex-col items-center text-center">
-                          <div className="flex items-center space-x-3 mb-4">
+                          <div className="flex items-center space-x-1 mb-4">
                             <img src={LOGO_URL} alt="Maroma" className="w-10 h-10 object-contain" />
                             <span className="text-3xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
                           </div>
