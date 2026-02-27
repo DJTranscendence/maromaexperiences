@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
@@ -124,9 +125,9 @@ export default function AdminPage() {
 
   // --- BRAND SETTINGS ---
   const brandSettingsRef = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
+    if (!firestore) return null;
     return doc(firestore, "settings", "brand_layout");
-  }, [firestore, isAdmin]);
+  }, [firestore]);
   const { data: brandSettings } = useDoc(brandSettingsRef);
 
   const [localBrandSettings, setLocalBrandSettings] = useState({
