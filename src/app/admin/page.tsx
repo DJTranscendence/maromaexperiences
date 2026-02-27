@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -526,20 +527,22 @@ export default function AdminPage() {
                     </CardHeader>
                     <CardContent className="p-0 flex-grow flex flex-col">
                       <div className="p-12 flex flex-col items-center justify-center bg-white min-h-[240px] border-b">
-                        <div className="flex flex-col items-center text-center">
-                          <div className="flex items-center space-x-1 mb-4">
-                            <img src={LOGO_URL} alt="Maroma" className="w-10 h-10 object-contain" />
-                            <span className="text-3xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+                        <div className="flex items-center space-x-1 mb-4">
+                          <div className="relative w-10 h-10 object-contain -translate-y-[4px]">
+                            <img src={LOGO_URL} alt="Maroma" className="w-full h-full object-contain" />
                           </div>
-                          <span 
-                            className="text-[8px] font-body font-medium text-accent uppercase leading-none transition-all block relative"
-                            style={{ 
-                              letterSpacing: `${localBrandSettings.navbarKerning}em`,
-                              left: `${localBrandSettings.navbarOffset}em`
-                            }}
-                          >
-                            Experiences
-                          </span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-3xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+                            <span 
+                              className="text-[8px] font-body font-medium text-accent uppercase leading-none transition-all block relative"
+                              style={{ 
+                                letterSpacing: `${localBrandSettings.navbarKerning}em`,
+                                left: `${localBrandSettings.navbarOffset}em`
+                              }}
+                            >
+                              Experiences
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="p-8 space-y-8 bg-slate-50/50">
@@ -585,20 +588,22 @@ export default function AdminPage() {
                     </CardHeader>
                     <CardContent className="p-0 flex-grow flex flex-col">
                       <div className="p-12 flex flex-col items-center justify-center bg-primary min-h-[240px] border-b border-white/5">
-                        <div className="flex flex-col items-center text-center">
-                          <div className="relative w-16 h-16 mb-6">
+                        <div className="flex items-center space-x-1 mb-6">
+                          <div className="relative w-16 h-16 shrink-0 -translate-y-[6px]">
                             <img src={LOGO_URL} alt="Maroma Logo" className="w-full h-full object-contain brightness-0 invert" />
                           </div>
-                          <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
-                          <span 
-                            className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all block relative mt-2"
-                            style={{ 
-                              letterSpacing: `${localBrandSettings.loadingKerning}em`,
-                              left: `${localBrandSettings.loadingOffset}em`
-                            }}
-                          >
-                            Experiences
-                          </span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
+                            <span 
+                              className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all block relative mt-2"
+                              style={{ 
+                                letterSpacing: `${localBrandSettings.loadingKerning}em`,
+                                left: `${localBrandSettings.loadingOffset}em`
+                              }}
+                            >
+                              Experiences
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="p-8 space-y-8 bg-white/5">
@@ -635,112 +640,6 @@ export default function AdminPage() {
                 </div>
               </section>
             </div>
-          </TabsContent>
-
-          {/* PROPOSALS TAB */}
-          <TabsContent value="proposals" className="m-0 focus-visible:ring-0">
-            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b px-8 py-6">
-                <CardTitle className="font-headline text-2xl text-primary">Corporate Proposals</CardTitle>
-                <p className="text-sm text-muted-foreground">Review and approve custom itinerary requests.</p>
-              </CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/30">
-                  <TableHead>Company</TableHead>
-                  <TableHead>Package</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {proposals?.map(p => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-bold">{p.companyName}</TableCell>
-                      <TableCell>{p.packageName}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn(
-                          "capitalize",
-                          p.status === 'pending' ? "bg-amber-100 text-amber-700" :
-                          p.status === 'reviewed' ? "bg-blue-100 text-blue-700" :
-                          "bg-green-100 text-green-700"
-                        )}>{p.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {p.createdAt?.toDate?.()?.toLocaleDateString() || "Recent"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" variant="ghost" onClick={() => setViewingProposal(p)} className="gap-2">
-                          <Search className="w-4 h-4" /> Review
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!proposals || proposals.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                        No pending proposals found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
-
-            {/* Proposal Detail Dialog */}
-            <Dialog open={!!viewingProposal} onOpenChange={() => setViewingProposal(null)}>
-              <DialogContent className="max-w-2xl rounded-3xl">
-                {viewingProposal && (
-                  <>
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl font-headline">{viewingProposal.companyName}</DialogTitle>
-                      <DialogDescription>Reviewing custom itinerary request</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-6 py-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="p-3 bg-muted/20 rounded-xl">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Contact</Label>
-                          <p className="font-medium">{viewingProposal.contactName}</p>
-                          <p className="text-xs text-muted-foreground">{viewingProposal.email}</p>
-                        </div>
-                        <div className="p-3 bg-muted/20 rounded-xl">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Package</Label>
-                          <p className="font-medium">{viewingProposal.packageName}</p>
-                          <p className="text-xs text-muted-foreground">{viewingProposal.hotel}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-2 block">Itinerary Items</Label>
-                        <div className="space-y-2">
-                          {viewingProposal.itinerary?.map((item, i) => (
-                            <div key={i} className="flex items-center gap-2 p-2 bg-muted/10 rounded-lg text-sm">
-                              <CheckCircle className="w-3 h-3 text-green-600" /> {item.name}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div className="flex-1">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Catering</Label>
-                          <p className="text-sm">{viewingProposal.catering}</p>
-                        </div>
-                        <div className="flex-1">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Add-ons</Label>
-                          <div className="flex flex-wrap gap-1">
-                            {viewingProposal.addons?.map((a, i) => <Badge key={i} variant="secondary" className="text-[9px]">{a}</Badge>)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <DialogFooter className="gap-2">
-                      <Button variant="outline" onClick={() => handleUpdateProposalStatus(viewingProposal.id, 'reviewed')} className="rounded-full">Mark as Reviewed</Button>
-                      <Button onClick={() => handleUpdateProposalStatus(viewingProposal.id, 'approved')} className="bg-green-600 hover:bg-green-700 text-white rounded-full">Approve & Send</Button>
-                    </DialogFooter>
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
           </TabsContent>
 
           {/* EXPERIENCES TAB */}

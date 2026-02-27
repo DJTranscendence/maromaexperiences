@@ -54,8 +54,8 @@ export default function AuthProvider({
   if (isUserLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background text-primary">
-        <div className="flex flex-col items-center mb-10 text-center">
-          <div className="relative w-20 h-20 mb-6">
+        <div className="flex items-center space-x-1 mb-10">
+          <div className="relative w-16 h-16 flex-shrink-0 -translate-y-[6px]">
             <Image 
               src={LOGO_URL} 
               alt="Maroma Logo" 
@@ -64,16 +64,18 @@ export default function AuthProvider({
               priority
             />
           </div>
-          <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-          <span 
-            className="text-[10px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all block relative"
-            style={{ 
-              letterSpacing: `${loadingKerning}em`,
-              left: `${loadingOffset}em`
-            }}
-          >
-            Experiences
-          </span>
+          <div className="flex flex-col items-center">
+            <span className="text-5xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
+            <span 
+              className="text-[12px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all block relative"
+              style={{ 
+                letterSpacing: `${loadingKerning}em`,
+                left: `${loadingOffset}em`
+              }}
+            >
+              Experiences
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
