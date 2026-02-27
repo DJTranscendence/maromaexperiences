@@ -30,7 +30,7 @@ import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 
