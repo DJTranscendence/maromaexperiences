@@ -530,7 +530,7 @@ export default function AdminPage() {
                         <Slider 
                           value={[Math.abs(localBrandSettings.navbarOffset)]} 
                           onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: -v})}
-                          max={2} 
+                          max={10} 
                           step={0.01}
                         />
                       </div>
@@ -560,7 +560,7 @@ export default function AdminPage() {
                         <Slider 
                           value={[Math.abs(localBrandSettings.loadingOffset)]} 
                           onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: -v})}
-                          max={2} 
+                          max={10} 
                           step={0.01}
                         />
                       </div>
@@ -597,6 +597,9 @@ export default function AdminPage() {
 
                 <Card className="rounded-[2rem] border-none shadow-xl bg-primary overflow-hidden p-12 flex flex-col items-center justify-center min-h-[300px]">
                   <div className="flex flex-col items-center text-center">
+                    <div className="relative w-16 h-16 mb-6">
+                      <img src={LOGO_URL} alt="Maroma Logo" className="w-full h-full object-contain brightness-0 invert" />
+                    </div>
                     <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
                     <span 
                       className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all"
@@ -818,7 +821,7 @@ export default function AdminPage() {
                       onClick={handleSaveTour}
                       disabled={isProcessing || isSuccess}
                     >
-                      {isProcessing ? <Loader2 className="animate-spin" /> : isSuccess ? <Check /> : <Save className="mr-2 h-4 w-4" />}
+                      {isProcessing ? <Loader2 className="animate-spin" /> : <Check /> : <Save className="mr-2 h-4 w-4" />}
                       {editingId ? "Save Changes" : "Publish Experience"}
                     </Button>
                   </CardContent>

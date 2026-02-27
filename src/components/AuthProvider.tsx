@@ -4,6 +4,9 @@ import { useUser, useFirestore, setDocumentNonBlocking, useMemoFirebase, useDoc 
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { doc, serverTimestamp } from "firebase/firestore";
+import Image from "next/image";
+
+const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 /**
  * AuthProvider component that manages the initial loading state of the application.
@@ -51,6 +54,15 @@ export default function AuthProvider({
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background text-primary">
         <div className="flex flex-col items-center mb-10 text-center">
+          <div className="relative w-20 h-20 mb-6">
+            <Image 
+              src={LOGO_URL} 
+              alt="Maroma Logo" 
+              fill 
+              className="object-contain" 
+              priority
+            />
+          </div>
           <span className="text-4xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
           <span 
             className="text-[10px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all"
