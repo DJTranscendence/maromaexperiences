@@ -14,6 +14,17 @@
       },
       "required": ["id", "email"]
     },
+    "AppSetting": {
+      "title": "AppSetting",
+      "type": "object",
+      "description": "Global configuration for brand layout and UI parameters.",
+      "properties": {
+        "navbarKerning": { "type": "number" },
+        "navbarOffset": { "type": "number" },
+        "loadingKerning": { "type": "number" },
+        "loadingOffset": { "type": "number" }
+      }
+    },
     "SimulatorSession": {
       "title": "SimulatorSession",
       "type": "object",
@@ -57,6 +68,14 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/settings/{settingId}",
+        "definition": {
+          "entityName": "AppSetting",
+          "schema": { "$ref": "#/backend/entities/AppSetting" },
+          "description": "Global application configuration."
+        }
+      },
       {
         "path": "/users/{userId}",
         "definition": {
