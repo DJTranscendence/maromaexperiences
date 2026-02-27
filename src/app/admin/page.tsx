@@ -20,7 +20,7 @@ import {
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, Grid, FileText, CheckCircle, Clock,
   Trophy, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  CreditCard, ExternalLink
+  CreditCard, ExternalLink, Wand2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -121,6 +121,8 @@ const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<str
   });
 };
 
+const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
+
 export default function AdminPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -146,18 +148,18 @@ export default function AdminPage() {
 
   const [localBrandSettings, setLocalBrandSettings] = useState({
     navbarKerning: 0.7,
-    navbarOffset: -0.7,
+    navbarOffset: 0,
     loadingKerning: 1.05,
-    loadingOffset: -1.05
+    loadingOffset: 0
   });
 
   useEffect(() => {
     if (brandSettings) {
       setLocalBrandSettings({
         navbarKerning: brandSettings.navbarKerning ?? 0.7,
-        navbarOffset: brandSettings.navbarOffset ?? -0.7,
+        navbarOffset: brandSettings.navbarOffset ?? 0,
         loadingKerning: brandSettings.loadingKerning ?? 1.05,
-        loadingOffset: brandSettings.loadingOffset ?? -1.05
+        loadingOffset: brandSettings.loadingOffset ?? 0
       });
     }
   }, [brandSettings]);
@@ -168,7 +170,7 @@ export default function AdminPage() {
       ...localBrandSettings,
       updatedAt: serverTimestamp()
     }, { merge: true });
-    toast({ title: "Brand Settings Saved", description: "Logo kerning updated across all platforms." });
+    toast({ title: "Brand Settings Saved", description: "Logo layout updated across all platforms." });
   };
 
   // --- TOUR STATE & QUERIES ---
@@ -412,8 +414,6 @@ export default function AdminPage() {
     );
   }
 
-  const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -504,9 +504,9 @@ export default function AdminPage() {
               <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
                 <CardHeader className="bg-primary/5 border-b border-primary/10">
                   <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                    <Type className="w-6 h-6 text-accent" /> Kerning Adjustments
+                    <Type className="w-6 h-6 text-accent" /> Brand Layout Controls
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">Fine-tune the "EXPERIENCES" typography spacing.</p>
+                  <p className="text-sm text-muted-foreground">Fine-tune the "EXPERIENCES" typography and centering.</p>
                 </CardHeader>
                 <CardContent className="p-8 space-y-10">
                   {/* Navbar Control */}
@@ -526,11 +526,12 @@ export default function AdminPage() {
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Centering Offset (Negative Margin)</span>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Manual Alignment Nudge</span>
                         <Slider 
-                          value={[Math.abs(localBrandSettings.navbarOffset)]} 
-                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: -v})}
-                          max={10} 
+                          value={[localBrandSettings.navbarOffset]} 
+                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: v})}
+                          min={-5}
+                          max={5} 
                           step={0.01}
                         />
                       </div>
@@ -556,11 +557,12 @@ export default function AdminPage() {
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Centering Offset (Negative Margin)</span>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Manual Alignment Nudge</span>
                         <Slider 
-                          value={[Math.abs(localBrandSettings.loadingOffset)]} 
-                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: -v})}
-                          max={10} 
+                          value={[localBrandSettings.loadingOffset]} 
+                          onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: v})}
+                          min={-5}
+                          max={5} 
                           step={0.01}
                         />
                       </div>
@@ -585,7 +587,7 @@ export default function AdminPage() {
                       className="text-[10px] font-body font-medium text-accent uppercase leading-none transition-all"
                       style={{ 
                         letterSpacing: `${localBrandSettings.navbarKerning}em`,
-                        marginRight: `${localBrandSettings.navbarOffset}em`,
+                        marginLeft: `${localBrandSettings.navbarOffset}em`,
                         marginTop: '4px'
                       }}
                     >
@@ -605,7 +607,7 @@ export default function AdminPage() {
                       className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all"
                       style={{ 
                         letterSpacing: `${localBrandSettings.loadingKerning}em`,
-                        marginRight: `${localBrandSettings.loadingOffset}em`,
+                        marginLeft: `${localBrandSettings.loadingOffset}em`,
                         marginTop: '8px'
                       }}
                     >

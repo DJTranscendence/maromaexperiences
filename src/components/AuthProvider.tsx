@@ -27,7 +27,7 @@ export default function AuthProvider({
   const { data: brandSettings } = useDoc(brandSettingsRef);
 
   const loadingKerning = brandSettings?.loadingKerning ?? 1.05;
-  const loadingOffset = brandSettings?.loadingOffset ?? -1.05;
+  const loadingOffset = brandSettings?.loadingOffset ?? 0;
 
   useEffect(() => {
     if (user && firestore) {
@@ -68,7 +68,7 @@ export default function AuthProvider({
             className="text-[10px] font-body font-medium text-accent uppercase leading-none mt-1 transition-all"
             style={{ 
               letterSpacing: `${loadingKerning}em`,
-              marginRight: `${loadingOffset}em`
+              marginLeft: `${loadingOffset}em`
             }}
           >
             Experiences

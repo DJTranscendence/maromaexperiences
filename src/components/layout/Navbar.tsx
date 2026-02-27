@@ -42,7 +42,7 @@ export default function Navbar() {
   const { data: brandSettings } = useDoc(brandSettingsRef);
 
   const kerning = brandSettings?.navbarKerning ?? 0.7;
-  const offset = brandSettings?.navbarOffset ?? -0.7;
+  const offset = brandSettings?.navbarOffset ?? 0;
 
   const handleScrollToWorkshops = (e: React.MouseEvent) => {
     if (isHomePage) {
@@ -121,13 +121,13 @@ export default function Navbar() {
                 priority
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
               <span className="text-2xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
               <span 
                 className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all"
                 style={{ 
                   letterSpacing: `${kerning}em`,
-                  marginRight: `${offset}em`
+                  marginLeft: `${offset}em`
                 }}
               >
                 Experiences
