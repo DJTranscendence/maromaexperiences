@@ -19,7 +19,7 @@ import {
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  Bell
+  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -52,6 +52,23 @@ interface BookingRecord {
   bookingStatus: string;
   bookedAt: any;
   tourId: string;
+}
+
+interface ProposalRecord {
+  id: string;
+  userId: string;
+  type?: string;
+  schoolName?: string;
+  companyName?: string;
+  contactName: string;
+  email: string;
+  phone?: string;
+  selectedDate?: string;
+  packageName?: string;
+  itinerary: any[];
+  status: string;
+  createdAt: any;
+  catering?: string;
 }
 
 interface MediaItem {
@@ -148,12 +165,18 @@ export default function AdminPage() {
     imageUrls: [] as string[]
   });
 
-  // --- BOOKINGS QUERIES ---
+  // --- BOOKINGS & PROPOSALS QUERIES ---
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
   }, [firestore, isAdmin]);
   const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
+
+  const proposalsQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
+  }, [firestore, isAdmin]);
+  const { data: proposals, isLoading: isProposalsLoading } = useCollection<ProposalRecord>(proposalsQuery);
 
   // --- USER STATE & QUERIES ---
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -209,17 +232,23 @@ export default function AdminPage() {
     });
   }, [media, mediaSearchQuery]);
 
-  // --- REMINDER LOGIC ---
-  const [isSendingReminder, setIsSendingReminder] = useState<string | null>(null);
+  // --- HANDLERS ---
+
+  const handleUpdateProposalStatus = (id: string, newStatus: string) => {
+    if (!firestore) return;
+    updateDocumentNonBlocking(doc(firestore, "proposals", id), {
+      status: newStatus,
+      updatedAt: serverTimestamp()
+    });
+    toast({ title: "Status Updated", description: `Proposal marked as ${newStatus}.` });
+  };
 
   const handleSendReminder = async (booking: BookingRecord) => {
     if (!firestore) return;
-    
-    setIsSendingReminder(booking.id);
+    setIsProcessing(true);
     
     try {
       let targetEmail = "";
-      // Use internal SDK method to get specific user profile data
       const userDoc = await fetch(`https://firestore.googleapis.com/v1/projects/${firestore.app.options.projectId}/databases/(default)/documents/users/${booking.userId}`).then(r => r.json());
       targetEmail = userDoc.fields?.email?.stringValue || "";
 
@@ -228,44 +257,21 @@ export default function AdminPage() {
         return;
       }
 
-      let reminderMessage = `Hello,\n\nThis is a friendly reminder for your upcoming experience: "${booking.tourName}" on ${booking.tourDate}.\n\nWe look forward to hosting you at the Maroma Campus!\n\nBest regards,\nThe Maroma Team`;
-
-      try {
-        const notification = await generateBookingNotification({
-          eventType: 'booking_reminder',
-          recipientType: 'booker',
-          bookingDetails: {
-            bookingId: booking.id,
-            tourName: booking.tourName,
-            tourDate: booking.tourDate,
-            tourTime: "10:00 AM",
-            numberOfGuests: booking.numberOfAttendees,
-            bookedBy: "Valued Guest",
-            bookerEmail: targetEmail
-          },
-          bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
-          supportEmailAddress: "booking@maromaexperience.com"
-        });
-        if (notification && notification.message) reminderMessage = notification.message;
-      } catch (aiErr) {
-        console.warn("AI Reminder generation failed, using standard template.");
-      }
+      const emailBody = `Hello,\n\nThis is a friendly reminder for your upcoming experience: "${booking.tourName}" on ${booking.tourDate}.\n\nWe look forward to hosting you at the Maroma Campus!\n\nBest regards,\nThe Maroma Team`;
 
       await sendEmailNotification({
         to: targetEmail,
         subject: `Reminder: Your experience at Maroma`,
-        textBody: reminderMessage
+        textBody: emailBody
       });
 
       toast({ title: "Reminder Sent", description: `Notification delivered to ${targetEmail}.` });
     } catch (err) {
-      toast({ variant: "destructive", title: "Delivery Failed", description: "Failed to generate or send the reminder email." });
+      toast({ variant: "destructive", title: "Delivery Failed", description: "Could not send the reminder email." });
     } finally {
-      setIsSendingReminder(null);
+      setIsProcessing(false);
     }
   };
-
-  // --- HANDLERS ---
 
   const resetTourForm = () => {
     setEditingId(null);
@@ -398,7 +404,7 @@ export default function AdminPage() {
             </div>
             <h2 className="text-3xl font-headline font-bold text-primary mb-2">Access Restricted</h2>
             <p className="text-muted-foreground leading-relaxed">
-              This area is reserved for administrators only. Please sign in with an authorized account to continue.
+              This area is reserved for administrators only.
             </p>
             <div className="mt-8 space-y-3">
               <Button asChild className="w-full bg-primary rounded-full h-12 font-bold shadow-lg">
@@ -420,16 +426,19 @@ export default function AdminPage() {
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
         
-        <Tabs defaultValue="admin" className="space-y-10">
+        <Tabs defaultValue="bookings" className="space-y-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage Maroma Experiences, Proposals, and Users.</p>
+              <p className="text-muted-foreground mt-1">Unified view of all Maroma activities.</p>
             </div>
             
             <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50">
               <TabsTrigger value="bookings" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <CalendarDays className="w-5 h-5" /> Bookings
+              </TabsTrigger>
+              <TabsTrigger value="proposals" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                <ClipboardList className="w-5 h-5" /> Requests
               </TabsTrigger>
               <TabsTrigger value="brand" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Palette className="w-5 h-5" /> Brand
@@ -449,8 +458,8 @@ export default function AdminPage() {
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b px-8 py-6">
-                <CardTitle className="font-headline text-2xl text-primary">Customer Bookings</CardTitle>
-                <p className="text-sm text-muted-foreground">Real-time view of individual workshop and tour reservations.</p>
+                <CardTitle className="font-headline text-2xl text-primary">Individual Bookings</CardTitle>
+                <p className="text-sm text-muted-foreground">Standard workshop and tour reservations.</p>
               </CardHeader>
               <Table>
                 <TableHeader><TableRow className="bg-muted/30">
@@ -477,15 +486,8 @@ export default function AdminPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="rounded-full h-9 gap-2 text-xs" 
-                            onClick={() => handleSendReminder(b)}
-                            disabled={isSendingReminder === b.id}
-                          >
-                            {isSendingReminder === b.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
-                            Send Reminder
+                          <Button size="sm" variant="outline" className="rounded-full h-9 gap-2 text-xs" onClick={() => handleSendReminder(b)}>
+                            <Bell className="w-3 h-3" /> Send Reminder
                           </Button>
                           <Button size="icon" variant="ghost" className="rounded-full hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "bookings", b.id))}>
                             <Trash2 className="w-4 h-4" />
@@ -494,11 +496,80 @@ export default function AdminPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!bookings || bookings.length === 0) && !isBookingsLoading && (
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="proposals" className="m-0 focus-visible:ring-0">
+            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b px-8 py-6">
+                <CardTitle className="font-headline text-2xl text-primary">Group & Corporate Requests</CardTitle>
+                <p className="text-sm text-muted-foreground">Managed inquiries for schools and businesses.</p>
+              </CardHeader>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/30">
+                  <TableHead>Type</TableHead>
+                  <TableHead>Organization</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Requested Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Management</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {isProposalsLoading ? (
+                    <TableRow><TableCell colSpan={6} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                  ) : proposals?.map(p => (
+                    <TableRow key={p.id} className="group">
+                      <TableCell>
+                        {p.type === 'School' ? (
+                          <Badge className="bg-blue-100 text-blue-700 border-none gap-1.5"><GraduationCap className="w-3 h-3" /> School</Badge>
+                        ) : (
+                          <Badge className="bg-purple-100 text-purple-700 border-none gap-1.5"><Building2 className="w-3 h-3" /> Corporate</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-bold text-primary">
+                        {p.schoolName || p.companyName || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col text-xs">
+                          <span className="font-medium">{p.contactName}</span>
+                          <a href={`mailto:${p.email}`} className="text-accent hover:underline flex items-center gap-1"><Mail className="w-3 h-3" /> Email</a>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {p.selectedDate || "Flexible"}
+                      </TableCell>
+                      <TableCell>
+                        <Select value={p.status} onValueChange={(val) => handleUpdateProposalStatus(p.id, val)}>
+                          <SelectTrigger className={cn("h-8 rounded-full text-xs font-bold border-none", 
+                            p.status === 'pending' ? "bg-amber-100 text-amber-700" : 
+                            p.status === 'reviewed' ? "bg-blue-100 text-blue-700" : 
+                            "bg-green-100 text-green-700"
+                          )}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="reviewed">Reviewed</SelectItem>
+                            <SelectItem value="approved">Approved</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button size="icon" variant="ghost" className="rounded-full hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "proposals", p.id))}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(!proposals || proposals.length === 0) && !isProposalsLoading && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
-                        <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        No customer bookings found.
+                        <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        No active requests found.
                       </TableCell>
                     </TableRow>
                   )}
@@ -513,7 +584,7 @@ export default function AdminPage() {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-2">
                   <div>
                     <h2 className="text-3xl font-headline font-bold text-primary">Brand Identity Studio</h2>
-                    <p className="text-muted-foreground">Dial in the perfect tracking and alignment for "EXPERIENCES".</p>
+                    <p className="text-muted-foreground">Dial in the tracking and alignment for "EXPERIENCES".</p>
                   </div>
                   <Button onClick={handleSaveBrandSettings} className="bg-primary rounded-full px-10 h-14 font-bold shadow-xl gap-2 text-lg">
                     <Save className="w-5 h-5" /> Save Global Brand Layout
@@ -529,7 +600,6 @@ export default function AdminPage() {
                         </CardTitle>
                         <Badge className="bg-accent text-white rounded-full">Light Mode</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Standard Header Spacing</p>
                     </CardHeader>
                     <CardContent className="p-0 flex-grow flex flex-col">
                       <div className="p-12 flex flex-col items-center justify-center bg-white min-h-[240px] border-b">
@@ -553,29 +623,12 @@ export default function AdminPage() {
                       </div>
                       <div className="p-8 space-y-8 bg-slate-50/50">
                         <div className="space-y-6">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Letter Spacing (Kerning)</Label>
-                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.navbarKerning.toFixed(2)}em</span>
-                          </div>
-                          <Slider 
-                            value={[localBrandSettings.navbarKerning]} 
-                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarKerning: v})}
-                            max={2} 
-                            step={0.01}
-                          />
+                          <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Letter Spacing (Kerning)</Label>
+                          <Slider value={[localBrandSettings.navbarKerning]} onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarKerning: v})} max={2} step={0.01} />
                         </div>
                         <div className="space-y-6">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Manual Alignment Nudge</Label>
-                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.navbarOffset.toFixed(2)}em</span>
-                          </div>
-                          <Slider 
-                            value={[localBrandSettings.navbarOffset]} 
-                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: v})}
-                            min={-5}
-                            max={5} 
-                            step={0.01}
-                          />
+                          <Label className="text-xs font-bold uppercase tracking-widest text-slate-500">Manual Alignment Nudge</Label>
+                          <Slider value={[localBrandSettings.navbarOffset]} onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, navbarOffset: v})} min={-5} max={5} step={0.01} />
                         </div>
                       </div>
                     </CardContent>
@@ -589,7 +642,6 @@ export default function AdminPage() {
                         </CardTitle>
                         <Badge className="bg-accent text-white rounded-full">Dark Mode</Badge>
                       </div>
-                      <p className="text-xs text-white/40 uppercase tracking-widest font-bold">App Boot Screen Spacing</p>
                     </CardHeader>
                     <CardContent className="p-0 flex-grow flex flex-col">
                       <div className="p-12 flex flex-col items-center justify-center bg-primary min-h-[240px] border-b border-white/5">
@@ -613,31 +665,12 @@ export default function AdminPage() {
                       </div>
                       <div className="p-8 space-y-8 bg-white/5">
                         <div className="space-y-6">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Letter Spacing (Kerning)</Label>
-                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.loadingKerning.toFixed(2)}em</span>
-                          </div>
-                          <Slider 
-                            value={[localBrandSettings.loadingKerning]} 
-                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingKerning: v})}
-                            max={2} 
-                            step={0.01}
-                            className="[&>span:first-child]:bg-white/20"
-                          />
+                          <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Letter Spacing (Kerning)</Label>
+                          <Slider value={[localBrandSettings.loadingKerning]} onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingKerning: v})} max={2} step={0.01} className="[&>span:first-child]:bg-white/20" />
                         </div>
                         <div className="space-y-6">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Manual Alignment Nudge</Label>
-                            <span className="text-xs font-mono font-bold text-accent">{localBrandSettings.loadingOffset.toFixed(2)}em</span>
-                          </div>
-                          <Slider 
-                            value={[localBrandSettings.loadingOffset]} 
-                            onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: v})}
-                            min={-5}
-                            max={5} 
-                            step={0.01}
-                            className="[&>span:first-child]:bg-white/20"
-                          />
+                          <Label className="text-xs font-bold uppercase tracking-widest text-white/50">Manual Alignment Nudge</Label>
+                          <Slider value={[localBrandSettings.loadingOffset]} onValueChange={([v]) => setLocalBrandSettings({...localBrandSettings, loadingOffset: v})} min={-5} max={5} step={0.01} className="[&>span:first-child]:bg-white/20" />
                         </div>
                       </div>
                     </CardContent>
@@ -756,7 +789,7 @@ export default function AdminPage() {
                   <ImageLibrary selectedUrls={newTour.imageUrls} onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} />
                 </section>
                 <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-                  <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Catalog</CardTitle></CardHeader>
+                  <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Experience Catalog</CardTitle></CardHeader>
                   <Table>
                     <TableHeader><TableRow className="bg-muted/30">
                       <TableHead>Experience</TableHead>
