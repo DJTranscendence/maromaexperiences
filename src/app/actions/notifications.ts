@@ -24,6 +24,10 @@ export async function sendEmailNotification({
   textBody,
   htmlBody
 }: EmailParams) {
+  if (!to) {
+    return { success: false, error: "Recipient email is required" };
+  }
+
   try {
     const response = await fetch("https://api.postmarkapp.com/email", {
       method: "POST",
@@ -35,7 +39,7 @@ export async function sendEmailNotification({
       body: JSON.stringify({
         From: SENDER_EMAIL,
         To: to,
-        Cc: ADMIN_EMAIL, // Automatic admin notification
+        Cc: ADMIN_EMAIL, 
         Subject: subject,
         TextBody: textBody,
         HtmlBody: htmlBody || textBody.replace(/\n/g, '<br>'),

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -63,6 +62,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { sendEmailNotification } from "@/app/actions/notifications";
 
 const CORPORATE_HERO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Newsletter%20Splash%20image.png?alt=media&token=1b459fe6-4123-40c5-a4bd-1b58c0f4915f";
 
@@ -228,9 +228,16 @@ export default function CorporatePage() {
         updatedAt: serverTimestamp()
       });
 
+      // Send Customer Notification
+      await sendEmailNotification({
+        to: contactForm.email,
+        subject: `Corporate Proposal Request Received: ${selectedPkg?.name || "Maroma Experience"}`,
+        textBody: `Hello ${contactForm.contactName},\n\nThank you for reaching out to Maroma Experiences. We have received your corporate retreat proposal request for "${contactForm.companyName}".\n\nOur design team is reviewing your custom itinerary and will be in touch within 24 hours with a detailed proposal and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
+      });
+
       toast({
         title: "Proposal Requested!",
-        description: "Our admin team is reviewing your itinerary. We'll contact you with the final proposal shortly.",
+        description: "Our admin team is reviewing your itinerary. A confirmation receipt has been sent to your email.",
       });
 
       setIsBuilderOpen(false);
