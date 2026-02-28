@@ -161,19 +161,6 @@ export default function SchoolsPage() {
     }
   }, [userData]);
 
-  useEffect(() => {
-    // Auto-scroll to center the hero content on mobile to ensure button visibility
-    const timer = setTimeout(() => {
-      if (window.innerWidth < 768) {
-        window.scrollTo({
-          top: 120,
-          behavior: 'smooth'
-        });
-      }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleRequestBooking = async () => {
     if (!firestore || !user) {
       toast({ variant: "destructive", title: "Authentication Required", description: "Please sign in to request a booking." });
@@ -233,7 +220,8 @@ export default function SchoolsPage() {
       <Navbar />
 
       <main className="flex-grow">
-        <section className="relative min-h-[85vh] py-20 md:py-32 flex items-center justify-center overflow-hidden">
+        {/* Hero Section - Optimized for perfect centering on all devices */}
+        <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden py-12">
           <Image
             src={SCHOOL_HERO_URL}
             alt="School Campus Experience"
@@ -242,13 +230,13 @@ export default function SchoolsPage() {
             priority
           />
           <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
-            <Badge className="mb-10 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
+            <Badge className="mb-8 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
               School Campus Experience
             </Badge>
-            <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-8 drop-shadow-2xl leading-tight">
+            <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-2xl leading-tight">
               Ignite Curiosity in the Classroom of Life.
             </h1>
-            <p className="text-xl text-white/90 mb-14 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
+            <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
               Our Schools Programme offers an immersive, structured visit to the Maroma campus, designed to introduce students to ethical production, craftsmanship, and sustainable enterprise.
             </p>
             <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-14 h-16 text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">

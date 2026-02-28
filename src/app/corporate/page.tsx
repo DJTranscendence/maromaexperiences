@@ -154,19 +154,6 @@ export default function CorporatePage() {
     }
   }, [userData]);
 
-  useEffect(() => {
-    // Auto-scroll to center the hero content on mobile to ensure button visibility
-    const timer = setTimeout(() => {
-      if (window.innerWidth < 768) {
-        window.scrollTo({
-          top: 120,
-          behavior: 'smooth'
-        });
-      }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "media");
@@ -276,8 +263,8 @@ export default function CorporatePage() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section - Balanced spacing for mobile bubbles */}
-        <section className="relative min-h-[85vh] py-20 md:py-32 flex items-center justify-center overflow-hidden">
+        {/* Hero Section - Optimized for perfect centering on all devices */}
+        <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden py-12">
           <Image
             src={heroImage}
             alt="Corporate Retreat"
@@ -286,13 +273,13 @@ export default function CorporatePage() {
             priority
           />
           <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
-            <Badge className="mb-10 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
+            <Badge className="mb-8 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
               Corporate Excellence
             </Badge>
-            <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-8 drop-shadow-2xl leading-tight">
+            <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-2xl leading-tight">
               Elevate Your Team's Connection.
             </h1>
-            <p className="text-xl text-white/90 mb-14 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
+            <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
               Maroma provides the perfect canvas for corporate groups to reconnect, strategize, and grow through curated artisan workshops and high-end logistics.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
