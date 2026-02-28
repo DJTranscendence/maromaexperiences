@@ -19,7 +19,7 @@ import {
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList
+  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -30,9 +30,8 @@ import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
-import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 
 interface UserProfile {
   id: string;
@@ -69,6 +68,11 @@ interface ProposalRecord {
   status: string;
   createdAt: any;
   catering?: string;
+  studentCount?: string;
+  adultCount?: string;
+  participants?: string;
+  addons?: string[];
+  hotel?: string;
 }
 
 interface MediaItem {
@@ -105,6 +109,54 @@ export default function AdminPage() {
   }, [firestore, user]);
   const { data: adminDoc, isLoading: isAdminDocLoading } = useDoc(adminRef);
   const isAdmin = isWorkshopOwner || !!adminDoc;
+
+  // --- PROPOSAL DETAIL MODAL ---
+  const [selectedProposal, setSelectedProposal] = useState<ProposalRecord | null>(null);
+  const [isEmailing, setIsEmailing] = useState(false);
+  const [emailDraft, setEmailDraft] = useState({ subject: "", body: "" });
+
+  const handleOpenProposal = (p: ProposalRecord) => {
+    setSelectedProposal(p);
+    // Pre-draft email based on type
+    if (p.type === 'School') {
+      setEmailDraft({
+        subject: `Booking Confirmed: ${p.schoolName} - Maroma Tour`,
+        body: `Hello ${p.contactName},\n\nWe are delighted to confirm your school tour for "${p.schoolName}" on ${p.selectedDate || "[Date]"}.\n\nSchedule: 10:30 AM — 12:00 PM\nGroup Size: ${p.studentCount} Students, ${p.adultCount} Adults\n\nWe look forward to hosting your students at the Maroma Campus!\n\nBest regards,\nThe Maroma Team`
+      });
+    } else {
+      setEmailDraft({
+        subject: `Proposal Confirmed: ${p.companyName} - Maroma Experience`,
+        body: `Hello ${p.contactName},\n\nWe have reviewed your request for "${p.companyName}" and are ready to proceed with your custom Maroma experience.\n\nPackage: ${p.packageName || "Custom Itinerary"}\nCatering: ${p.catering || "Standard"}\n\nOur team will be in touch shortly with the formal contract and invoice details.\n\nWarm regards,\nThe Maroma Team`
+      });
+    }
+  };
+
+  const handleSendConfirmation = async () => {
+    if (!selectedProposal) return;
+    setIsEmailing(true);
+    try {
+      await sendEmailNotification({
+        to: selectedProposal.email,
+        subject: emailDraft.subject,
+        textBody: emailDraft.body
+      });
+      
+      // Auto-update status to approved
+      if (firestore) {
+        updateDocumentNonBlocking(doc(firestore, "proposals", selectedProposal.id), {
+          status: "approved",
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      toast({ title: "Confirmation Sent", description: `Email delivered to ${selectedProposal.email}.` });
+      setIsEmailing(false);
+      setSelectedProposal(null);
+    } catch (err) {
+      toast({ variant: "destructive", title: "Delivery Failed", description: "Could not send the confirmation email." });
+      setIsEmailing(false);
+    }
+  };
 
   // --- BRAND SETTINGS ---
   const brandSettingsRef = useMemoFirebase(() => {
@@ -505,7 +557,7 @@ export default function AdminPage() {
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b px-8 py-6">
                 <CardTitle className="font-headline text-2xl text-primary">Group & Corporate Requests</CardTitle>
-                <p className="text-sm text-muted-foreground">Managed inquiries for schools and businesses.</p>
+                <p className="text-sm text-muted-foreground">Managed inquiries for schools and businesses. Click to view details.</p>
               </CardHeader>
               <Table>
                 <TableHeader><TableRow className="bg-muted/30">
@@ -520,7 +572,11 @@ export default function AdminPage() {
                   {isProposalsLoading ? (
                     <TableRow><TableCell colSpan={6} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
                   ) : proposals?.map(p => (
-                    <TableRow key={p.id} className="group">
+                    <TableRow 
+                      key={p.id} 
+                      className="group cursor-pointer hover:bg-muted/10 transition-colors"
+                      onClick={() => handleOpenProposal(p)}
+                    >
                       <TableCell>
                         {p.type === 'School' ? (
                           <Badge className="bg-blue-100 text-blue-700 border-none gap-1.5"><GraduationCap className="w-3 h-3" /> School</Badge>
@@ -534,30 +590,26 @@ export default function AdminPage() {
                       <TableCell>
                         <div className="flex flex-col text-xs">
                           <span className="font-medium">{p.contactName}</span>
-                          <a href={`mailto:${p.email}`} className="text-accent hover:underline flex items-center gap-1"><Mail className="w-3 h-3" /> Email</a>
+                          <span className="text-muted-foreground">{p.email}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium">
                         {p.selectedDate || "Flexible"}
                       </TableCell>
                       <TableCell>
-                        <Select value={p.status} onValueChange={(val) => handleUpdateProposalStatus(p.id, val)}>
-                          <SelectTrigger className={cn("h-8 rounded-full text-xs font-bold border-none", 
-                            p.status === 'pending' ? "bg-amber-100 text-amber-700" : 
-                            p.status === 'reviewed' ? "bg-blue-100 text-blue-700" : 
-                            "bg-green-100 text-green-700"
-                          )}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="reviewed">Reviewed</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Badge className={cn("rounded-full px-3 py-0.5 text-[10px] font-bold border-none", 
+                          p.status === 'pending' ? "bg-amber-100 text-amber-700" : 
+                          p.status === 'reviewed' ? "bg-blue-100 text-blue-700" : 
+                          "bg-green-100 text-green-700"
+                        )}>
+                          {p.status}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-end gap-2">
+                          <Button size="icon" variant="ghost" className="rounded-full hover:bg-white shadow-sm" onClick={() => handleOpenProposal(p)}>
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" className="rounded-full hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "proposals", p.id))}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -576,6 +628,139 @@ export default function AdminPage() {
                 </TableBody>
               </Table>
             </Card>
+
+            {/* Proposal Details Modal */}
+            <Dialog open={!!selectedProposal} onOpenChange={open => !open && setSelectedProposal(null)}>
+              <DialogContent className="max-w-3xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                {selectedProposal && (
+                  <div className="flex flex-col h-[85vh]">
+                    <div className="bg-primary p-8 text-white shrink-0">
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge className="bg-white/20 text-white border-none px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
+                          {selectedProposal.type || 'Request'} Detail
+                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs opacity-60">Status:</span>
+                          <Select 
+                            value={selectedProposal.status} 
+                            onValueChange={(val) => handleUpdateProposalStatus(selectedProposal.id, val)}
+                          >
+                            <SelectTrigger className="h-8 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[120px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="reviewed">Reviewed</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <h2 className="text-3xl font-headline font-bold leading-tight">
+                        {selectedProposal.schoolName || selectedProposal.companyName}
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-6 mt-4 text-sm opacity-80 font-medium">
+                        <div className="flex items-center gap-2"><User className="w-4 h-4" /> {selectedProposal.contactName}</div>
+                        <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {selectedProposal.email}</div>
+                        {selectedProposal.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {selectedProposal.phone}</div>}
+                      </div>
+                    </div>
+
+                    <div className="flex-grow overflow-y-auto bg-slate-50 p-8 space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <section className="space-y-4">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b pb-2">Experience Logistics</h3>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <CalendarDays className="w-5 h-5 text-accent" />
+                                <span className="text-sm font-bold text-primary">Requested Date</span>
+                              </div>
+                              <span className="text-sm font-medium">{selectedProposal.selectedDate || 'Flexible'}</span>
+                            </div>
+                            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <Users className="w-5 h-5 text-accent" />
+                                <span className="text-sm font-bold text-primary">Group Size</span>
+                              </div>
+                              <div className="text-right">
+                                {selectedProposal.type === 'School' ? (
+                                  <span className="text-sm font-medium">{selectedProposal.studentCount} Students, {selectedProposal.adultCount} Adults</span>
+                                ) : (
+                                  <span className="text-sm font-medium">{selectedProposal.participants || 'N/A'} Participants</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section className="space-y-4">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b pb-2">Curated Itinerary</h3>
+                          <div className="space-y-3">
+                            {selectedProposal.itinerary?.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-border/50">
+                                <div className="w-10 h-10 bg-accent/5 rounded-lg flex items-center justify-center shrink-0">
+                                  {item.type === 'Experience' ? <MapPin className="w-5 h-5 text-accent" /> : <Activity className="w-5 h-5 text-accent" />}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-primary">{item.name}</span>
+                                  <span className="text-[10px] text-muted-foreground uppercase font-medium">{item.type}</span>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="bg-white p-4 rounded-2xl border-l-4 border-accent shadow-sm">
+                              <Label className="text-[10px] font-bold uppercase text-accent mb-1 block">Catering Preference</Label>
+                              <p className="text-sm font-medium text-primary">{selectedProposal.catering || 'Standard'}</p>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+
+                      <section className="bg-white rounded-[2rem] p-8 border border-border shadow-inner space-y-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-headline font-bold text-primary flex items-center gap-2">
+                            <Send className="w-5 h-5 text-accent" /> Email Confirmation Studio
+                          </h3>
+                          <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground border-slate-200">Official Template</Badge>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Subject Line</Label>
+                            <Input 
+                              value={emailDraft.subject} 
+                              onChange={e => setEmailDraft({...emailDraft, subject: e.target.value})}
+                              className="rounded-xl h-12 bg-slate-50/50 border-slate-200"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Email Body</Label>
+                            <Textarea 
+                              value={emailDraft.body} 
+                              onChange={e => setEmailDraft({...emailDraft, body: e.target.value})}
+                              className="min-h-[200px] rounded-2xl bg-slate-50/50 border-slate-200 leading-relaxed text-sm font-body"
+                            />
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+
+                    <div className="p-6 bg-white border-t flex items-center justify-between shrink-0">
+                      <Button variant="ghost" className="rounded-full px-8" onClick={() => setSelectedProposal(null)}>Cancel</Button>
+                      <div className="flex items-center gap-4">
+                        <Button 
+                          className="bg-accent hover:bg-accent/90 text-white rounded-full px-10 h-14 font-bold text-lg shadow-xl shadow-accent/10 gap-3"
+                          onClick={handleSendConfirmation}
+                          disabled={isEmailing}
+                        >
+                          {isEmailing ? <Loader2 className="animate-spin w-5 h-5" /> : <Send className="w-5 h-5" />}
+                          Confirm & Send Email
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="brand" className="m-0 focus-visible:ring-0">
