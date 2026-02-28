@@ -207,7 +207,6 @@ export default function CorporatePage() {
     if (!contactForm.companyName || !contactForm.email || !contactForm.contactName) {
       toast({ variant: "destructive", title: "Missing Information", description: "Please complete all required contact information." });
       
-      // Auto-scroll to the details section on validation failure
       const element = document.getElementById('details-section');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -264,8 +263,8 @@ export default function CorporatePage() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+        {/* Hero Section - Balanced spacing for mobile bubbles */}
+        <section className="relative min-h-[85vh] py-24 md:py-32 flex items-center justify-center overflow-hidden">
           <Image
             src={heroImage}
             alt="Corporate Retreat"
@@ -273,18 +272,18 @@ export default function CorporatePage() {
             className="object-cover brightness-[0.5]"
             priority
           />
-          <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-            <Badge className="mb-6 bg-accent text-white border-none px-6 py-2 rounded-full uppercase tracking-[0.3em] font-bold text-xs">
+          <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
+            <Badge className="mb-10 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
               Corporate Excellence
             </Badge>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-8 drop-shadow-2xl leading-tight">
               Elevate Your Team's Connection.
             </h1>
-            <p className="text-xl text-white/90 mb-12 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
+            <p className="text-xl text-white/90 mb-14 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
               Maroma provides the perfect canvas for corporate groups to reconnect, strategize, and grow through curated artisan workshops and high-end logistics.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-14 font-bold shadow-2xl transition-all hover:scale-105">
+              <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-14 h-16 text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
                 Build Your Custom Itinerary
               </Button>
             </div>
@@ -385,7 +384,6 @@ export default function CorporatePage() {
         {/* Builder Dialog */}
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
           <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-3xl lg:rounded-[3rem] flex flex-col bg-white">
-            {/* Header - Sticky */}
             <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
               <div>
                 <DialogTitle className="text-2xl lg:text-3xl font-headline font-bold text-primary">
@@ -402,12 +400,9 @@ export default function CorporatePage() {
               )}
             </div>
 
-            {/* Main Content - Scrollable */}
             <div className="flex-grow overflow-y-auto">
               <div className="flex flex-col lg:flex-row min-h-full">
-                {/* Selection Area */}
                 <div className="flex-1 lg:flex-[2] p-4 lg:p-8 space-y-8 lg:space-y-12 pb-12 border-b lg:border-b-0 lg:border-r border-primary/5">
-                  {/* Workshops Selection */}
                   <section>
                     <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-accent" /> Select Workshops & Tours
@@ -453,7 +448,6 @@ export default function CorporatePage() {
                     )}
                   </section>
 
-                  {/* Spa Treatments Selection */}
                   <section>
                     <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                       <Sprout className="w-5 h-5 text-accent" /> Spa & Wellness Treatments
@@ -490,7 +484,6 @@ export default function CorporatePage() {
                     </div>
                   </section>
 
-                  {/* Catering & Addons */}
                   <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                     <div>
                       <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
@@ -558,7 +551,6 @@ export default function CorporatePage() {
                     </div>
                   </section>
 
-                  {/* Accommodation Selection */}
                   <section>
                     <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                       <Hotel className="w-5 h-5 text-accent" /> Luxury Accommodation
@@ -583,7 +575,6 @@ export default function CorporatePage() {
                   </section>
                 </div>
 
-                {/* Finalisation Area (Summary & Contact Form) */}
                 <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 p-6 lg:p-8 flex flex-col space-y-8 pb-32 lg:pb-8">
                   <div>
                     <h3 className="text-xl font-headline font-bold text-primary mb-6">Your Itinerary Summary</h3>
@@ -693,7 +684,6 @@ export default function CorporatePage() {
               </div>
             </div>
 
-            {/* Sticky Action Footer */}
             <div className="p-4 lg:p-8 border-t bg-white shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] flex items-center justify-between z-20">
               <div className="hidden sm:flex flex-col">
                 <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Current Itinerary</span>

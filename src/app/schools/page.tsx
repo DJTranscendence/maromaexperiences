@@ -178,8 +178,8 @@ export default function SchoolsPage() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+        {/* Hero Section - Balanced spacing for mobile bubbles */}
+        <section className="relative min-h-[85vh] py-24 md:py-32 flex items-center justify-center overflow-hidden">
           <Image
             src={SCHOOL_HERO_URL}
             alt="School Field Trip"
@@ -187,17 +187,17 @@ export default function SchoolsPage() {
             className="object-cover brightness-[0.5]"
             priority
           />
-          <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-            <Badge className="mb-6 bg-accent text-white border-none px-6 py-2 rounded-full uppercase tracking-[0.3em] font-bold text-xs">
+          <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
+            <Badge className="mb-10 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
               Educational Journeys
             </Badge>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-8 drop-shadow-2xl leading-tight">
               Ignite Curiosity in the Classroom of Life.
             </h1>
-            <p className="text-xl text-white/90 mb-12 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
+            <p className="text-xl text-white/90 mb-14 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
               Maroma offers immersive field trips that blend history, science, and artisan craft into unforgettable learning experiences for students of all ages.
             </p>
-            <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-14 font-bold shadow-2xl transition-all hover:scale-105">
+            <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-14 h-16 text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
               Build Your School Itinerary
             </Button>
           </div>
@@ -229,7 +229,7 @@ export default function SchoolsPage() {
           </div>
         </section>
 
-        {/* Simulator Section - MOVED FROM NAVBAR */}
+        {/* Simulator Section */}
         <section className="bg-slate-900 py-24 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative group shadow-2xl">
