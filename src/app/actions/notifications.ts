@@ -16,7 +16,35 @@ interface EmailParams {
 }
 
 /**
- * Sends an email via Postmark and CCs the admin.
+ * Internal helper to interface with Postmark API
+ */
+async function postmarkRequest(payload: any) {
+  try {
+    const response = await fetch("https://api.postmarkapp.com/email", {
+      method: "POST",
+      headers: {
+        "X-Postmark-Server-Token": POSTMARK_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        ...payload,
+        From: SENDER_EMAIL,
+        MessageStream: "outbound"
+      }),
+    });
+
+    const data = await response.json();
+    return { ok: response.ok, data };
+  } catch (err: any) {
+    return { ok: false, data: { Message: err.message } };
+  }
+}
+
+/**
+ * Sends an email to the customer and a separate, distinct alert to the admin.
+ * This separate-dispatch approach ensures high visibility in the admin's inbox
+ * and prevents thread-grouping issues in Gmail.
  */
 export async function sendEmailNotification({
   to,
@@ -28,35 +56,26 @@ export async function sendEmailNotification({
     return { success: false, error: "Recipient email is required" };
   }
 
-  try {
-    const response = await fetch("https://api.postmarkapp.com/email", {
-      method: "POST",
-      headers: {
-        "X-Postmark-Server-Token": POSTMARK_API_KEY,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        From: SENDER_EMAIL,
-        To: to,
-        Cc: ADMIN_EMAIL, 
-        Subject: subject,
-        TextBody: textBody,
-        HtmlBody: htmlBody || textBody.replace(/\n/g, '<br>'),
-        MessageStream: "outbound"
-      }),
-    });
+  // 1. Send the primary email to the Customer
+  const customerResult = await postmarkRequest({
+    To: to,
+    Subject: subject,
+    TextBody: textBody,
+    HtmlBody: htmlBody || textBody.replace(/\n/g, '<br>')
+  });
 
-    const data = await response.json();
+  // 2. Send a separate alert to the Admin
+  // We use a distinct subject prefix to ensure it stands out in the admin console.
+  await postmarkRequest({
+    To: ADMIN_EMAIL,
+    Subject: `[ADMIN ALERT] ${subject}`,
+    TextBody: `--- ADMINISTRATIVE NOTIFICATION ---\n\nRecipient: ${to}\nOriginal Subject: ${subject}\n\nMessage Content:\n------------------------------\n${textBody}\n------------------------------\n\nView recent bookings: https://maromaexperience.com/admin`,
+  });
 
-    if (!response.ok) {
-      console.error("Postmark API Error:", data);
-      return { success: false, error: data.Message || "Failed to send email" };
-    }
-
-    return { success: true, messageId: data.MessageID };
-  } catch (err: any) {
-    console.error("Network error sending email:", err);
-    return { success: false, error: err.message };
+  if (!customerResult.ok) {
+    console.error("Postmark API Error (Customer):", customerResult.data);
+    return { success: false, error: customerResult.data.Message || "Failed to send email" };
   }
+
+  return { success: true, messageId: customerResult.data.MessageID };
 }
