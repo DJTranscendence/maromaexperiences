@@ -39,17 +39,19 @@ import {
   MessageSquare,
   PlayCircle,
   Palette,
-  History
+  History,
+  Calendar
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
-import { useFirestore, useUser, addDocumentNonBlocking, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc } from "firebase/firestore";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useFirestore, useUser, addDocumentNonBlocking, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { collection, serverTimestamp, doc, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { sendEmailNotification } from "@/app/actions/notifications";
+import { Tour } from "@/lib/types";
 
 const SCHOOL_HERO_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2000";
 const GAME_TITLE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
@@ -120,6 +122,7 @@ export default function SchoolsPage() {
   const { toast } = useToast();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>('secondary');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [contactForm, setContactForm] = useState({
@@ -138,6 +141,22 @@ export default function SchoolsPage() {
   }, [firestore, user]);
   const { data: userData } = useDoc(userDocRef);
 
+  // Fetch the Maroma Tour to get available dates
+  const tourQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "tours"), where("name", "==", "The Maroma Tour"), where("isActive", "==", true));
+  }, [firestore]);
+  const { data: tourDocs } = useCollection<Tour>(tourQuery);
+  const tourData = tourDocs?.[0];
+
+  const availableDates = useMemo(() => {
+    if (tourData?.scheduledDates && tourData.scheduledDates.length > 0) {
+      return tourData.scheduledDates;
+    }
+    // Fallback planned dates if not in DB
+    return ["2025-04-14", "2025-04-21", "2025-04-28", "2025-05-05", "2025-05-12", "2025-05-19"];
+  }, [tourData]);
+
   useEffect(() => {
     if (userData && !isInitialized.current) {
       setContactForm({
@@ -152,15 +171,22 @@ export default function SchoolsPage() {
     }
   }, [userData]);
 
-  const handleRequestInquiry = async () => {
+  const handleRequestBooking = async () => {
     if (!firestore || !user) {
-      toast({ variant: "destructive", title: "Authentication Required", description: "Please sign in to request a proposal." });
+      toast({ variant: "destructive", title: "Authentication Required", description: "Please sign in to request a booking." });
       return;
     }
 
     if (!contactForm.schoolName || !contactForm.email || !contactForm.contactName) {
       toast({ variant: "destructive", title: "Missing Information", description: "Please complete all required contact information." });
       const element = document.getElementById('details-section');
+      if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    if (!selectedDate) {
+      toast({ variant: "destructive", title: "Date Required", description: "Please select a preferred date for your tour." });
+      const element = document.getElementById('date-section');
       if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
@@ -173,6 +199,7 @@ export default function SchoolsPage() {
         ...contactForm,
         type: 'School',
         educationLevel: selectedLevel,
+        selectedDate: selectedDate,
         itinerary: [{ id: CAMPUS_TOUR_PROGRAM.id, name: CAMPUS_TOUR_PROGRAM.name, type: CAMPUS_TOUR_PROGRAM.type }],
         catering: "Standard Ethical Refreshments",
         status: "pending",
@@ -180,20 +207,21 @@ export default function SchoolsPage() {
         updatedAt: serverTimestamp()
       });
 
+      // Send to Admin
       await sendEmailNotification({
-        to: contactForm.email,
-        subject: `School Inquiry Received: The Maroma Tour`,
-        textBody: `Hello ${contactForm.contactName},\n\nThank you for reaching out to Maroma Experiences. We have received your educational group inquiry for "${contactForm.schoolName}" regarding The Maroma Tour.\n\nOur educational design team is reviewing your requirements for ${contactForm.studentCount} students and ${contactForm.adultCount} adults/teachers at the ${selectedLevel} level. We will be in touch within 24 hours with a detailed educational plan and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
+        to: contactForm.email, // This helper sends to both user and admin
+        subject: `Booking Request: The Maroma Tour`,
+        textBody: `Hello ${contactForm.contactName},\n\nYour request for "The Maroma Tour" on ${selectedDate} has been received for "${contactForm.schoolName}".\n\nWe will confirm your booking as soon as possible after reviewing our campus schedule.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
       });
 
       toast({
-        title: "Inquiry Sent!",
-        description: "Our educational team is reviewing your request. A confirmation receipt has been sent to your email.",
+        title: "Request Sent!",
+        description: "Your booking request has been received. We will confirm as soon as possible.",
       });
 
       setIsBuilderOpen(false);
     } catch (err) {
-      toast({ variant: "destructive", title: "Submission Failed", description: "Could not send inquiry request." });
+      toast({ variant: "destructive", title: "Submission Failed", description: "Could not send booking request." });
     } finally {
       setIsSubmitting(false);
     }
@@ -224,7 +252,7 @@ export default function SchoolsPage() {
               Our Schools Programme offers an immersive, structured visit to the Maroma campus, designed to introduce students to ethical production, craftsmanship, and sustainable enterprise.
             </p>
             <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-14 h-16 text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
-              Build Your School Itinerary
+              Request School Booking
             </Button>
           </div>
         </section>
@@ -343,6 +371,27 @@ export default function SchoolsPage() {
                     </div>
                   </section>
 
+                  <section id="date-section">
+                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-accent" /> Select Preferred Date
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {availableDates.map(date => (
+                        <button 
+                          key={date} 
+                          onClick={() => setSelectedDate(date)}
+                          className={cn(
+                            "p-3 text-center rounded-xl border transition-all font-bold text-xs uppercase tracking-widest",
+                            selectedDate === date ? "bg-primary text-white border-primary shadow-lg scale-[1.02]" : "bg-white border-border hover:border-accent/50 text-primary"
+                          )}
+                        >
+                          {new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates subject to production cycle availability. All school tours generally run on Monday or Friday mornings.</p>
+                  </section>
+
                   <section className="space-y-6">
                     <div className="flex items-center gap-2">
                       <Compass className="w-5 h-5 text-accent" />
@@ -364,24 +413,10 @@ export default function SchoolsPage() {
                       </div>
                     </Card>
                   </section>
-
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-2">
-                      <Utensils className="w-5 h-5 text-accent" />
-                      <h3 className="text-lg lg:text-xl font-headline font-bold text-primary">Ethical Refreshments</h3>
-                    </div>
-                    <Card className="rounded-[2rem] border-none bg-accent/5 p-8">
-                      <p className="text-sm text-primary/80 leading-relaxed font-body">
-                        For the school tours, we offer refreshments that align with our ecological and ethical values.
-                        Children are served healthy biscuits baked locally at the Auroville bakery, along with hibiscus flower syrup prepared in-house from locally sourced flowers. The intention is precise: zero packaging, minimal processing, and maximal flavour.
-                        It demonstrates that food can be wholesome, delicious, and environmentally responsible — without compromise.
-                      </p>
-                    </Card>
-                  </section>
                 </div>
 
                 <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 p-6 lg:p-8 flex flex-col space-y-8 pb-32 lg:pb-8">
-                  <h3 className="text-xl font-headline font-bold text-primary mb-6">Inquiry Summary</h3>
+                  <h3 className="text-xl font-headline font-bold text-primary mb-6">Booking Summary</h3>
                   
                   <div className="space-y-6">
                     <div className="space-y-3">
@@ -390,9 +425,9 @@ export default function SchoolsPage() {
                           <Image src={CAMPUS_TOUR_PROGRAM.imageUrl} alt={CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
                         </div>
                         <div className="flex-grow min-w-0">
-                          <div className="text-[8px] font-bold text-accent uppercase tracking-widest">Included Program</div>
+                          <div className="text-[8px] font-bold text-accent uppercase tracking-widest">Selected Program</div>
                           <h5 className="text-xs font-bold text-primary truncate">{CAMPUS_TOUR_PROGRAM.name}</h5>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{CAMPUS_TOUR_PROGRAM.duration}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{selectedDate ? `Date: ${selectedDate}` : CAMPUS_TOUR_PROGRAM.duration}</span>
                         </div>
                       </div>
                     </div>
@@ -465,10 +500,12 @@ export default function SchoolsPage() {
 
             <div className="p-4 lg:p-8 border-t bg-white shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] flex items-center justify-between z-20">
               <div className="hidden sm:flex flex-col">
-                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Program Selected</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Selection Status</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-primary font-headline">{CAMPUS_TOUR_PROGRAM.name}</span>
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <span className="text-lg font-bold text-primary font-headline">
+                    {selectedDate ? `Reserved for ${selectedDate}` : "Select a date to request booking"}
+                  </span>
+                  {selectedDate && <CheckCircle2 className="w-4 h-4 text-green-600" />}
                 </div>
               </div>
               <div className="w-full sm:w-auto flex flex-col gap-2">
@@ -478,28 +515,28 @@ export default function SchoolsPage() {
                     className="w-full sm:min-w-[280px] bg-accent hover:bg-accent/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-accent/10 transition-all active:scale-[0.98] gap-3"
                   >
                     <Link href="/login">
-                      Sign In to Request Inquiry
+                      Sign In to Request Booking
                       <LogIn className="w-5 h-5" />
                     </Link>
                   </Button>
                 ) : (
                   <Button 
-                    onClick={handleRequestInquiry} 
-                    disabled={isSubmitting} 
+                    onClick={handleRequestBooking} 
+                    disabled={isSubmitting || !selectedDate} 
                     className="w-full sm:min-w-[280px] bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
                   >
                     {isSubmitting ? (
                       <Loader2 className="animate-spin" />
                     ) : (
                       <>
-                        Submit Educational Inquiry
+                        {!selectedDate ? "Select Date to Request" : "Request Booking"}
                         <ChevronRight className="w-5 h-5" />
                       </>
                     )}
                   </Button>
                 )}
                 <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest font-bold">
-                  Review & Admin Quote within 24 Hours
+                  Final confirmation within 24 Hours
                 </p>
               </div>
             </div>
