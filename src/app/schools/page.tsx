@@ -35,7 +35,9 @@ import {
   Award,
   Users2,
   Quote,
-  Utensils
+  Utensils,
+  History,
+  Palette
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -276,7 +278,7 @@ export default function SchoolsPage() {
                             onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Field Trip' })}
                             className={cn(
                               "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
-                              itinerary.find(t => t.id === tour.id) ? "bg-accent/5 border-accent shadow-sm" : "bg-white border-border hover:border-accent hover:shadow-md"
+                              itinerary.find(t => t.id === tour.id) ? "bg-accent/5 border-accent shadow-sm" : "bg-white border-border hover:border-accent/30 hover:shadow-md"
                             )}
                           >
                             <div className="relative w-16 lg:w-20 h-16 lg:h-20 rounded-xl overflow-hidden shrink-0">
