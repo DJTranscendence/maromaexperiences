@@ -169,10 +169,15 @@ export default function CorporatePage() {
 
   const toursQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Ensure we only fetch active tours
+    // Fetch all active tours
     return query(collection(firestore, "tours"), where("isActive", "==", true));
   }, [firestore]);
   const { data: availableTours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
+
+  // Filter for only 'live' experiences for the selection list
+  const liveTours = useMemo(() => {
+    return availableTours?.filter(tour => tour.status === 'live') || [];
+  }, [availableTours]);
 
   const heroImage = CORPORATE_HERO_URL;
 
@@ -397,7 +402,7 @@ export default function CorporatePage() {
               </div>
 
               <div className="flex-grow flex flex-col lg:flex-row min-h-0 overflow-hidden">
-                {/* Selection Menu - Using flex-1 to share space correctly on mobile */}
+                {/* Selection Menu */}
                 <div className="flex-1 lg:flex-[2] flex flex-col min-h-0 overflow-hidden order-1">
                   <ScrollArea className="flex-grow">
                     <div className="p-4 lg:p-8 space-y-8 lg:space-y-12 pb-20">
@@ -408,9 +413,9 @@ export default function CorporatePage() {
                         </h3>
                         {isToursLoading ? (
                           <div className="flex justify-center p-12"><Loader2 className="animate-spin text-accent" /></div>
-                        ) : availableTours && availableTours.length > 0 ? (
+                        ) : liveTours.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {availableTours.map(tour => (
+                            {liveTours.map(tour => (
                               <button 
                                 key={tour.id} 
                                 onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Experience' })}
@@ -439,7 +444,7 @@ export default function CorporatePage() {
                         ) : (
                           <div className="p-10 border-2 border-dashed rounded-3xl text-center bg-muted/5">
                             <Sparkles className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                            <p className="text-sm text-muted-foreground">No experiences currently published.</p>
+                            <p className="text-sm text-muted-foreground">No live experiences currently bookable.</p>
                             <Button asChild variant="link" size="sm" className="text-accent mt-1">
                               <Link href="/admin">Add Live Experiences</Link>
                             </Button>
@@ -576,7 +581,7 @@ export default function CorporatePage() {
                   </ScrollArea>
                 </div>
 
-                {/* Summary Sidebar - Ensure it has a share of space on mobile */}
+                {/* Summary Sidebar */}
                 <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 lg:border-l p-6 lg:p-8 flex flex-col min-h-0 order-2 overflow-y-auto">
                   <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 shrink-0">Your Itinerary</h3>
                   
