@@ -486,26 +486,28 @@ export default function AdminPage() {
               <p className="text-muted-foreground mt-1">Unified view of all Maroma activities.</p>
             </div>
             
-            <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50">
-              <TabsTrigger value="bookings" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <CalendarDays className="w-5 h-5" /> Bookings
-              </TabsTrigger>
-              <TabsTrigger value="proposals" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <ClipboardList className="w-5 h-5" /> Requests
-              </TabsTrigger>
-              <TabsTrigger value="brand" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Palette className="w-5 h-5" /> Brand
-              </TabsTrigger>
-              <TabsTrigger value="media" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <ImageIcon className="w-5 h-5" /> Media
-              </TabsTrigger>
-              <TabsTrigger value="users" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Users className="w-5 h-5" /> Users
-              </TabsTrigger>
-              <TabsTrigger value="admin" className="rounded-full h-full px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Settings className="w-5 h-5" /> Experiences
-              </TabsTrigger>
-            </TabsList>
+            <div className="w-full overflow-x-auto no-scrollbar pb-4 -mb-4">
+              <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50 min-w-max flex">
+                <TabsTrigger value="bookings" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <CalendarDays className="w-5 h-5" /> Bookings
+                </TabsTrigger>
+                <TabsTrigger value="proposals" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <ClipboardList className="w-5 h-5" /> Requests
+                </TabsTrigger>
+                <TabsTrigger value="brand" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Palette className="w-5 h-5" /> Brand
+                </TabsTrigger>
+                <TabsTrigger value="media" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <ImageIcon className="w-5 h-5" /> Media
+                </TabsTrigger>
+                <TabsTrigger value="users" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Users className="w-5 h-5" /> Users
+                </TabsTrigger>
+                <TabsTrigger value="admin" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Settings className="w-5 h-5" /> Experiences
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
