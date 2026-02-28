@@ -19,7 +19,7 @@ import {
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin
+  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin, Navigation
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -629,26 +629,27 @@ export default function AdminPage() {
               </Table>
             </Card>
 
-            {/* Proposal Details Modal */}
+            {/* Proposal Details Modal - Refined high-fidelity styling */}
             <Dialog open={!!selectedProposal} onOpenChange={open => !open && setSelectedProposal(null)}>
-              <DialogContent className="max-w-3xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+              <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
                 {selectedProposal && (
                   <div className="flex flex-col h-[85vh]">
-                    <div className="bg-primary p-8 text-white shrink-0">
-                      <div className="flex items-center justify-between mb-4">
-                        <Badge className="bg-white/20 text-white border-none px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
+                    {/* Header Section */}
+                    <div className="bg-primary p-10 pb-12 text-white shrink-0 relative">
+                      <div className="flex items-center justify-between mb-6">
+                        <Badge className="bg-white/20 text-white border-none px-5 py-1.5 rounded-full uppercase tracking-[0.2em] text-[10px] font-bold">
                           {selectedProposal.type || 'Request'} Detail
                         </Badge>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs opacity-60">Status:</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold uppercase tracking-widest opacity-60">Status:</span>
                           <Select 
                             value={selectedProposal.status} 
                             onValueChange={(val) => handleUpdateProposalStatus(selectedProposal.id, val)}
                           >
-                            <SelectTrigger className="h-8 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[120px]">
+                            <SelectTrigger className="h-9 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[130px] font-bold">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl">
+                            <SelectContent className="rounded-2xl shadow-2xl border-none">
                               <SelectItem value="pending">Pending</SelectItem>
                               <SelectItem value="reviewed">Reviewed</SelectItem>
                               <SelectItem value="approved">Approved</SelectItem>
@@ -656,106 +657,115 @@ export default function AdminPage() {
                           </Select>
                         </div>
                       </div>
-                      <h2 className="text-3xl font-headline font-bold leading-tight">
+                      <h2 className="text-5xl font-headline font-bold leading-none tracking-tight mb-6">
                         {selectedProposal.schoolName || selectedProposal.companyName}
                       </h2>
-                      <div className="flex flex-wrap items-center gap-6 mt-4 text-sm opacity-80 font-medium">
-                        <div className="flex items-center gap-2"><User className="w-4 h-4" /> {selectedProposal.contactName}</div>
-                        <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {selectedProposal.email}</div>
-                        {selectedProposal.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {selectedProposal.phone}</div>}
+                      <div className="flex flex-wrap items-center gap-8 text-sm font-medium">
+                        <div className="flex items-center gap-2.5 opacity-80"><User className="w-4 h-4 text-accent" /> {selectedProposal.contactName}</div>
+                        <div className="flex items-center gap-2.5 opacity-80"><Mail className="w-4 h-4 text-accent" /> {selectedProposal.email}</div>
+                        {selectedProposal.phone && <div className="flex items-center gap-2.5 opacity-80"><Phone className="w-4 h-4 text-accent" /> {selectedProposal.phone}</div>}
                       </div>
                     </div>
 
-                    <div className="flex-grow overflow-y-auto bg-slate-50 p-8 space-y-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <section className="space-y-4">
-                          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b pb-2">Experience Logistics</h3>
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <CalendarDays className="w-5 h-5 text-accent" />
+                    {/* Content Section */}
+                    <div className="flex-grow overflow-y-auto bg-slate-50/50 p-10 space-y-12">
+                      <div className="grid grid-cols-1 gap-10">
+                        {/* Logistics Section */}
+                        <section className="space-y-6">
+                          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-1">Experience Logistics</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex items-center justify-between bg-white p-6 rounded-[1.5rem] shadow-sm border border-border/40">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                                  <CalendarDays className="w-5 h-5 text-accent" />
+                                </div>
                                 <span className="text-sm font-bold text-primary">Requested Date</span>
                               </div>
-                              <span className="text-sm font-medium">{selectedProposal.selectedDate || 'Flexible'}</span>
+                              <span className="text-sm font-bold text-slate-600">{selectedProposal.selectedDate || 'Flexible'}</span>
                             </div>
-                            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <Users className="w-5 h-5 text-accent" />
+                            <div className="flex items-center justify-between bg-white p-6 rounded-[1.5rem] shadow-sm border border-border/40">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                                  <Users className="w-5 h-5 text-accent" />
+                                </div>
                                 <span className="text-sm font-bold text-primary">Group Size</span>
                               </div>
                               <div className="text-right">
                                 {selectedProposal.type === 'School' ? (
-                                  <span className="text-sm font-medium">{selectedProposal.studentCount} Students, {selectedProposal.adultCount} Adults</span>
+                                  <span className="text-sm font-bold text-slate-600">{selectedProposal.studentCount} Students, {selectedProposal.adultCount} Adults</span>
                                 ) : (
-                                  <span className="text-sm font-medium">{selectedProposal.participants || 'N/A'} Participants</span>
+                                  <span className="text-sm font-bold text-slate-600">{selectedProposal.participants || 'N/A'} Participants</span>
                                 )}
                               </div>
                             </div>
                           </div>
                         </section>
 
-                        <section className="space-y-4">
-                          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b pb-2">Curated Itinerary</h3>
+                        {/* Itinerary Section */}
+                        <section className="space-y-6">
+                          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-1">Curated Itinerary</h3>
                           <div className="space-y-3">
                             {selectedProposal.itinerary?.map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-border/50">
-                                <div className="w-10 h-10 bg-accent/5 rounded-lg flex items-center justify-center shrink-0">
-                                  {item.type === 'Experience' ? <MapPin className="w-5 h-5 text-accent" /> : <Activity className="w-5 h-5 text-accent" />}
+                              <div key={idx} className="flex items-center gap-5 bg-white p-5 rounded-2xl border border-border/40 shadow-sm group">
+                                <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center shrink-0 transition-colors group-hover:bg-primary/10">
+                                  <Activity className="w-6 h-6 text-primary/40" />
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className="text-xs font-bold text-primary">{item.name}</span>
-                                  <span className="text-[10px] text-muted-foreground uppercase font-medium">{item.type}</span>
+                                  <span className="text-base font-bold text-primary">{item.name}</span>
+                                  <span className="text-[10px] text-accent uppercase font-black tracking-widest">{item.type || 'Program'}</span>
                                 </div>
                               </div>
                             ))}
-                            <div className="bg-white p-4 rounded-2xl border-l-4 border-accent shadow-sm">
-                              <Label className="text-[10px] font-bold uppercase text-accent mb-1 block">Catering Preference</Label>
-                              <p className="text-sm font-medium text-primary">{selectedProposal.catering || 'Standard'}</p>
-                            </div>
+                            {selectedProposal.catering && (
+                              <div className="bg-white p-6 rounded-[1.5rem] border-l-4 border-accent shadow-sm mt-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-accent mb-2 block">Catering Strategy</Label>
+                                <p className="text-sm font-bold text-primary">{selectedProposal.catering}</p>
+                              </div>
+                            )}
                           </div>
                         </section>
                       </div>
 
-                      <section className="bg-white rounded-[2rem] p-8 border border-border shadow-inner space-y-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-headline font-bold text-primary flex items-center gap-2">
-                            <Send className="w-5 h-5 text-accent" /> Email Confirmation Studio
+                      {/* Email Confirmation Studio */}
+                      <section className="bg-white rounded-[2.5rem] p-10 border border-border/60 shadow-xl space-y-8">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-3">
+                            <Send className="w-6 h-6 text-accent" /> Confirmation Studio
                           </h3>
-                          <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground border-slate-200">Official Template</Badge>
+                          <Badge variant="outline" className="text-[9px] uppercase font-black tracking-tighter text-muted-foreground border-slate-200 px-3">Official Response Template</Badge>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Subject Line</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Subject Line</Label>
                             <Input 
                               value={emailDraft.subject} 
                               onChange={e => setEmailDraft({...emailDraft, subject: e.target.value})}
-                              className="rounded-xl h-12 bg-slate-50/50 border-slate-200"
+                              className="rounded-xl h-14 bg-slate-50/50 border-slate-200 font-bold text-primary"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Email Body</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Email Body Content</Label>
                             <Textarea 
                               value={emailDraft.body} 
                               onChange={e => setEmailDraft({...emailDraft, body: e.target.value})}
-                              className="min-h-[200px] rounded-2xl bg-slate-50/50 border-slate-200 leading-relaxed text-sm font-body"
+                              className="min-h-[250px] rounded-[1.5rem] bg-slate-50/50 border-slate-200 leading-relaxed text-sm font-body p-6"
                             />
                           </div>
                         </div>
                       </section>
                     </div>
 
-                    <div className="p-6 bg-white border-t flex items-center justify-between shrink-0">
-                      <Button variant="ghost" className="rounded-full px-8" onClick={() => setSelectedProposal(null)}>Cancel</Button>
-                      <div className="flex items-center gap-4">
-                        <Button 
-                          className="bg-accent hover:bg-accent/90 text-white rounded-full px-10 h-14 font-bold text-lg shadow-xl shadow-accent/10 gap-3"
-                          onClick={handleSendConfirmation}
-                          disabled={isEmailing}
-                        >
-                          {isEmailing ? <Loader2 className="animate-spin w-5 h-5" /> : <Send className="w-5 h-5" />}
-                          Confirm & Send Email
-                        </Button>
-                      </div>
+                    {/* Footer Actions */}
+                    <div className="p-8 bg-white border-t flex items-center justify-between shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+                      <Button variant="ghost" className="rounded-full px-10 h-14 font-bold text-slate-400 hover:text-primary transition-colors" onClick={() => setSelectedProposal(null)}>Cancel</Button>
+                      <Button 
+                        className="bg-accent hover:bg-accent/90 text-white rounded-full px-14 h-16 font-bold text-xl shadow-2xl shadow-accent/20 gap-4 transition-transform active:scale-[0.98]"
+                        onClick={handleSendConfirmation}
+                        disabled={isEmailing}
+                      >
+                        {isEmailing ? <Loader2 className="animate-spin w-6 h-6" /> : <Send className="w-6 h-6" />}
+                        Confirm & Send Email
+                      </Button>
                     </div>
                   </div>
                 )}
