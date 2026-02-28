@@ -54,14 +54,6 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { sendEmailNotification } from "@/app/actions/notifications";
 
 const CORPORATE_HERO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Newsletter%20Splash%20image.png?alt=media&token=1b459fe6-4123-40c5-a4bd-1b58c0f4915f";
@@ -160,7 +152,6 @@ export default function CorporatePage() {
     }
   }, [userData]);
 
-  // Fetch real media from Firestore
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "media");
@@ -169,12 +160,10 @@ export default function CorporatePage() {
 
   const toursQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Fetch all active tours
     return query(collection(firestore, "tours"), where("isActive", "==", true));
   }, [firestore]);
   const { data: availableTours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
 
-  // Filter for only 'live' experiences for the selection list
   const liveTours = useMemo(() => {
     return availableTours?.filter(tour => tour.status === 'live') || [];
   }, [availableTours]);
@@ -218,6 +207,11 @@ export default function CorporatePage() {
       return;
     }
 
+    if (itinerary.length === 0) {
+      toast({ variant: "destructive", title: "Empty Itinerary", description: "Please select at least one workshop or tour." });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -234,7 +228,6 @@ export default function CorporatePage() {
         updatedAt: serverTimestamp()
       });
 
-      // Send Customer Notification
       await sendEmailNotification({
         to: contactForm.email,
         subject: `Corporate Proposal Request Received: ${selectedPkg?.name || "Maroma Experience"}`,
@@ -383,298 +376,312 @@ export default function CorporatePage() {
 
         {/* Builder Dialog */}
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-          <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-3xl lg:rounded-[3rem]">
-            <div className="flex flex-col h-full bg-white">
-              <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
-                <div>
-                  <DialogTitle className="text-2xl lg:text-3xl font-headline font-bold text-primary">
-                    Customise Your Experience
-                  </DialogTitle>
-                  <DialogDescription className="text-muted-foreground mt-1 text-sm lg:text-base">
-                    Select your preferred workshops, wellness treatments, and dining.
-                  </DialogDescription>
-                </div>
-                {selectedPkg && (
-                  <Badge className="bg-accent text-white px-4 lg:px-6 py-2 rounded-full uppercase tracking-widest text-[10px] lg:text-xs font-bold w-fit">
-                    {selectedPkg.name}
-                  </Badge>
-                )}
+          <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-3xl lg:rounded-[3rem] flex flex-col bg-white">
+            {/* Header - Sticky */}
+            <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
+              <div>
+                <DialogTitle className="text-2xl lg:text-3xl font-headline font-bold text-primary">
+                  Customise Your Experience
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground mt-1 text-sm lg:text-base">
+                  Select your preferred workshops, wellness treatments, and dining.
+                </DialogDescription>
               </div>
+              {selectedPkg && (
+                <Badge className="bg-accent text-white px-4 lg:px-6 py-2 rounded-full uppercase tracking-widest text-[10px] lg:text-xs font-bold w-fit">
+                  {selectedPkg.name}
+                </Badge>
+              )}
+            </div>
 
-              <div className="flex-grow min-h-0 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <div className="flex flex-col lg:flex-row min-h-full">
-                    {/* Selection Area */}
-                    <div className="flex-1 lg:flex-[2] p-4 lg:p-8 space-y-8 lg:space-y-12 pb-20 border-b lg:border-b-0 lg:border-r border-primary/5">
-                      {/* Workshops Selection */}
-                      <section>
-                        <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                          <Sparkles className="w-5 h-5 text-accent" /> Select Workshops & Tours
-                        </h3>
-                        {isToursLoading ? (
-                          <div className="flex justify-center p-12"><Loader2 className="animate-spin text-accent" /></div>
-                        ) : liveTours.length > 0 ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {liveTours.map(tour => (
-                              <button 
-                                key={tour.id} 
-                                onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Experience' })}
-                                disabled={!!itinerary.find(t => t.id === tour.id)}
-                                className={cn(
-                                  "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
-                                  itinerary.find(t => t.id === tour.id) 
-                                    ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
-                                    : "bg-white border-border hover:border-accent hover:shadow-md"
-                                )}
-                              >
-                                <div className="relative w-16 lg:w-20 h-16 lg:h-20 rounded-xl overflow-hidden shrink-0">
-                                  <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
-                                </div>
-                                <div className="flex-grow min-w-0">
-                                  <h4 className="font-bold text-primary text-sm lg:text-base leading-tight truncate">{tour.name}</h4>
-                                  <div className="flex items-center gap-2 lg:gap-3 text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration}</span>
-                                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {tour.location}</span>
-                                  </div>
-                                </div>
-                                {itinerary.find(t => t.id === tour.id) ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-10 border-2 border-dashed rounded-3xl text-center bg-muted/5">
-                            <Sparkles className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                            <p className="text-sm text-muted-foreground">No live experiences currently bookable.</p>
-                            <Button asChild variant="link" size="sm" className="text-accent mt-1">
-                              <Link href="/admin">Add Live Experiences</Link>
-                            </Button>
-                          </div>
-                        )}
-                      </section>
-
-                      {/* Spa Treatments Selection */}
-                      <section>
-                        <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                          <Sprout className="w-5 h-5 text-accent" /> Spa & Wellness Treatments
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {SPA_TREATMENTS.map(spa => (
-                            <button 
-                              key={spa.id} 
-                              onClick={() => addItemToItinerary({ id: spa.id, name: spa.name, imageUrl: spa.image, duration: spa.duration, type: 'Wellness' })}
-                              disabled={!!itinerary.find(t => t.id === spa.id)}
-                              className={cn(
-                                "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
-                                itinerary.find(t => t.id === spa.id) 
-                                  ? "bg-muted/50 border-transparent cursor-not-allowed opacity-60" 
-                                  : "bg-white border-border hover:border-accent hover:shadow-md"
-                              )}
-                            >
-                              <div className="relative w-14 lg:w-16 h-14 lg:h-16 rounded-xl overflow-hidden shrink-0">
-                                <Image src={spa.image} alt={spa.name} fill className="object-cover" />
-                              </div>
-                              <div className="flex-grow min-w-0">
-                                <h4 className="font-bold text-primary text-xs lg:text-sm leading-tight truncate">{spa.name}</h4>
-                                <div className="flex items-center gap-2 lg:gap-3 text-[8px] lg:text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
-                                  <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {spa.duration}</span>
-                                  <span className="font-bold text-accent">{spa.price}</span>
-                                </div>
-                              </div>
-                              {itinerary.find(t => t.id === spa.id) ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />}
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-
-                      {/* Catering & Addons */}
-                      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                        <div>
-                          <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                            <Utensils className="w-5 h-5 text-accent" /> Catering Menus
-                          </h3>
-                          <div className="space-y-4">
-                            {CATERING_OPTIONS.map(opt => (
-                              <div 
-                                key={opt.id} 
-                                className={cn(
-                                  "flex items-center gap-4 lg:gap-5 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border transition-all cursor-pointer bg-white group",
-                                  selectedCatering === opt.id ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
-                                )}
-                                onClick={() => setSelectedCatering(opt.id)}
-                              >
-                                <div className="relative flex items-center justify-center w-7 lg:w-8 h-7 lg:h-8 shrink-0">
-                                  <div className={cn(
-                                    "w-6 lg:w-7 h-6 lg:h-7 rounded-full border-2 flex items-center justify-center transition-all",
-                                    selectedCatering === opt.id ? "border-accent bg-accent" : "border-muted-foreground/30 bg-transparent"
-                                  )}>
-                                    {selectedCatering === opt.id && <div className="w-2 lg:w-2.5 h-2 lg:h-2.5 rounded-full bg-white shadow-sm" />}
-                                  </div>
-                                </div>
-                                <div className="flex-grow">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-primary text-sm lg:text-base font-headline">{opt.name}</h4>
-                                    <span className="text-[9px] lg:text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
-                                  </div>
-                                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-1 leading-relaxed font-body">{opt.desc}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                            <Camera className="w-5 h-5 text-accent" /> Professional Services
-                          </h3>
-                          <div className="space-y-3">
-                            {[
-                              { id: 'srv1', name: 'Event Photography', price: '₹250', icon: Camera },
-                              { id: 'srv2', name: 'Team Strategy Facilitator', price: '₹400', icon: Users2 },
-                              { id: 'srv3', name: 'Premium Coffee Bar', price: '₹15/pp', icon: Coffee },
-                            ].map(opt => (
-                              <div key={opt.id} className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
-                                <div className="relative flex items-center justify-center w-5 lg:w-6 h-5 lg:h-6 shrink-0">
-                                  <Checkbox 
-                                    checked={selectedAddons.includes(opt.id)} 
-                                    onCheckedChange={() => toggleAddon(opt.id)} 
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="rounded-full w-5 lg:w-6 h-5 lg:h-6" 
-                                  />
-                                </div>
-                                <opt.icon className="w-4 h-4 text-accent shrink-0" />
-                                <div className="flex-grow">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-primary text-xs lg:text-sm">{opt.name}</h4>
-                                    <span className="text-[9px] lg:text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </section>
-
-                      {/* Accommodation Selection */}
-                      <section>
-                        <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                          <Hotel className="w-5 h-5 text-accent" /> Luxury Accommodation
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {HOTEL_PACKAGES.map(hotel => (
-                            <div 
-                              key={hotel.id} 
-                              onClick={() => setSelectedHotel(hotel.id)}
-                              className={cn(
-                                "p-4 lg:p-5 rounded-2xl border transition-all cursor-pointer bg-white relative",
-                                selectedHotel === hotel.id ? "border-accent shadow-lg ring-1 ring-accent/20" : "border-border hover:border-accent/30"
-                              )}
-                            >
-                              <h4 className="font-bold text-primary text-sm lg:text-base mb-1 truncate pr-6">{hotel.name}</h4>
-                              <p className="text-[10px] lg:text-[11px] text-muted-foreground leading-relaxed mb-4 line-clamp-2">{hotel.desc}</p>
-                              <div className="text-[10px] lg:text-xs font-bold text-accent uppercase tracking-widest">{hotel.price}</div>
-                              {selectedHotel === hotel.id && <div className="absolute top-4 right-4"><CheckCircle2 className="w-4 h-4 text-accent" /></div>}
+            {/* Main Content - Scrollable */}
+            <div className="flex-grow overflow-y-auto">
+              <div className="flex flex-col lg:flex-row min-h-full">
+                {/* Selection Area */}
+                <div className="flex-1 lg:flex-[2] p-4 lg:p-8 space-y-8 lg:space-y-12 pb-12 border-b lg:border-b-0 lg:border-r border-primary/5">
+                  {/* Workshops Selection */}
+                  <section>
+                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-accent" /> Select Workshops & Tours
+                    </h3>
+                    {isToursLoading ? (
+                      <div className="flex justify-center p-12"><Loader2 className="animate-spin text-accent" /></div>
+                    ) : liveTours.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {liveTours.map(tour => (
+                          <button 
+                            key={tour.id} 
+                            onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Experience' })}
+                            className={cn(
+                              "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
+                              itinerary.find(t => t.id === tour.id) 
+                                ? "bg-accent/5 border-accent shadow-sm" 
+                                : "bg-white border-border hover:border-accent hover:shadow-md"
+                            )}
+                          >
+                            <div className="relative w-16 lg:w-20 h-16 lg:h-20 rounded-xl overflow-hidden shrink-0">
+                              <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
                             </div>
-                          ))}
-                        </div>
-                      </section>
+                            <div className="flex-grow min-w-0">
+                              <h4 className="font-bold text-primary text-sm lg:text-base leading-tight truncate">{tour.name}</h4>
+                              <div className="flex items-center gap-2 lg:gap-3 text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration}</span>
+                                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {tour.location}</span>
+                              </div>
+                            </div>
+                            {itinerary.find(t => t.id === tour.id) ? (
+                              <CheckCircle2 className="w-5 h-5 text-accent" />
+                            ) : (
+                              <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-10 border-2 border-dashed rounded-3xl text-center bg-muted/5">
+                        <Sparkles className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">No live experiences currently bookable.</p>
+                      </div>
+                    )}
+                  </section>
+
+                  {/* Spa Treatments Selection */}
+                  <section>
+                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
+                      <Sprout className="w-5 h-5 text-accent" /> Spa & Wellness Treatments
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {SPA_TREATMENTS.map(spa => (
+                        <button 
+                          key={spa.id} 
+                          onClick={() => addItemToItinerary({ id: spa.id, name: spa.name, imageUrl: spa.image, duration: spa.duration, type: 'Wellness' })}
+                          className={cn(
+                            "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
+                            itinerary.find(t => t.id === spa.id) 
+                              ? "bg-accent/5 border-accent shadow-sm" 
+                              : "bg-white border-border hover:border-accent hover:shadow-md"
+                          )}
+                        >
+                          <div className="relative w-14 lg:w-16 h-14 lg:h-16 rounded-xl overflow-hidden shrink-0">
+                            <Image src={spa.image} alt={spa.name} fill className="object-cover" />
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <h4 className="font-bold text-primary text-xs lg:text-sm leading-tight truncate">{spa.name}</h4>
+                            <div className="flex items-center gap-2 lg:gap-3 text-[8px] lg:text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
+                              <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {spa.duration}</span>
+                              <span className="font-bold text-accent">{spa.price}</span>
+                            </div>
+                          </div>
+                          {itinerary.find(t => t.id === spa.id) ? (
+                            <CheckCircle2 className="w-5 h-5 text-accent" />
+                          ) : (
+                            <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Catering & Addons */}
+                  <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                    <div>
+                      <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
+                        <Utensils className="w-5 h-5 text-accent" /> Catering Menus
+                      </h3>
+                      <div className="space-y-4">
+                        {CATERING_OPTIONS.map(opt => (
+                          <div 
+                            key={opt.id} 
+                            className={cn(
+                              "flex items-center gap-4 lg:gap-5 p-4 lg:p-6 rounded-2xl lg:rounded-[2rem] border transition-all cursor-pointer bg-white group",
+                              selectedCatering === opt.id ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
+                            )}
+                            onClick={() => setSelectedCatering(opt.id)}
+                          >
+                            <div className="relative flex items-center justify-center w-7 lg:w-8 h-7 lg:h-8 shrink-0">
+                              <div className={cn(
+                                "w-6 lg:w-7 h-6 lg:h-7 rounded-full border-2 flex items-center justify-center transition-all",
+                                selectedCatering === opt.id ? "border-accent bg-accent" : "border-muted-foreground/30 bg-transparent"
+                              )}>
+                                {selectedCatering === opt.id && <div className="w-2 lg:w-2.5 h-2 lg:h-2.5 rounded-full bg-white shadow-sm" />}
+                              </div>
+                            </div>
+                            <div className="flex-grow">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-bold text-primary text-sm lg:text-base font-headline">{opt.name}</h4>
+                                <span className="text-[9px] lg:text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
+                              </div>
+                              <p className="text-[10px] lg:text-xs text-muted-foreground mt-1 leading-relaxed font-body">{opt.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Finalisation Area (Sidebar on Desktop) */}
-                    <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 p-6 lg:p-8 flex flex-col space-y-8">
-                      <div>
-                        <h3 className="text-xl font-headline font-bold text-primary mb-6">Your Itinerary Summary</h3>
-                        
-                        <div className="space-y-6">
-                          {itinerary.length === 0 && !selectedCatering && (
-                            <div className="text-center py-12 px-4 border border-dashed rounded-2xl bg-white/50">
-                              <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                              <p className="text-xs text-muted-foreground">Add workshops or treatments to begin planning your retreat.</p>
+                    <div>
+                      <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
+                        <Camera className="w-5 h-5 text-accent" /> Professional Services
+                      </h3>
+                      <div className="space-y-3">
+                        {[
+                          { id: 'srv1', name: 'Event Photography', price: '₹250', icon: Camera },
+                          { id: 'srv2', name: 'Team Strategy Facilitator', price: '₹400', icon: Users2 },
+                          { id: 'srv3', name: 'Premium Coffee Bar', price: '₹15/pp', icon: Coffee },
+                        ].map(opt => (
+                          <div key={opt.id} className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border border-border bg-white hover:border-accent/30 transition-all cursor-pointer group" onClick={() => toggleAddon(opt.id)}>
+                            <div className="relative flex items-center justify-center w-5 lg:w-6 h-5 lg:h-6 shrink-0">
+                              <Checkbox 
+                                checked={selectedAddons.includes(opt.id)} 
+                                onCheckedChange={() => toggleAddon(opt.id)} 
+                                onClick={(e) => e.stopPropagation()}
+                                className="rounded-full w-5 lg:w-6 h-5 lg:h-6" 
+                              />
                             </div>
+                            <opt.icon className="w-4 h-4 text-accent shrink-0" />
+                            <div className="flex-grow">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-bold text-primary text-xs lg:text-sm">{opt.name}</h4>
+                                <span className="text-[9px] lg:text-[10px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Accommodation Selection */}
+                  <section>
+                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
+                      <Hotel className="w-5 h-5 text-accent" /> Luxury Accommodation
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {HOTEL_PACKAGES.map(hotel => (
+                        <div 
+                          key={hotel.id} 
+                          onClick={() => setSelectedHotel(hotel.id)}
+                          className={cn(
+                            "p-4 lg:p-5 rounded-2xl border transition-all cursor-pointer bg-white relative",
+                            selectedHotel === hotel.id ? "border-accent shadow-lg ring-1 ring-accent/20" : "border-border hover:border-accent/30"
                           )}
-                          
-                          <div className="space-y-3">
-                            {itinerary.map(item => (
-                              <div key={item.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border group">
-                                <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
-                                </div>
-                                <div className="flex-grow min-w-0">
-                                  <div className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
-                                  <h5 className="text-xs font-bold text-primary truncate">{item.name}</h5>
-                                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
-                                </div>
-                                <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1">
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="space-y-4 pt-6 border-t border-primary/10">
-                            <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
-                              <Building2 className="w-3.5 h-3.5" /> Company Information
-                            </h4>
-                            <div className="space-y-3">
-                              <div className="relative">
-                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                <Input 
-                                  placeholder="Company Name" 
-                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                  value={contactForm.companyName}
-                                  onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
-                                />
-                              </div>
-                              <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                <Input 
-                                  placeholder="Contact Person" 
-                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                  value={contactForm.contactName}
-                                  onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
-                                />
-                              </div>
-                              <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                <Input 
-                                  placeholder="Email Address" 
-                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                  value={contactForm.email}
-                                  onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                                />
-                              </div>
-                              <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                <Input 
-                                  placeholder="Phone Number" 
-                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                  value={contactForm.phone}
-                                  onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-8 border-t mt-auto space-y-4 shrink-0 bg-white/40 p-6 rounded-3xl border border-white/60">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-muted-foreground">Estimated Base Rate</span>
-                          <span className="text-xl font-bold text-primary font-headline">Pending Review</span>
-                        </div>
-                        <Button 
-                          onClick={handleRequestProposal} 
-                          disabled={itinerary.length === 0 || isSubmitting} 
-                          className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
                         >
-                          {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Detailed Proposal"}
-                        </Button>
-                        <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest font-bold">
-                          Formal Admin Quote Required
-                        </p>
+                          <h4 className="font-bold text-primary text-sm lg:text-base mb-1 truncate pr-6">{hotel.name}</h4>
+                          <p className="text-[10px] lg:text-[11px] text-muted-foreground leading-relaxed mb-4 line-clamp-2">{hotel.desc}</p>
+                          <div className="text-[10px] lg:text-xs font-bold text-accent uppercase tracking-widest">{hotel.price}</div>
+                          {selectedHotel === hotel.id && <div className="absolute top-4 right-4"><CheckCircle2 className="w-4 h-4 text-accent" /></div>}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Finalisation Area (Summary & Contact Form) */}
+                <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 p-6 lg:p-8 flex flex-col space-y-8 pb-32 lg:pb-8">
+                  <div>
+                    <h3 className="text-xl font-headline font-bold text-primary mb-6">Your Itinerary Summary</h3>
+                    
+                    <div className="space-y-6">
+                      {itinerary.length === 0 && (
+                        <div className="text-center py-12 px-4 border border-dashed rounded-2xl bg-white/50">
+                          <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                          <p className="text-xs text-muted-foreground">Add workshops or treatments to begin planning your retreat.</p>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-3">
+                        {itinerary.map(item => (
+                          <div key={item.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border group">
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                              <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                            </div>
+                            <div className="flex-grow min-w-0">
+                              <div className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
+                              <h5 className="text-xs font-bold text-primary truncate">{item.name}</h5>
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
+                            </div>
+                            <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    </aside>
+
+                      <div className="space-y-4 pt-6 border-t border-primary/10">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                          <Building2 className="w-3.5 h-3.5" /> Company Information
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="relative">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input 
+                              placeholder="Company Name" 
+                              className="pl-9 h-11 text-sm rounded-xl bg-white"
+                              value={contactForm.companyName}
+                              onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
+                            />
+                          </div>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input 
+                              placeholder="Contact Person" 
+                              className="pl-9 h-11 text-sm rounded-xl bg-white"
+                              value={contactForm.contactName}
+                              onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
+                            />
+                          </div>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input 
+                              placeholder="Email Address" 
+                              className="pl-9 h-11 text-sm rounded-xl bg-white"
+                              value={contactForm.email}
+                              onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                            />
+                          </div>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input 
+                              placeholder="Phone Number" 
+                              className="pl-9 h-11 text-sm rounded-xl bg-white"
+                              value={contactForm.phone}
+                              onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </ScrollArea>
+                </aside>
+              </div>
+            </div>
+
+            {/* Sticky Action Footer */}
+            <div className="p-4 lg:p-8 border-t bg-white shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] flex items-center justify-between z-20">
+              <div className="hidden sm:flex flex-col">
+                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Current Itinerary</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-primary font-headline">{itinerary.length} Item(s) Selected</span>
+                  {itinerary.length > 0 && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+                </div>
+              </div>
+              <div className="w-full sm:w-auto flex flex-col gap-2">
+                <Button 
+                  onClick={handleRequestProposal} 
+                  disabled={itinerary.length === 0 || isSubmitting} 
+                  className="w-full sm:min-w-[280px] bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <>
+                      {itinerary.length === 0 ? "Select an Experience First" : "Request Detailed Proposal"}
+                      <ChevronRight className="w-5 h-5" />
+                    </>
+                  )}
+                </Button>
+                <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest font-bold">
+                  Formal Admin Quote Required within 24 Hours
+                </p>
               </div>
             </div>
           </DialogContent>
