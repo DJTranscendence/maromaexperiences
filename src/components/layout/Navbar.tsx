@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Sprout, Edit2, Save, MoveHorizontal, Type } from "lucide-react";
+import { User, Menu, X, Settings, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Sprout, Edit2, Save, MoveHorizontal, Type, GraduationCap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
@@ -37,7 +37,6 @@ export default function Navbar() {
 
   const isHomePage = pathname === "/";
 
-  // Load Brand Identity Settings
   const brandSettingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return doc(firestore, "settings", "brand_layout");
@@ -211,7 +210,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             <Link href="/" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/" && "text-accent")}>Home</Link>
             <Link 
               href="/#workshops" 
@@ -219,6 +218,9 @@ export default function Navbar() {
               className="text-sm font-medium hover:text-accent transition-colors"
             >
               Tours & Workshops
+            </Link>
+            <Link href="/schools" className={cn("text-sm font-medium hover:text-accent transition-colors flex items-center gap-1.5", pathname === "/schools" && "text-accent")}>
+              <GraduationCap className="w-4 h-4" /> Schools
             </Link>
             <Link href="/corporate" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/corporate" && "text-accent")}>Corporate</Link>
             <Link href="/simulator" className={cn("text-sm font-bold text-accent hover:text-primary transition-colors flex items-center gap-1", pathname === "/simulator" && "text-primary")}>
@@ -270,13 +272,11 @@ export default function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin ? (
-                      <>
-                        <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                          <Link href="/admin" className="flex items-center gap-2">
-                            <Settings className="w-4 h-4" /> Admin Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                        <Link href="/admin" className="flex items-center gap-2">
+                          <Settings className="w-4 h-4" /> Admin Dashboard
+                        </Link>
+                      </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem onClick={handleBecomeAdmin} className="rounded-xl cursor-pointer text-accent font-bold bg-accent/5">
                         <ShieldCheck className="w-4 h-4 mr-2" /> Enable Admin Mode
@@ -305,7 +305,7 @@ export default function Navbar() {
             </DropdownMenu>
           </div>
 
-          <div className="md:hidden flex items-center">
+          <div className="lg:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-primary hover:text-accent transition-colors"
@@ -316,7 +316,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className={cn("md:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-screen" : "max-h-0")}>
+      <div className={cn("lg:hidden bg-white border-b border-border overflow-hidden transition-all duration-300", isOpen ? "max-h-screen" : "max-h-0")}>
         <div className="px-4 pt-2 pb-6 space-y-4">
           <Link href="/" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Home</Link>
           <Link 
@@ -326,6 +326,7 @@ export default function Navbar() {
           >
             Tours & Workshops
           </Link>
+          <Link href="/schools" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Schools</Link>
           <Link href="/corporate" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Corporate Events</Link>
           <Link href="/simulator" className="block text-lg font-bold text-accent" onClick={() => setIsOpen(false)}>Join Game</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>

@@ -2,13 +2,10 @@
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import AvailabilityBadge from "@/components/booking/AvailabilityBadge";
 import IndividualBookingForm from "@/components/booking/IndividualBookingForm";
-import SchoolBookingForm from "@/components/booking/SchoolBookingForm";
-import CorporateBookingForm from "@/components/booking/CorporateBookingForm";
 import { 
   MapPin, 
   Clock, 
@@ -20,7 +17,6 @@ import {
   Sparkles, 
   Bell, 
   Send, 
-  Check,
   MessageCircleQuestion,
   Gift,
   Palette,
@@ -84,7 +80,6 @@ export default function TourDetailsPage() {
     setIsRegistering(true);
     
     try {
-      // Send automatic notification email
       await sendEmailNotification({
         to: notifyEmail,
         subject: `Registry Confirmed: ${tour.name}`,
@@ -171,7 +166,7 @@ export default function TourDetailsPage() {
                 </Badge>
               ) : (
                 <Badge className="bg-green-600 text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2 shadow-lg">
-                  <Check className="w-3.5 h-3.5" /> Live
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Live
                 </Badge>
               )}
               {!isComingSoon && (
@@ -188,7 +183,6 @@ export default function TourDetailsPage() {
               <div>
                 <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-6">{tour.name}</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {/* Location Card */}
                   <a 
                     href={DIRECTIONS_URL} 
                     target="_blank" 
@@ -291,56 +285,40 @@ export default function TourDetailsPage() {
                           Notify Me
                         </Button>
                       </form>
-                      <p className="text-[10px] text-center text-amber-700/80 font-medium">
-                        Secure your spot in the notification queue.
-                      </p>
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <div className="mb-8 flex justify-between items-end">
-                      <div>
-                        <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
-                          ₹{tour.price}
-                          <span className="text-sm font-normal text-muted-foreground">/ Person</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="rounded-full px-3 py-1 border-accent/20 text-accent font-bold">
-                          Min: {tour.minGroupSize}
-                        </Badge>
+                  <div className="space-y-8">
+                    <div className="flex justify-between items-end">
+                      <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
+                        ₹{tour.price}
+                        <span className="text-sm font-normal text-muted-foreground">/ Person</span>
                       </div>
                     </div>
-
-                    <Tabs defaultValue="individual" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 rounded-full h-12">
-                        <TabsTrigger value="individual" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px] font-bold tracking-tight uppercase">Individual</TabsTrigger>
-                        <TabsTrigger value="school" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px] font-bold tracking-tight uppercase">School</TabsTrigger>
-                        <TabsTrigger value="corporate" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px] font-bold tracking-tight uppercase">Corporate</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="individual" className="mt-0">
-                        <div className="space-y-6">
-                          <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-accent" />
-                            <div>
-                              <div className="text-[10px] font-bold text-accent uppercase tracking-wider">Upcoming Date</div>
-                              <div className="text-sm font-bold text-primary">{tour.scheduledDates?.[0] || 'TBA'}</div>
-                            </div>
-                          </div>
-                          <IndividualBookingForm tour={tour} />
+                    
+                    <div className="space-y-6">
+                      <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-accent" />
+                        <div>
+                          <div className="text-[10px] font-bold text-accent uppercase tracking-wider">Upcoming Date</div>
+                          <div className="text-sm font-bold text-primary">{tour.scheduledDates?.[0] || 'TBA'}</div>
                         </div>
-                      </TabsContent>
+                      </div>
+                      <IndividualBookingForm tour={tour} />
+                    </div>
 
-                      <TabsContent value="school" className="mt-0">
-                        <SchoolBookingForm tour={tour} />
-                      </TabsContent>
-
-                      <TabsContent value="corporate" className="mt-0">
-                        <CorporateBookingForm tour={tour} />
-                      </TabsContent>
-                    </Tabs>
-                  </>
+                    <div className="pt-6 border-t border-border space-y-4">
+                      <p className="text-xs text-muted-foreground text-center italic">Looking for a large group or corporate event?</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button asChild variant="outline" className="rounded-full text-[10px] font-bold uppercase h-10 border-accent/20 text-accent">
+                          <a href="/schools">School Groups</a>
+                        </Button>
+                        <Button asChild variant="outline" className="rounded-full text-[10px] font-bold uppercase h-10 border-accent/20 text-accent">
+                          <a href="/corporate">Corporate Teams</a>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
