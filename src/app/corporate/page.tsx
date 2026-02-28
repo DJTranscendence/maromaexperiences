@@ -41,7 +41,9 @@ import {
   ExternalLink,
   Phone,
   User,
-  Mail
+  Mail,
+  LogIn,
+  AlertCircle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -610,44 +612,62 @@ export default function CorporatePage() {
                         <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
                           <Building2 className="w-3.5 h-3.5" /> Company Information
                         </h4>
-                        <div className="space-y-3">
-                          <div className="relative">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <Input 
-                              placeholder="Company Name" 
-                              className="pl-9 h-11 text-sm rounded-xl bg-white"
-                              value={contactForm.companyName}
-                              onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
-                            />
+                        
+                        {!user ? (
+                          <Card className="rounded-2xl border-dashed border-accent/30 bg-accent/5 p-6 space-y-4">
+                            <div className="flex gap-3">
+                              <AlertCircle className="w-5 h-5 text-accent shrink-0" />
+                              <div className="space-y-1">
+                                <p className="text-xs font-bold text-primary leading-tight">Authentication Required</p>
+                                <p className="text-[10px] text-muted-foreground leading-relaxed">Please sign in to your Maroma account to request and manage your corporate proposals.</p>
+                              </div>
+                            </div>
+                            <Button asChild size="sm" className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-10 font-bold gap-2">
+                              <Link href="/login">
+                                <LogIn className="w-3.5 h-3.5" /> Sign In or Create Account
+                              </Link>
+                            </Button>
+                          </Card>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="relative">
+                              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input 
+                                placeholder="Company Name" 
+                                className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                value={contactForm.companyName}
+                                onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
+                              />
+                            </div>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input 
+                                placeholder="Contact Person" 
+                                className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                value={contactForm.contactName}
+                                onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
+                              />
+                            </div>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input 
+                                placeholder="Email Address" 
+                                className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                value={contactForm.email}
+                                onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                              />
+                            </div>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input 
+                                placeholder="Phone Number" 
+                                className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                value={contactForm.phone}
+                                onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                              />
+                            </div>
                           </div>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <Input 
-                              placeholder="Contact Person" 
-                              className="pl-9 h-11 text-sm rounded-xl bg-white"
-                              value={contactForm.contactName}
-                              onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
-                            />
-                          </div>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <Input 
-                              placeholder="Email Address" 
-                              className="pl-9 h-11 text-sm rounded-xl bg-white"
-                              value={contactForm.email}
-                              onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                            />
-                          </div>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <Input 
-                              placeholder="Phone Number" 
-                              className="pl-9 h-11 text-sm rounded-xl bg-white"
-                              value={contactForm.phone}
-                              onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
-                            />
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -665,20 +685,32 @@ export default function CorporatePage() {
                 </div>
               </div>
               <div className="w-full sm:w-auto flex flex-col gap-2">
-                <Button 
-                  onClick={handleRequestProposal} 
-                  disabled={itinerary.length === 0 || isSubmitting} 
-                  className="w-full sm:min-w-[280px] bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <>
-                      {itinerary.length === 0 ? "Select an Experience First" : "Request Detailed Proposal"}
-                      <ChevronRight className="w-5 h-5" />
-                    </>
-                  )}
-                </Button>
+                {!user ? (
+                  <Button 
+                    asChild
+                    className="w-full sm:min-w-[280px] bg-accent hover:bg-accent/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-accent/10 transition-all active:scale-[0.98] gap-3"
+                  >
+                    <Link href="/login">
+                      Sign In to Request Proposal
+                      <LogIn className="w-5 h-5" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleRequestProposal} 
+                    disabled={itinerary.length === 0 || isSubmitting} 
+                    className="w-full sm:min-w-[280px] bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <>
+                        {itinerary.length === 0 ? "Select an Experience First" : "Request Detailed Proposal"}
+                        <ChevronRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </Button>
+                )}
                 <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest font-bold">
                   Formal Admin Quote Required within 24 Hours
                 </p>

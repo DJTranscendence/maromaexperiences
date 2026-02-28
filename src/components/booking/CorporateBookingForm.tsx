@@ -18,9 +18,13 @@ import {
   ChevronDown,
   Info,
   ExternalLink,
-  Loader2
+  Loader2,
+  LogIn,
+  AlertCircle
 } from "lucide-react";
 import { sendEmailNotification } from "@/app/actions/notifications";
+import Link from "next/link";
+import { Card } from "@/components/ui/card";
 
 interface CorporateBookingFormProps {
   tour: Tour;
@@ -100,114 +104,135 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="companyName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company Name</Label>
-          <Input 
-            id="companyName" 
-            placeholder="Acme Corp" 
-            required 
-            className="rounded-xl h-12"
-            value={formData.companyName}
-            onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="contactName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Booking Manager</Label>
-          <Input 
-            id="contactName" 
-            placeholder="Jane Doe" 
-            required 
-            className="rounded-xl h-12" 
-            value={formData.contactName}
-            onChange={(e) => setFormData({...formData, contactName: e.target.value})}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="jane@company.com" 
-            required 
-            className="rounded-xl h-12" 
-            value={formData.email}
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="participants" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Participants</Label>
-          <Input 
-            id="participants" 
-            type="number" 
-            min="5" 
-            placeholder="Min 5 Person(s)" 
-            required 
-            className="rounded-xl h-12" 
-            value={formData.participants}
-            onChange={(e) => setFormData({...formData, participants: e.target.value})}
-          />
-        </div>
-      </div>
+      {!user ? (
+        <Card className="rounded-[2rem] border-dashed border-accent/30 bg-accent/5 p-8 text-center space-y-6">
+          <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center mx-auto shadow-sm">
+            <AlertCircle className="w-8 h-8 text-accent" />
+          </div>
+          <div className="space-y-2">
+            <h4 className="text-xl font-headline font-bold text-primary">Authentication Required</h4>
+            <p className="text-sm text-muted-foreground leading-relaxed px-4">
+              Please sign in to request a formal corporate proposal. This allows you to track the progress of your inquiry.
+            </p>
+          </div>
+          <Button asChild className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-accent/10">
+            <Link href="/login">
+              <LogIn className="w-5 h-5 mr-2" /> Sign In or Create Account
+            </Link>
+          </Button>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="companyName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company Name</Label>
+              <Input 
+                id="companyName" 
+                placeholder="Acme Corp" 
+                required 
+                className="rounded-xl h-12"
+                value={formData.companyName}
+                onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Booking Manager</Label>
+              <Input 
+                id="contactName" 
+                placeholder="Jane Doe" 
+                required 
+                className="rounded-xl h-12" 
+                value={formData.contactName}
+                onChange={(e) => setFormData({...formData, contactName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="jane@company.com" 
+                required 
+                className="rounded-xl h-12" 
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="participants" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Participants</Label>
+              <Input 
+                id="participants" 
+                type="number" 
+                min="5" 
+                placeholder="Min 5 Person(s)" 
+                required 
+                className="rounded-xl h-12" 
+                value={formData.participants}
+                onChange={(e) => setFormData({...formData, participants: e.target.value})}
+              />
+            </div>
+          </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <Label className="text-primary font-bold font-headline text-lg">Experience Add-ons</Label>
-          <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Optional</span>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-4">
-          {ADD_ONS.map((addon) => (
-            <div 
-              key={addon.id} 
-              className={`flex items-center gap-5 p-5 rounded-[2rem] border transition-all cursor-pointer bg-white group ${
-                selectedAddons.includes(addon.id) ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
-              }`}
-              onClick={() => toggleAddon(addon.id)}
-            >
-              <div className="flex-shrink-0">
-                <Checkbox 
-                  checked={selectedAddons.includes(addon.id)} 
-                  className="w-6 h-6 rounded-full border-muted-foreground data-[state=checked]:bg-accent data-[state=checked]:border-accent transition-colors"
-                  onCheckedChange={() => toggleAddon(addon.id)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              
-              <div className="flex-grow flex items-start gap-3">
-                <div className="mt-1 p-1 bg-accent/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                  <addon.icon className="w-5 h-5 text-accent" />
-                </div>
-                
-                <div className="flex flex-col">
-                  <span className="text-lg font-headline font-bold text-primary leading-tight">{addon.label}</span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm text-muted-foreground font-medium">₹{addon.price}{addon.id !== "photo" ? "/pp" : ""}</span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <Label className="text-primary font-bold font-headline text-lg">Experience Add-ons</Label>
+              <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Optional</span>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {ADD_ONS.map((addon) => (
+                <div 
+                  key={addon.id} 
+                  className={`flex items-center gap-5 p-5 rounded-[2rem] border transition-all cursor-pointer bg-white group ${
+                    selectedAddons.includes(addon.id) ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
+                  }`}
+                  onClick={() => toggleAddon(addon.id)}
+                >
+                  <div className="flex-shrink-0">
+                    <Checkbox 
+                      checked={selectedAddons.includes(addon.id)} 
+                      className="w-6 h-6 rounded-full border-muted-foreground data-[state=checked]:bg-accent data-[state=checked]:border-accent transition-colors"
+                      onCheckedChange={() => toggleAddon(addon.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  
+                  <div className="flex-grow flex items-start gap-3">
+                    <div className="mt-1 p-1 bg-accent/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                      <addon.icon className="w-5 h-5 text-accent" />
+                    </div>
+                    
+                    <div className="flex flex-col">
+                      <span className="text-lg font-headline font-bold text-primary leading-tight">{addon.label}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-sm text-muted-foreground font-medium">₹{addon.price}{addon.id !== "photo" ? "/pp" : ""}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <div className="pt-4">
-        <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3" disabled={loading}>
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Processing...
-            </div>
-          ) : (
-            <>
-              <Building2 className="w-5 h-5" /> Request Corporate Proposal
-            </>
-          )}
-        </Button>
-        <p className="text-center text-[10px] text-muted-foreground mt-4 uppercase tracking-[0.2em] font-medium">
-          Subject to Admin Approval
-        </p>
-      </div>
+          <div className="pt-4">
+            <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </div>
+              ) : (
+                <>
+                  <Building2 className="w-5 h-5" /> Request Corporate Proposal
+                </>
+              )}
+            </Button>
+            <p className="text-center text-[10px] text-muted-foreground mt-4 uppercase tracking-[0.2em] font-medium">
+              Subject to Admin Approval
+            </p>
+          </div>
+        </>
+      )}
     </form>
   );
 }
