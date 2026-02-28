@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -631,13 +632,13 @@ export default function AdminPage() {
 
             {/* Proposal Details Modal - Refined high-fidelity styling */}
             <Dialog open={!!selectedProposal} onOpenChange={open => !open && setSelectedProposal(null)}>
-              <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+              <DialogContent className="w-[95vw] sm:max-w-3xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
                 {selectedProposal && (
                   <div className="flex flex-col h-[85vh]">
                     {/* Header Section */}
-                    <div className="bg-primary p-10 pb-12 text-white shrink-0 relative">
-                      <div className="flex items-center justify-between mb-6">
-                        <Badge className="bg-white/20 text-white border-none px-5 py-1.5 rounded-full uppercase tracking-[0.2em] text-[10px] font-bold">
+                    <div className="bg-primary p-6 sm:p-10 pb-8 sm:pb-12 text-white shrink-0 relative">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <Badge className="bg-white/20 text-white border-none px-5 py-1.5 rounded-full uppercase tracking-[0.2em] text-[10px] font-bold w-fit">
                           {selectedProposal.type || 'Request'} Detail
                         </Badge>
                         <div className="flex items-center gap-3">
@@ -646,7 +647,7 @@ export default function AdminPage() {
                             value={selectedProposal.status} 
                             onValueChange={(val) => handleUpdateProposalStatus(selectedProposal.id, val)}
                           >
-                            <SelectTrigger className="h-9 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[130px] font-bold">
+                            <SelectTrigger className="h-9 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[120px] sm:min-w-[130px] font-bold">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl shadow-2xl border-none">
@@ -657,10 +658,10 @@ export default function AdminPage() {
                           </Select>
                         </div>
                       </div>
-                      <h2 className="text-5xl font-headline font-bold leading-none tracking-tight mb-6">
+                      <h2 className="text-3xl sm:text-5xl font-headline font-bold leading-tight tracking-tight mb-6 line-clamp-2">
                         {selectedProposal.schoolName || selectedProposal.companyName}
                       </h2>
-                      <div className="flex flex-wrap items-center gap-8 text-sm font-medium">
+                      <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-medium">
                         <div className="flex items-center gap-2.5 opacity-80"><User className="w-4 h-4 text-accent" /> {selectedProposal.contactName}</div>
                         <div className="flex items-center gap-2.5 opacity-80"><Mail className="w-4 h-4 text-accent" /> {selectedProposal.email}</div>
                         {selectedProposal.phone && <div className="flex items-center gap-2.5 opacity-80"><Phone className="w-4 h-4 text-accent" /> {selectedProposal.phone}</div>}
@@ -668,29 +669,29 @@ export default function AdminPage() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="flex-grow overflow-y-auto bg-slate-50/50 p-10 space-y-12">
+                    <div className="flex-grow overflow-y-auto bg-slate-50/50 p-6 sm:p-10 space-y-10 sm:space-y-12">
                       <div className="grid grid-cols-1 gap-10">
                         {/* Logistics Section */}
                         <section className="space-y-6">
                           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-1">Experience Logistics</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex items-center justify-between bg-white p-6 rounded-[1.5rem] shadow-sm border border-border/40">
+                            <div className="flex items-center justify-between bg-white p-5 sm:p-6 rounded-[1.5rem] shadow-sm border border-border/40">
                               <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center shrink-0">
                                   <CalendarDays className="w-5 h-5 text-accent" />
                                 </div>
                                 <span className="text-sm font-bold text-primary">Requested Date</span>
                               </div>
-                              <span className="text-sm font-bold text-slate-600">{selectedProposal.selectedDate || 'Flexible'}</span>
+                              <span className="text-sm font-bold text-slate-600 ml-2">{selectedProposal.selectedDate || 'Flexible'}</span>
                             </div>
-                            <div className="flex items-center justify-between bg-white p-6 rounded-[1.5rem] shadow-sm border border-border/40">
+                            <div className="flex items-center justify-between bg-white p-5 sm:p-6 rounded-[1.5rem] shadow-sm border border-border/40">
                               <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center shrink-0">
                                   <Users className="w-5 h-5 text-accent" />
                                 </div>
                                 <span className="text-sm font-bold text-primary">Group Size</span>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right ml-2">
                                 {selectedProposal.type === 'School' ? (
                                   <span className="text-sm font-bold text-slate-600">{selectedProposal.studentCount} Students, {selectedProposal.adultCount} Adults</span>
                                 ) : (
@@ -727,12 +728,12 @@ export default function AdminPage() {
                       </div>
 
                       {/* Email Confirmation Studio */}
-                      <section className="bg-white rounded-[2.5rem] p-10 border border-border/60 shadow-xl space-y-8">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-2xl font-headline font-bold text-primary flex items-center gap-3">
+                      <section className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-border/60 shadow-xl space-y-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+                          <h3 className="text-xl sm:text-2xl font-headline font-bold text-primary flex items-center gap-3">
                             <Send className="w-6 h-6 text-accent" /> Confirmation Studio
                           </h3>
-                          <Badge variant="outline" className="text-[9px] uppercase font-black tracking-tighter text-muted-foreground border-slate-200 px-3">Official Response Template</Badge>
+                          <Badge variant="outline" className="text-[9px] uppercase font-black tracking-tighter text-muted-foreground border-slate-200 px-3 w-fit">Official Response Template</Badge>
                         </div>
                         <div className="space-y-6">
                           <div className="space-y-2">
@@ -740,7 +741,7 @@ export default function AdminPage() {
                             <Input 
                               value={emailDraft.subject} 
                               onChange={e => setEmailDraft({...emailDraft, subject: e.target.value})}
-                              className="rounded-xl h-14 bg-slate-50/50 border-slate-200 font-bold text-primary"
+                              className="rounded-xl h-12 sm:h-14 bg-slate-50/50 border-slate-200 font-bold text-primary"
                             />
                           </div>
                           <div className="space-y-2">
@@ -748,7 +749,7 @@ export default function AdminPage() {
                             <Textarea 
                               value={emailDraft.body} 
                               onChange={e => setEmailDraft({...emailDraft, body: e.target.value})}
-                              className="min-h-[250px] rounded-[1.5rem] bg-slate-50/50 border-slate-200 leading-relaxed text-sm font-body p-6"
+                              className="min-h-[200px] sm:min-h-[250px] rounded-[1.5rem] bg-slate-50/50 border-slate-200 leading-relaxed text-sm font-body p-5 sm:p-6"
                             />
                           </div>
                         </div>
@@ -756,14 +757,14 @@ export default function AdminPage() {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-8 bg-white border-t flex items-center justify-between shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
-                      <Button variant="ghost" className="rounded-full px-10 h-14 font-bold text-slate-400 hover:text-primary transition-colors" onClick={() => setSelectedProposal(null)}>Cancel</Button>
+                    <div className="p-4 sm:p-8 bg-white border-t flex flex-col sm:flex-row items-center justify-between shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] gap-4">
+                      <Button variant="ghost" className="rounded-full px-8 sm:px-10 h-12 sm:h-14 font-bold text-slate-400 hover:text-primary transition-colors w-full sm:w-auto" onClick={() => setSelectedProposal(null)}>Cancel</Button>
                       <Button 
-                        className="bg-accent hover:bg-accent/90 text-white rounded-full px-14 h-16 font-bold text-xl shadow-2xl shadow-accent/20 gap-4 transition-transform active:scale-[0.98]"
+                        className="bg-accent hover:bg-accent/90 text-white rounded-full px-6 sm:px-14 h-12 sm:h-16 font-bold text-base sm:text-xl shadow-2xl shadow-accent/20 gap-3 sm:gap-4 transition-transform active:scale-[0.98] w-full sm:w-auto"
                         onClick={handleSendConfirmation}
                         disabled={isEmailing}
                       >
-                        {isEmailing ? <Loader2 className="animate-spin w-6 h-6" /> : <Send className="w-6 h-6" />}
+                        {isEmailing ? <Loader2 className="animate-spin w-5 h-5 sm:w-6 h-6" /> : <Send className="w-5 h-5 sm:w-6 h-6" />}
                         Confirm & Send Email
                       </Button>
                     </div>
