@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { 
   GraduationCap, 
-  BookOpen, 
   Sparkles, 
   Clock, 
   MapPin, 
@@ -31,22 +30,15 @@ import {
   Phone, 
   LogIn, 
   AlertCircle,
-  Trees,
-  Award,
-  Users2,
-  Quote,
   Utensils,
-  History,
-  Palette,
-  PlayCircle,
-  Sprout,
   Compass,
   Flame,
   Droplets,
   Wind,
   ShoppingBag,
   Image as ImageIcon,
-  MessageSquare
+  MessageSquare,
+  PlayCircle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -84,7 +76,7 @@ const PROGRAMME_STEPS = [
   },
   {
     title: "5. Snacks",
-    desc: "Light refreshments are served following the workshop sessions to allow students to recharge and reflect on the morning's activities.",
+    desc: "For the school tours, we offer refreshments that align with our ecological and ethical values. Children are served healthy biscuits baked locally at the Auroville bakery, along with hibiscus flower syrup prepared in-house from locally sourced flowers. The intention is precise: zero packaging, minimal processing, and maximal flavour.",
     icon: Utensils
   },
   {
@@ -110,12 +102,6 @@ const EDUCATION_LEVELS = [
   { id: 'higher', name: "Higher Education", desc: "Design, sustainability, and business focus." },
 ];
 
-const CATERING_OPTIONS = [
-  { id: 'cat1', name: 'Standard School Lunch', price: 'Included', desc: 'Healthy, balanced meal suitable for students.' },
-  { id: 'cat2', name: 'Artisan Garden Picnic', price: '+₹15/pp', desc: 'Lush outdoor dining with locally sourced snacks.' },
-  { id: 'cat3', name: 'Premium Education Menu', price: '+₹25/pp', desc: 'Extended menu with farm-to-table ingredients.' },
-];
-
 export default function SchoolsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -123,7 +109,6 @@ export default function SchoolsPage() {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>('secondary');
   const [itinerary, setItinerary] = useState<any[]>([]);
-  const [selectedCatering, setSelectedCatering] = useState<string>('cat1');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [contactForm, setContactForm] = useState({
@@ -196,7 +181,7 @@ export default function SchoolsPage() {
         type: 'School',
         educationLevel: selectedLevel,
         itinerary: itinerary.map(item => ({ id: item.id, name: item.name, type: item.type })),
-        catering: CATERING_OPTIONS.find(c => c.id === selectedCatering)?.name || "Standard",
+        catering: "Standard Ethical Refreshments",
         status: "pending",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -215,7 +200,6 @@ export default function SchoolsPage() {
 
       setIsBuilderOpen(false);
       setItinerary([]);
-      setSelectedCatering('cat1');
     } catch (err) {
       toast({ variant: "destructive", title: "Submission Failed", description: "Could not send inquiry request." });
     } finally {
@@ -410,36 +394,18 @@ export default function SchoolsPage() {
                     )}
                   </section>
 
-                  <section>
-                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                      <Utensils className="w-5 h-5 text-accent" /> Student Catering
-                    </h3>
-                    <div className="space-y-4">
-                      {CATERING_OPTIONS.map(opt => (
-                        <div 
-                          key={opt.id} 
-                          className={cn(
-                            "flex items-center gap-4 p-4 lg:p-6 rounded-2xl border transition-all cursor-pointer bg-white group",
-                            selectedCatering === opt.id ? "border-accent shadow-md ring-1 ring-accent/20" : "border-border hover:border-accent/30 hover:shadow-sm"
-                          )}
-                          onClick={() => setSelectedCatering(opt.id)}
-                        >
-                          <div className={cn(
-                            "w-6 h-6 rounded-full border-2 flex items-center justify-center",
-                            selectedCatering === opt.id ? "border-accent bg-accent" : "border-muted-foreground/30"
-                          )}>
-                            {selectedCatering === opt.id && <div className="w-2 h-2 rounded-full bg-white shadow-sm" />}
-                          </div>
-                          <div className="flex-grow">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-bold text-primary text-sm lg:text-base">{opt.name}</h4>
-                              <span className="text-[9px] font-bold text-accent uppercase tracking-widest">{opt.price}</span>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">{opt.desc}</p>
-                          </div>
-                        </div>
-                      ))}
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-2">
+                      <Utensils className="w-5 h-5 text-accent" />
+                      <h3 className="text-lg lg:text-xl font-headline font-bold text-primary">Ethical Refreshments</h3>
                     </div>
+                    <Card className="rounded-[2rem] border-none bg-accent/5 p-8">
+                      <p className="text-sm text-primary/80 leading-relaxed font-body">
+                        For the school tours, we offer refreshments that align with our ecological and ethical values.
+                        Children are served healthy biscuits baked locally at the Auroville bakery, along with hibiscus flower syrup prepared in-house from locally sourced flowers. The intention is precise: zero packaging, minimal processing, and maximal flavour.
+                        It demonstrates that food can be wholesome, delicious, and environmentally responsible — without compromise.
+                      </p>
+                    </Card>
                   </section>
                 </div>
 
