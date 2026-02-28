@@ -39,7 +39,14 @@ import {
   History,
   Palette,
   PlayCircle,
-  Sprout
+  Sprout,
+  Compass,
+  Flame,
+  Droplets,
+  Wind,
+  ShoppingBag,
+  Image as ImageIcon,
+  MessageSquare
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,6 +60,49 @@ import { sendEmailNotification } from "@/app/actions/notifications";
 
 const SCHOOL_HERO_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2000";
 const GAME_TITLE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
+
+const PROGRAMME_STEPS = [
+  {
+    title: "1. Guided Campus Tour",
+    desc: "Students are welcomed to the Maroma campus and introduced to our philosophy and production ecosystem. The tour begins in the packing and dispatch area, where they observe how finished products are carefully prepared for distribution.",
+    icon: Compass
+  },
+  {
+    title: "2. Candle Studio",
+    desc: "In the candle section, students witness the candle-making process firsthand — from preparation to pouring and finishing. Subject to availability, a short candle workshop may be conducted.",
+    icon: Flame
+  },
+  {
+    title: "3. Soap Making Unit",
+    desc: "Students visit our soap production space where they observe how soaps are formulated and produced. When possible, our soap maker delivers a concise technical introduction to ingredients, processes, and quality control.",
+    icon: Droplets
+  },
+  {
+    title: "4. Incense Workshop",
+    desc: "Hands-On Session: In the incense section, students participate in a practical workshop making traditional leaf incense. This interactive session provides direct engagement with natural materials and artisanal techniques.",
+    icon: Wind
+  },
+  {
+    title: "5. Snacks",
+    desc: "Light refreshments are served following the workshop sessions to allow students to recharge and reflect on the morning's activities.",
+    icon: Utensils
+  },
+  {
+    title: "6. Maroma Shop Visit",
+    desc: "Students have the opportunity to visit the Maroma shop, explore the full product range, and make purchases if they wish.",
+    icon: ShoppingBag
+  },
+  {
+    title: "7. Maji Maroma Gallery",
+    desc: "The tour includes a visit to the Maji Maroma Gallery, offering insight into the creative and artistic dimension of the Maroma ecosystem.",
+    icon: ImageIcon
+  },
+  {
+    title: "8. Q&A Session",
+    desc: "The experience concludes with an open Q&A session. Students are encouraged to engage with the team on topics such as production processes, sustainability, and values-driven enterprise.",
+    icon: MessageSquare
+  }
+];
 
 const EDUCATION_LEVELS = [
   { id: 'primary', name: "Primary (K-6)", desc: "Focus on sensory exploration and nature." },
@@ -178,24 +228,24 @@ export default function SchoolsPage() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section - Balanced spacing for mobile bubbles */}
+        {/* Hero Section */}
         <section className="relative min-h-[85vh] py-24 md:py-32 flex items-center justify-center overflow-hidden">
           <Image
             src={SCHOOL_HERO_URL}
-            alt="School Field Trip"
+            alt="School Campus Experience"
             fill
             className="object-cover brightness-[0.5]"
             priority
           />
           <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
             <Badge className="mb-10 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
-              Educational Journeys
+              School Campus Experience
             </Badge>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-8 drop-shadow-2xl leading-tight">
               Ignite Curiosity in the Classroom of Life.
             </h1>
             <p className="text-xl text-white/90 mb-14 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
-              Maroma offers immersive field trips that blend history, science, and artisan craft into unforgettable learning experiences for students of all ages.
+              Our Schools Programme offers an immersive, structured visit to the Maroma campus, designed to introduce students to ethical production, craftsmanship, and sustainable enterprise.
             </p>
             <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-14 h-16 text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
               Build Your School Itinerary
@@ -203,27 +253,34 @@ export default function SchoolsPage() {
           </div>
         </section>
 
-        {/* Learning Advantages */}
+        {/* The Journey Section */}
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
-              <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Why Field Trips at Maroma?</h2>
-              <div className="h-1.5 w-24 bg-accent mx-auto rounded-full" />
+              <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Programme Itinerary</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto font-body">
+                This programme combines education, craft exposure, and hands-on learning within a functioning production campus.
+              </p>
+              <div className="h-1.5 w-24 bg-accent mx-auto rounded-full mt-6" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {[
-                { title: "Hands-on Discovery", desc: "Students engage directly with artisan processes, from chemistry in perfumery to physics in pottery.", icon: BookOpen },
-                { title: "Cultural Heritage", desc: "A deep dive into local history and traditional crafts that foster a sense of place and heritage.", icon: History },
-                { title: "Safe & Inspiring", desc: "Our campus provides a secure, natural environment that encourages group collaboration and focus.", icon: Trees }
-              ].map((item, i) => (
-                <div key={i} className="text-center group">
-                  <div className="w-20 h-20 bg-muted/30 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-accent/10 transition-colors duration-500">
-                    <item.icon className="w-8 h-8 text-accent" />
-                  </div>
-                  <h3 className="text-xl font-headline font-bold text-primary mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed font-body">{item.desc}</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {PROGRAMME_STEPS.map((step, i) => (
+                <Card key={i} className="rounded-[2.5rem] border-none shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden flex flex-col h-full">
+                  <CardHeader className="bg-muted/30 p-8 pb-4">
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:bg-accent/10 transition-colors">
+                      <step.icon className="w-6 h-6 text-accent" />
+                    </div>
+                    <CardTitle className="text-xl font-headline font-bold text-primary leading-tight">
+                      {step.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-4 flex-grow">
+                    <p className="text-sm text-muted-foreground leading-relaxed font-body">
+                      {step.desc}
+                    </p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
@@ -463,40 +520,6 @@ export default function SchoolsPage() {
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* Signature Features */}
-        <section className="py-24 bg-primary text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-              <div>
-                <Badge className="bg-white/10 text-white border-none rounded-full px-4 py-1.5 mb-6 uppercase tracking-widest text-[10px] font-bold">
-                  Bespoke Education
-                </Badge>
-                <h2 className="text-4xl font-headline font-bold mb-8">Curriculum-aligned experiences.</h2>
-                <div className="space-y-10">
-                  {[
-                    { title: "Science of Scent", icon: Sparkles, desc: "Explore botanical extraction and distillation processes in our laboratory." },
-                    { title: "Historical Context", icon: History, desc: "Interactive tours that bring local heritage and traditional architecture to life." },
-                    { title: "Artisan Workshops", icon: Palette, desc: "Practical hands-on sessions in pottery, textiles, and traditional crafts." }
-                  ].map((service, i) => (
-                    <div key={i} className="flex gap-6 group">
-                      <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                        <service.icon className="w-6 h-6 text-accent" />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-bold mb-2">{service.title}</h4>
-                        <p className="text-white/70 text-sm leading-relaxed font-body">{service.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="aspect-[4/3] relative rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white/5">
-                <Image src={SCHOOL_HERO_URL} alt="Education" fill className="object-cover" />
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />
