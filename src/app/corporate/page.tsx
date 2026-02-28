@@ -154,6 +154,19 @@ export default function CorporatePage() {
     }
   }, [userData]);
 
+  useEffect(() => {
+    // Auto-scroll to center the hero content on mobile to ensure button visibility
+    const timer = setTimeout(() => {
+      if (window.innerWidth < 768) {
+        window.scrollTo({
+          top: 120,
+          behavior: 'smooth'
+        });
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "media");
@@ -264,7 +277,7 @@ export default function CorporatePage() {
 
       <main className="flex-grow">
         {/* Hero Section - Balanced spacing for mobile bubbles */}
-        <section className="relative min-h-[85vh] py-24 md:py-32 flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-[85vh] py-20 md:py-32 flex items-center justify-center overflow-hidden">
           <Image
             src={heroImage}
             alt="Corporate Retreat"
@@ -464,7 +477,7 @@ export default function CorporatePage() {
                               : "bg-white border-border hover:border-accent hover:shadow-md"
                           )}
                         >
-                          <div className="relative w-14 lg:w-16 h-14 lg:h-16 rounded-xl overflow-hidden shrink-0">
+                          <div className="relative i-14 lg:w-16 h-14 lg:h-16 rounded-xl overflow-hidden shrink-0">
                             <Image src={spa.image} alt={spa.name} fill className="object-cover" />
                           </div>
                           <div className="flex-grow min-w-0">

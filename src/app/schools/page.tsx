@@ -161,6 +161,19 @@ export default function SchoolsPage() {
     }
   }, [userData]);
 
+  useEffect(() => {
+    // Auto-scroll to center the hero content on mobile to ensure button visibility
+    const timer = setTimeout(() => {
+      if (window.innerWidth < 768) {
+        window.scrollTo({
+          top: 120,
+          behavior: 'smooth'
+        });
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleRequestBooking = async () => {
     if (!firestore || !user) {
       toast({ variant: "destructive", title: "Authentication Required", description: "Please sign in to request a booking." });
@@ -220,7 +233,7 @@ export default function SchoolsPage() {
       <Navbar />
 
       <main className="flex-grow">
-        <section className="relative min-h-[85vh] py-24 md:py-32 flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-[85vh] py-20 md:py-32 flex items-center justify-center overflow-hidden">
           <Image
             src={SCHOOL_HERO_URL}
             alt="School Campus Experience"
