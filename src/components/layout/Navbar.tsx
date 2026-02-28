@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, Settings, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Sprout, Edit2, Save, MoveHorizontal, Type, GraduationCap } from "lucide-react";
+import { User, Menu, X, Settings, LogOut, LogIn, UserCircle, UserPlus, ShieldCheck, Edit2, Save, MoveHorizontal, Type, GraduationCap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
@@ -222,10 +222,7 @@ export default function Navbar() {
             <Link href="/schools" className={cn("text-sm font-medium hover:text-accent transition-colors flex items-center gap-1.5", pathname === "/schools" && "text-accent")}>
               <GraduationCap className="w-4 h-4" /> Schools
             </Link>
-            <Link href="/corporate" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/corporate" && "text-accent")}>Corporate</Link>
-            <Link href="/simulator" className={cn("text-sm font-bold text-accent hover:text-primary transition-colors flex items-center gap-1", pathname === "/simulator" && "text-primary")}>
-              <Sprout className="w-4 h-4" /> Join Game
-            </Link>
+            <Link href="/corporate" className={cn("text-sm font-medium hover:text-accent transition-colors", pathname === "/corporate" && "text-accent")}>Corporate Events</Link>
             
             {isAdmin && (
               <div className="flex items-center gap-4 pl-4 border-l border-border animate-in fade-in duration-500">
@@ -328,7 +325,6 @@ export default function Navbar() {
           </Link>
           <Link href="/schools" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Schools</Link>
           <Link href="/corporate" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>Corporate Events</Link>
-          <Link href="/simulator" className="block text-lg font-bold text-accent" onClick={() => setIsOpen(false)}>Join Game</Link>
           <Link href="/account" className="block text-lg font-medium" onClick={() => setIsOpen(false)}>My Bookings</Link>
           
           {isAdmin && (

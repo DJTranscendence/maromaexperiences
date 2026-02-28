@@ -37,7 +37,9 @@ import {
   Quote,
   Utensils,
   History,
-  Palette
+  Palette,
+  PlayCircle,
+  Sprout
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -50,6 +52,7 @@ import { cn } from "@/lib/utils";
 import { sendEmailNotification } from "@/app/actions/notifications";
 
 const SCHOOL_HERO_URL = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2000";
+const GAME_TITLE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
 
 const EDUCATION_LEVELS = [
   { id: 'primary', name: "Primary (K-6)", desc: "Focus on sensory exploration and nature." },
@@ -222,6 +225,49 @@ export default function SchoolsPage() {
                   <p className="text-muted-foreground leading-relaxed font-body">{item.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Simulator Section - MOVED FROM NAVBAR */}
+        <section className="bg-slate-900 py-24 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative group shadow-2xl">
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              
+              <div className="relative w-56 h-56 md:w-80 md:h-80 shrink-0 flex items-center justify-center">
+                <Image 
+                  src={GAME_TITLE_URL}
+                  alt="The Maroma Product Game"
+                  fill
+                  className="object-contain group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+
+              <div className="flex-grow text-center md:text-left space-y-8 relative z-10">
+                <div className="space-y-4">
+                  <Badge className="bg-accent text-white px-6 py-1.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-bold border-none shadow-lg">
+                    Educational Workshop Tool
+                  </Badge>
+                  <h2 className="text-4xl md:text-6xl font-headline font-bold text-white leading-tight">
+                    The Maroma <br className="hidden lg:block" /> Product Game
+                  </h2>
+                  <p className="text-slate-300 text-xl max-w-xl font-body leading-relaxed">
+                    Students step into the shoes of entrepreneurs. In our live laboratory simulator, they'll design ethical products and see the real-world market impact of their choices.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                  <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-16 text-xl font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+                    <Link href="/simulator">
+                      <PlayCircle className="w-6 h-6" /> Launch Simulator
+                    </Link>
+                  </Button>
+                  <div className="flex items-center gap-2 text-slate-500 text-sm font-bold uppercase tracking-widest mt-2 sm:mt-0 sm:ml-4">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Integration Ready
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -430,7 +476,7 @@ export default function SchoolsPage() {
                 <div className="space-y-10">
                   {[
                     { title: "Science of Scent", icon: Sparkles, desc: "Explore botanical extraction and distillation processes in our laboratory." },
-                    { title: "Historical Context", icon: Award, desc: "Interactive tours that bring local heritage and traditional architecture to life." },
+                    { title: "Historical Context", icon: History, desc: "Interactive tours that bring local heritage and traditional architecture to life." },
                     { title: "Artisan Workshops", icon: Palette, desc: "Practical hands-on sessions in pottery, textiles, and traditional crafts." }
                   ].map((service, i) => (
                     <div key={i} className="flex gap-6 group">
