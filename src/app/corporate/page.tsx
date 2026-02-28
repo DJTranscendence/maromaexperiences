@@ -214,7 +214,7 @@ export default function CorporatePage() {
     }
 
     if (!contactForm.companyName || !contactForm.email || !contactForm.contactName) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please complete the contact form in the sidebar." });
+      toast({ variant: "destructive", title: "Missing Information", description: "Please complete all required contact information." });
       return;
     }
 
@@ -384,7 +384,7 @@ export default function CorporatePage() {
         {/* Builder Dialog */}
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
           <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-3xl lg:rounded-[3rem]">
-            <div className="flex flex-col h-full bg-white min-h-0">
+            <div className="flex flex-col h-full bg-white">
               <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
                 <div>
                   <DialogTitle className="text-2xl lg:text-3xl font-headline font-bold text-primary">
@@ -401,11 +401,11 @@ export default function CorporatePage() {
                 )}
               </div>
 
-              <div className="flex-grow flex flex-col lg:flex-row min-h-0 overflow-hidden">
-                {/* Selection Menu */}
-                <div className="flex-1 lg:flex-[2] flex flex-col min-h-0 overflow-hidden order-1">
-                  <ScrollArea className="flex-grow">
-                    <div className="p-4 lg:p-8 space-y-8 lg:space-y-12 pb-20">
+              <div className="flex-grow min-h-0 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="flex flex-col lg:flex-row min-h-full">
+                    {/* Selection Area */}
+                    <div className="flex-1 lg:flex-[2] p-4 lg:p-8 space-y-8 lg:space-y-12 pb-20 border-b lg:border-b-0 lg:border-r border-primary/5">
                       {/* Workshops Selection */}
                       <section>
                         <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
@@ -578,97 +578,103 @@ export default function CorporatePage() {
                         </div>
                       </section>
                     </div>
-                  </ScrollArea>
-                </div>
 
-                {/* Summary Sidebar */}
-                <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 lg:border-l p-6 lg:p-8 flex flex-col min-h-0 order-2 overflow-y-auto">
-                  <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 shrink-0">Your Itinerary</h3>
-                  
-                  <div className="flex-grow space-y-6 mb-8">
-                    {itinerary.length === 0 && !selectedCatering && (
-                      <div className="text-center py-8 lg:py-12 px-4 border border-dashed rounded-2xl">
-                        <Calendar className="w-6 lg:w-8 h-6 lg:h-8 text-muted-foreground/30 mx-auto mb-3" />
-                        <p className="text-[10px] lg:text-xs text-muted-foreground">Add workshops or treatments to begin planning.</p>
-                      </div>
-                    )}
-                    
-                    <div className="space-y-3">
-                      {itinerary.map(item => (
-                        <div key={item.id} className="flex items-start gap-3 p-2 lg:p-3 bg-white rounded-xl shadow-sm border border-border">
-                          <div className="relative w-10 lg:w-12 h-10 lg:h-12 rounded-lg overflow-hidden shrink-0">
-                            <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                    {/* Finalisation Area (Sidebar on Desktop) */}
+                    <aside className="flex-1 lg:w-96 bg-muted/20 border-t lg:border-t-0 p-6 lg:p-8 flex flex-col space-y-8">
+                      <div>
+                        <h3 className="text-xl font-headline font-bold text-primary mb-6">Your Itinerary Summary</h3>
+                        
+                        <div className="space-y-6">
+                          {itinerary.length === 0 && !selectedCatering && (
+                            <div className="text-center py-12 px-4 border border-dashed rounded-2xl bg-white/50">
+                              <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                              <p className="text-xs text-muted-foreground">Add workshops or treatments to begin planning your retreat.</p>
+                            </div>
+                          )}
+                          
+                          <div className="space-y-3">
+                            {itinerary.map(item => (
+                              <div key={item.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border group">
+                                <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                                </div>
+                                <div className="flex-grow min-w-0">
+                                  <div className="text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
+                                  <h5 className="text-xs font-bold text-primary truncate">{item.name}</h5>
+                                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
+                                </div>
+                                <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                          <div className="flex-grow min-w-0">
-                            <div className="text-[7px] lg:text-[8px] font-bold text-accent uppercase tracking-[0.2em]">{item.type}</div>
-                            <h5 className="text-[10px] lg:text-xs font-bold text-primary truncate">{item.name}</h5>
-                            <span className="text-[8px] lg:text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
-                          </div>
-                          <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
 
-                    <div className="space-y-4 pt-4 border-t border-primary/10">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company Details</Label>
-                        <div className="relative">
-                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input 
-                            placeholder="Company Name" 
-                            className="pl-9 h-10 text-xs rounded-xl"
-                            value={contactForm.companyName}
-                            onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
-                          />
-                        </div>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input 
-                            placeholder="Contact Person" 
-                            className="pl-9 h-10 text-xs rounded-xl"
-                            value={contactForm.contactName}
-                            onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
-                          />
-                        </div>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input 
-                            placeholder="Email Address" 
-                            className="pl-9 h-10 text-xs rounded-xl"
-                            value={contactForm.email}
-                            onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                          />
-                        </div>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input 
-                            placeholder="Phone Number" 
-                            className="pl-9 h-10 text-xs rounded-xl"
-                            value={contactForm.phone}
-                            onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
-                          />
+                          <div className="space-y-4 pt-6 border-t border-primary/10">
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                              <Building2 className="w-3.5 h-3.5" /> Company Information
+                            </h4>
+                            <div className="space-y-3">
+                              <div className="relative">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="Company Name" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.companyName}
+                                  onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
+                                />
+                              </div>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="Contact Person" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.contactName}
+                                  onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
+                                />
+                              </div>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="Email Address" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.email}
+                                  onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                                />
+                              </div>
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="Phone Number" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.phone}
+                                  onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="pt-4 lg:pt-8 border-t mt-auto space-y-4 shrink-0 bg-muted/5 p-4 rounded-2xl">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs lg:text-sm font-medium text-muted-foreground">Est. Base Total</span>
-                      <span className="text-lg lg:text-xl font-bold text-primary font-headline">Pending Review</span>
-                    </div>
-                    <Button 
-                      onClick={handleRequestProposal} 
-                      disabled={itinerary.length === 0 || isSubmitting} 
-                      className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-12 lg:h-14 font-bold text-base lg:text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
-                    >
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Detailed Proposal"}
-                    </Button>
-                    <p className="text-[9px] lg:text-[10px] text-center text-muted-foreground uppercase tracking-widest">Formal Admin Approval Required</p>
+                      <div className="pt-8 border-t mt-auto space-y-4 shrink-0 bg-white/40 p-6 rounded-3xl border border-white/60">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-muted-foreground">Estimated Base Rate</span>
+                          <span className="text-xl font-bold text-primary font-headline">Pending Review</span>
+                        </div>
+                        <Button 
+                          onClick={handleRequestProposal} 
+                          disabled={itinerary.length === 0 || isSubmitting} 
+                          className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
+                        >
+                          {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Detailed Proposal"}
+                        </Button>
+                        <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest font-bold">
+                          Formal Admin Quote Required
+                        </p>
+                      </div>
+                    </aside>
                   </div>
-                </aside>
+                </ScrollArea>
               </div>
             </div>
           </DialogContent>
