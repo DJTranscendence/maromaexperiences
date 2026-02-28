@@ -20,8 +20,6 @@ import {
   Sparkles, 
   Clock, 
   MapPin, 
-  Plus, 
-  Trash2, 
   CheckCircle2, 
   ChevronRight, 
   Loader2, 
@@ -37,7 +35,7 @@ import {
   Droplets,
   Wind,
   ShoppingBag,
-  Image as ImageIcon,
+  ImageIcon,
   MessageSquare,
   PlayCircle,
   Palette,
@@ -46,10 +44,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking, useDoc } from "@/firebase";
-import { collection, query, where, serverTimestamp, doc } from "firebase/firestore";
-import { Tour } from "@/lib/types";
+import { useState, useEffect, useRef } from "react";
+import { useFirestore, useUser, addDocumentNonBlocking, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { sendEmailNotification } from "@/app/actions/notifications";
@@ -109,13 +106,20 @@ const EDUCATION_LEVELS = [
 const STUDENT_COUNT_OPTIONS = ["10", "15", "20", "25", "30", "35", "40", "50", "60", "70", "80", "90", "100"];
 const ADULT_COUNT_OPTIONS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "20"];
 
+const CAMPUS_TOUR_PROGRAM = {
+  id: 'the-maroma-tour',
+  name: 'The Maroma Tour',
+  type: 'Campus Experience',
+  imageUrl: SCHOOL_HERO_URL,
+  duration: '3-4 Hours'
+};
+
 export default function SchoolsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>('secondary');
-  const [itinerary, setItinerary] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [contactForm, setContactForm] = useState({
@@ -137,7 +141,7 @@ export default function SchoolsPage() {
   useEffect(() => {
     if (userData && !isInitialized.current) {
       setContactForm({
-        schoolName: userData.organization || "",
+        schoolName: userData.schoolName || userData.organization || "",
         contactName: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
         email: userData.email || "",
         phone: userData.phoneNumber || "",
@@ -147,21 +151,6 @@ export default function SchoolsPage() {
       isInitialized.current = true;
     }
   }, [userData]);
-
-  const toursQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, "tours"), where("isActive", "==", true), where("status", "==", "live"));
-  }, [firestore]);
-  const { data: liveTours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
-
-  const addItemToItinerary = (item: any) => {
-    if (itinerary.find(t => t.id === item.id)) return;
-    setItinerary([...itinerary, item]);
-  };
-
-  const removeItemFromItinerary = (id: string) => {
-    setItinerary(itinerary.filter(t => t.id !== id));
-  };
 
   const handleRequestInquiry = async () => {
     if (!firestore || !user) {
@@ -176,11 +165,6 @@ export default function SchoolsPage() {
       return;
     }
 
-    if (itinerary.length === 0) {
-      toast({ variant: "destructive", title: "Empty Itinerary", description: "Please select at least one workshop or tour." });
-      return;
-    }
-
     setIsSubmitting(true);
     
     try {
@@ -189,7 +173,7 @@ export default function SchoolsPage() {
         ...contactForm,
         type: 'School',
         educationLevel: selectedLevel,
-        itinerary: itinerary.map(item => ({ id: item.id, name: item.name, type: item.type })),
+        itinerary: [{ id: CAMPUS_TOUR_PROGRAM.id, name: CAMPUS_TOUR_PROGRAM.name, type: CAMPUS_TOUR_PROGRAM.type }],
         catering: "Standard Ethical Refreshments",
         status: "pending",
         createdAt: serverTimestamp(),
@@ -198,8 +182,8 @@ export default function SchoolsPage() {
 
       await sendEmailNotification({
         to: contactForm.email,
-        subject: `School Inquiry Received: Maroma Experiences`,
-        textBody: `Hello ${contactForm.contactName},\n\nThank you for reaching out to Maroma Experiences. We have received your educational group inquiry for "${contactForm.schoolName}".\n\nOur educational design team is reviewing your custom itinerary for ${contactForm.studentCount} students and ${contactForm.adultCount} adults/teachers. We will be in touch within 24 hours with a detailed educational plan and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
+        subject: `School Inquiry Received: The Maroma Tour`,
+        textBody: `Hello ${contactForm.contactName},\n\nThank you for reaching out to Maroma Experiences. We have received your educational group inquiry for "${contactForm.schoolName}" regarding The Maroma Tour.\n\nOur educational design team is reviewing your requirements for ${contactForm.studentCount} students and ${contactForm.adultCount} adults/teachers at the ${selectedLevel} level. We will be in touch within 24 hours with a detailed educational plan and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
       });
 
       toast({
@@ -208,7 +192,6 @@ export default function SchoolsPage() {
       });
 
       setIsBuilderOpen(false);
-      setItinerary([]);
     } catch (err) {
       toast({ variant: "destructive", title: "Submission Failed", description: "Could not send inquiry request." });
     } finally {
@@ -250,9 +233,9 @@ export default function SchoolsPage() {
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
-              <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Programme Itinerary</h2>
+              <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Programme Itinerary: The Maroma Tour</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto font-body">
-                This programme combines education, craft exposure, and hands-on learning within a functioning production campus.
+                This 8-step programme combines education, craft exposure, and hands-on learning within a functioning production campus.
               </p>
               <div className="h-1.5 w-24 bg-accent mx-auto rounded-full mt-6" />
             </div>
@@ -331,7 +314,7 @@ export default function SchoolsPage() {
                   Educational Planner
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground mt-1 text-sm lg:text-base">
-                  Select workshops and learning levels for your school group.
+                  Reconfigure your campus visit for your school group.
                 </DialogDescription>
               </div>
             </div>
@@ -360,47 +343,26 @@ export default function SchoolsPage() {
                     </div>
                   </section>
 
-                  <section>
-                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-accent" /> Select Educational Experiences
-                    </h3>
-                    {isToursLoading ? (
-                      <div className="flex justify-center p-12"><Loader2 className="animate-spin text-accent" /></div>
-                    ) : liveTours && liveTours.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {liveTours.map(tour => (
-                          <button 
-                            key={tour.id} 
-                            onClick={() => addItemToItinerary({ id: tour.id, name: tour.name, imageUrl: tour.imageUrl, duration: tour.duration, type: 'Field Trip' })}
-                            className={cn(
-                              "flex text-left items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl border transition-all group",
-                              itinerary.find(t => t.id === tour.id) ? "bg-accent/5 border-accent shadow-sm" : "bg-white border-border hover:border-accent/30 hover:shadow-md"
-                            )}
-                          >
-                            <div className="relative w-16 lg:w-20 h-16 lg:h-20 rounded-xl overflow-hidden shrink-0">
-                              <Image src={tour.imageUrl} alt={tour.name} fill className="object-cover" />
-                            </div>
-                            <div className="flex-grow min-w-0">
-                              <h4 className="font-bold text-primary text-sm lg:text-base leading-tight truncate">{tour.name}</h4>
-                              <div className="flex items-center gap-2 lg:gap-3 text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration}</span>
-                                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {tour.location}</span>
-                              </div>
-                            </div>
-                            {itinerary.find(t => t.id === tour.id) ? (
-                              <CheckCircle2 className="w-5 h-5 text-accent" />
-                            ) : (
-                              <Plus className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </button>
-                        ))}
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-2">
+                      <Compass className="w-5 h-5 text-accent" />
+                      <h3 className="text-lg lg:text-xl font-headline font-bold text-primary">Core Experience</h3>
+                    </div>
+                    <Card className="rounded-[2rem] border-none bg-accent/5 p-8 flex items-center gap-6">
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 shadow-lg">
+                        <Image src={CAMPUS_TOUR_PROGRAM.imageUrl} alt={CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
                       </div>
-                    ) : (
-                      <div className="p-10 border-2 border-dashed rounded-3xl text-center bg-muted/5">
-                        <Sparkles className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                        <p className="text-sm text-muted-foreground">No field trips currently available.</p>
+                      <div>
+                        <h4 className="text-xl font-headline font-bold text-primary mb-1">{CAMPUS_TOUR_PROGRAM.name}</h4>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground uppercase tracking-widest font-bold">
+                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {CAMPUS_TOUR_PROGRAM.duration}</span>
+                          <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> 8-Step Programme</span>
+                        </div>
+                        <p className="text-sm text-primary/70 mt-3 leading-relaxed">
+                          A comprehensive tour of our production ecosystem, including hands-on incense making and ethical refreshment service.
+                        </p>
                       </div>
-                    )}
+                    </Card>
                   </section>
 
                   <section className="space-y-6">
@@ -422,54 +384,52 @@ export default function SchoolsPage() {
                   <h3 className="text-xl font-headline font-bold text-primary mb-6">Inquiry Summary</h3>
                   
                   <div className="space-y-6">
-                    {itinerary.length === 0 && (
-                      <div className="text-center py-12 px-4 border border-dashed rounded-2xl bg-white/50">
-                        <p className="text-xs text-muted-foreground">Add field trips to begin planning.</p>
-                      </div>
-                    )}
-                    
                     <div className="space-y-3">
-                      {itinerary.map(item => (
-                        <div key={item.id} className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-border">
-                          <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                            <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
-                          </div>
-                          <div className="flex-grow min-w-0">
-                            <h5 className="text-xs font-bold text-primary truncate">{item.name}</h5>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{item.duration}</span>
-                          </div>
-                          <button onClick={() => removeItemFromItinerary(item.id)} className="text-muted-foreground hover:text-destructive p-1">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                      <div className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-accent/20">
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                          <Image src={CAMPUS_TOUR_PROGRAM.imageUrl} alt={CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
                         </div>
-                      ))}
+                        <div className="flex-grow min-w-0">
+                          <div className="text-[8px] font-bold text-accent uppercase tracking-widest">Included Program</div>
+                          <h5 className="text-xs font-bold text-primary truncate">{CAMPUS_TOUR_PROGRAM.name}</h5>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{CAMPUS_TOUR_PROGRAM.duration}</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div id="details-section" className="space-y-4 pt-6 border-t border-primary/10 scroll-mt-24">
                       {!user ? (
                         <Card className="rounded-2xl border-dashed border-accent/30 bg-accent/5 p-6 space-y-4">
-                          <p className="text-xs font-bold text-primary">Authentication Required</p>
-                          <Button asChild size="sm" className="w-full bg-accent hover:bg-accent/90 text-white rounded-full">
-                            <Link href="/login">Sign In to Continue</Link>
+                          <div className="flex gap-3">
+                            <AlertCircle className="w-5 h-5 text-accent shrink-0" />
+                            <div className="space-y-1">
+                              <p className="text-xs font-bold text-primary">Authentication Required</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">Please sign in to your Maroma account to request and manage your educational inquiries.</p>
+                            </div>
+                          </div>
+                          <Button asChild size="sm" className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-10 font-bold gap-2">
+                            <Link href="/login">
+                              <LogIn className="w-3.5 h-3.5" /> Sign In to Continue
+                            </Link>
                           </Button>
                         </Card>
                       ) : (
                         <div className="space-y-3">
                           <div className="space-y-1">
-                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">School Name *</Label>
-                            <Input placeholder="Greenwood High" className="h-11 text-sm rounded-xl" value={contactForm.schoolName} onChange={e => setContactForm({...contactForm, schoolName: e.target.value})} />
+                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">School Name *</Label>
+                            <Input placeholder="Greenwood High" className="h-11 text-sm rounded-xl bg-white" value={contactForm.schoolName} onChange={e => setContactForm({...contactForm, schoolName: e.target.value})} />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Lead Teacher *</Label>
-                            <Input placeholder="Mr. Smith" className="h-11 text-sm rounded-xl" value={contactForm.contactName} onChange={e => setContactForm({...contactForm, contactName: e.target.value})} />
+                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Lead Teacher *</Label>
+                            <Input placeholder="Mr. Smith" className="h-11 text-sm rounded-xl bg-white" value={contactForm.contactName} onChange={e => setContactForm({...contactForm, contactName: e.target.value})} />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Email Address *</Label>
-                            <Input placeholder="smith@school.edu" className="h-11 text-sm rounded-xl" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
+                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Email Address *</Label>
+                            <Input placeholder="smith@school.edu" className="h-11 text-sm rounded-xl bg-white" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-1">
-                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Number of students *</Label>
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Number of students *</Label>
                               <Select value={contactForm.studentCount} onValueChange={v => setContactForm({...contactForm, studentCount: v})}>
                                 <SelectTrigger className="h-11 text-sm rounded-xl bg-white">
                                   <SelectValue placeholder="Count" />
@@ -482,7 +442,7 @@ export default function SchoolsPage() {
                               </Select>
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Number of adults *</Label>
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Number of adults *</Label>
                               <Select value={contactForm.adultCount} onValueChange={v => setContactForm({...contactForm, adultCount: v})}>
                                 <SelectTrigger className="h-11 text-sm rounded-xl bg-white">
                                   <SelectValue placeholder="Count" />
@@ -503,19 +463,45 @@ export default function SchoolsPage() {
               </div>
             </div>
 
-            <div className="p-4 lg:p-8 border-t bg-white shrink-0 shadow-lg flex items-center justify-between z-20">
+            <div className="p-4 lg:p-8 border-t bg-white shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] flex items-center justify-between z-20">
               <div className="hidden sm:flex flex-col">
-                <span className="text-lg font-bold text-primary font-headline">{itinerary.length} Trip(s) Selected</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Program Selected</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-primary font-headline">{CAMPUS_TOUR_PROGRAM.name}</span>
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                </div>
               </div>
-              {!user ? (
-                <Button asChild className="w-full sm:min-w-[280px] bg-accent rounded-full h-14 font-bold text-lg">
-                  <Link href="/login">Sign In to Request Inquiry</Link>
-                </Button>
-              ) : (
-                <Button onClick={handleRequestInquiry} disabled={itinerary.length === 0 || isSubmitting} className="w-full sm:min-w-[280px] bg-primary rounded-full h-14 font-bold text-lg">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit Educational Inquiry"}
-                </Button>
-              )}
+              <div className="w-full sm:w-auto flex flex-col gap-2">
+                {!user ? (
+                  <Button 
+                    asChild
+                    className="w-full sm:min-w-[280px] bg-accent hover:bg-accent/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-accent/10 transition-all active:scale-[0.98] gap-3"
+                  >
+                    <Link href="/login">
+                      Sign In to Request Inquiry
+                      <LogIn className="w-5 h-5" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleRequestInquiry} 
+                    disabled={isSubmitting} 
+                    className="w-full sm:min-w-[280px] bg-primary hover:bg-primary/90 text-white rounded-full h-14 font-bold text-lg shadow-xl shadow-primary/10 transition-all active:scale-[0.98] gap-3"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <>
+                        Submit Educational Inquiry
+                        <ChevronRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </Button>
+                )}
+                <p className="text-[9px] text-center text-muted-foreground uppercase tracking-widest font-bold">
+                  Review & Admin Quote within 24 Hours
+                </p>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
