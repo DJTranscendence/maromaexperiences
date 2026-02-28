@@ -105,8 +105,8 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Contact</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> maroma@maroma.com</li>
-              <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +1 (555) 123-4567</li>
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> booking@maromaexperience.com</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +919486623749</li>
             </ul>
           </div>
 
