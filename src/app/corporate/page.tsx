@@ -206,6 +206,12 @@ export default function CorporatePage() {
 
     if (!contactForm.companyName || !contactForm.email || !contactForm.contactName) {
       toast({ variant: "destructive", title: "Missing Information", description: "Please complete all required contact information." });
+      
+      // Auto-scroll to the details section on validation failure
+      const element = document.getElementById('details-section');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       return;
     }
 
@@ -608,7 +614,7 @@ export default function CorporatePage() {
                         ))}
                       </div>
 
-                      <div className="space-y-4 pt-6 border-t border-primary/10">
+                      <div id="details-section" className="space-y-4 pt-6 border-t border-primary/10 scroll-mt-24">
                         <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
                           <Building2 className="w-3.5 h-3.5" /> Company Information
                         </h4>
@@ -630,41 +636,53 @@ export default function CorporatePage() {
                           </Card>
                         ) : (
                           <div className="space-y-3">
-                            <div className="relative">
-                              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input 
-                                placeholder="Company Name" 
-                                className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                value={contactForm.companyName}
-                                onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
-                              />
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Company Name *</Label>
+                              <div className="relative">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="Acme Corp" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.companyName}
+                                  onChange={(e) => setContactForm({...contactForm, companyName: e.target.value})}
+                                />
+                              </div>
                             </div>
-                            <div className="relative">
-                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input 
-                                placeholder="Contact Person" 
-                                className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                value={contactForm.contactName}
-                                onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
-                              />
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Contact Person *</Label>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="John Doe" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.contactName}
+                                  onChange={(e) => setContactForm({...contactForm, contactName: e.target.value})}
+                                />
+                              </div>
                             </div>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input 
-                                placeholder="Email Address" 
-                                className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                value={contactForm.email}
-                                onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                              />
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Email Address *</Label>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="john@acme.com" 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.email}
+                                  onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                                />
+                              </div>
                             </div>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input 
-                                placeholder="Phone Number" 
-                                className="pl-9 h-11 text-sm rounded-xl bg-white"
-                                value={contactForm.phone}
-                                onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
-                              />
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground pl-1">Phone Number</Label>
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input 
+                                  placeholder="+91..." 
+                                  className="pl-9 h-11 text-sm rounded-xl bg-white"
+                                  value={contactForm.phone}
+                                  onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                                />
+                              </div>
                             </div>
                           </div>
                         )}
