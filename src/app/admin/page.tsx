@@ -15,16 +15,18 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin, Navigation
+  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin, Navigation,
+  Calendar as CalendarIcon, Plus, Wand2, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
-import { collection, serverTimestamp, doc, query, orderBy } from "firebase/firestore";
+import { collection, serverTimestamp, doc, query, orderBy, Timestamp } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
 import NextImage from "next/image";
@@ -33,6 +35,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay } from "date-fns";
 
 interface UserProfile {
   id: string;
@@ -118,7 +121,6 @@ export default function AdminPage() {
 
   const handleOpenProposal = (p: ProposalRecord) => {
     setSelectedProposal(p);
-    // Pre-draft email based on type
     if (p.type === 'School') {
       setEmailDraft({
         subject: `Booking Confirmed: ${p.schoolName} - Maroma Tour`,
@@ -141,15 +143,12 @@ export default function AdminPage() {
         subject: emailDraft.subject,
         textBody: emailDraft.body
       });
-      
-      // Auto-update status to approved
       if (firestore) {
         updateDocumentNonBlocking(doc(firestore, "proposals", selectedProposal.id), {
           status: "approved",
           updatedAt: serverTimestamp()
         });
       }
-
       toast({ title: "Confirmation Sent", description: `Email delivered to ${selectedProposal.email}.` });
       setIsEmailing(false);
       setSelectedProposal(null);
@@ -158,6 +157,94 @@ export default function AdminPage() {
       setIsEmailing(false);
     }
   };
+
+  // --- TOUR STATE & QUERIES ---
+  const toursQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return collection(firestore, "tours");
+  }, [firestore, isAdmin]);
+  const { data: tours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [newTour, setNewTour] = useState({
+    name: "",
+    highlights: [] as string[],
+    location: "Maroma Campus",
+    duration: "60 minutes",
+    audience: "",
+    description: "",
+    price: 500,
+    capacity: 20,
+    minGroupSize: 8,
+    type: "workshop" as Tour.type,
+    status: "live" as 'live' | 'coming-soon',
+    imageUrls: [] as string[],
+    scheduledDates: [] as string[]
+  });
+
+  // --- SCHEDULING LOGIC ---
+  const [dateSelection, setDateSelection] = useState<Date[]>([]);
+  
+  const generateDatesForDay = (dayIndex: number) => {
+    const dates: Date[] = [];
+    let current = new Date();
+    const end = addMonths(new Date(), 12);
+    
+    while (current <= end) {
+      if (getDay(current) === dayIndex) {
+        dates.push(new Date(current));
+      }
+      current = addDays(current, 1);
+    }
+    
+    const formatted = dates.map(d => format(d, 'yyyy-MM-dd'));
+    setNewTour(prev => ({
+      ...prev,
+      scheduledDates: Array.from(new Set([...prev.scheduledDates, ...formatted])).sort()
+    }));
+    toast({ title: "Schedule Generated", description: `Added ${dates.length} occurrences over the next 12 months.` });
+  };
+
+  // --- CALENDAR VIEW LOGIC ---
+  const proposalsQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
+  }, [firestore, isAdmin]);
+  const { data: proposals, isLoading: isProposalsLoading } = useCollection<ProposalRecord>(proposalsQuery);
+
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  
+  const calendarEvents = useMemo(() => {
+    const events: { date: string, title: string, type: 'workshop' | 'school' | 'corporate', id: string }[] = [];
+    
+    tours?.forEach(t => {
+      t.scheduledDates?.forEach(d => {
+        events.push({ date: d, title: t.name, type: 'workshop', id: t.id });
+      });
+    });
+    
+    proposals?.forEach(p => {
+      if (p.selectedDate) {
+        events.push({ 
+          date: p.selectedDate, 
+          title: p.schoolName || p.companyName || "Group Tour", 
+          type: p.type === 'School' ? 'school' : 'corporate',
+          id: p.id 
+        });
+      }
+    });
+    
+    return events;
+  }, [tours, proposals]);
+
+  const daysInMonth = useMemo(() => {
+    return eachDayOfInterval({
+      start: startOfMonth(calendarMonth),
+      end: endOfMonth(calendarMonth)
+    });
+  }, [calendarMonth]);
 
   // --- BRAND SETTINGS ---
   const brandSettingsRef = useMemoFirebase(() => {
@@ -193,43 +280,69 @@ export default function AdminPage() {
     toast({ title: "Brand Settings Saved", description: "Logo layout updated across all platforms." });
   };
 
-  // --- TOUR STATE & QUERIES ---
-  const toursQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return collection(firestore, "tours");
-  }, [firestore, isAdmin]);
-  const { data: tours, isLoading: isToursLoading } = useCollection<Tour>(toursQuery);
+  const resetTourForm = () => {
+    setEditingId(null);
+    setNewTour({
+      name: "",
+      highlights: [],
+      location: "Maroma Campus",
+      duration: "60 minutes",
+      audience: "",
+      description: "",
+      price: 500,
+      capacity: 20,
+      minGroupSize: 8,
+      type: "workshop",
+      status: "live",
+      imageUrls: [],
+      scheduledDates: []
+    });
+    setDateSelection([]);
+  };
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [newTour, setNewTour] = useState({
-    name: "",
-    highlights: [] as string[],
-    location: "Maroma Campus",
-    duration: "60 minutes",
-    audience: "",
-    description: "",
-    price: 500,
-    capacity: 20,
-    minGroupSize: 8,
-    type: "workshop" as Tour.type,
-    status: "live" as 'live' | 'coming-soon',
-    imageUrls: [] as string[]
-  });
+  const handleEditTour = (tour: Tour) => {
+    setEditingId(tour.id);
+    setNewTour({
+      name: tour.name,
+      highlights: tour.highlights || [],
+      location: tour.location || "Maroma Campus",
+      duration: tour.duration || "60 minutes",
+      audience: tour.audience || "",
+      description: tour.description || "",
+      price: tour.price,
+      capacity: tour.capacity || 20,
+      minGroupSize: tour.minGroupSize || 8,
+      type: tour.type || "workshop",
+      status: tour.status || "live",
+      imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : []),
+      scheduledDates: tour.scheduledDates || []
+    });
+    setDateSelection((tour.scheduledDates || []).map(d => new Date(d)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  // --- BOOKINGS & PROPOSALS QUERIES ---
-  const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
-  }, [firestore, isAdmin]);
-  const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
-
-  const proposalsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
-  }, [firestore, isAdmin]);
-  const { data: proposals, isLoading: isProposalsLoading } = useCollection<ProposalRecord>(proposalsQuery);
+  const handleSaveTour = () => {
+    if (!newTour.name || !firestore || !user) return;
+    setIsProcessing(true);
+    const tourData: Partial<Tour> = {
+      ...newTour,
+      shortDescription: newTour.description.substring(0, 100),
+      pricePerPerson: newTour.price,
+      durationHours: parseInt(newTour.duration) || 1,
+      isActive: true,
+      updatedAt: serverTimestamp(),
+      imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`,
+    };
+    if (editingId) {
+      updateDocumentNonBlocking(doc(firestore, "tours", editingId), tourData);
+      toast({ title: "Changes Saved" });
+    } else {
+      addDocumentNonBlocking(collection(firestore, "tours"), { ...tourData, tourOwnerId: user.uid, createdAt: serverTimestamp(), bookedSpaces: 0 });
+      toast({ title: "Experience Published" });
+    }
+    setIsSuccess(true);
+    setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
+  };
 
   // --- USER STATE & QUERIES ---
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -259,6 +372,13 @@ export default function AdminPage() {
     u.lastName?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
+  // --- BOOKINGS QUERY ---
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
+  }, [firestore, isAdmin]);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
+
   // --- MEDIA STATE & QUERIES ---
   const [mediaSearchQuery, setMediaSearchQuery] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -285,158 +405,6 @@ export default function AdminPage() {
     });
   }, [media, mediaSearchQuery]);
 
-  // --- HANDLERS ---
-
-  const handleUpdateProposalStatus = (id: string, newStatus: string) => {
-    if (!firestore) return;
-    updateDocumentNonBlocking(doc(firestore, "proposals", id), {
-      status: newStatus,
-      updatedAt: serverTimestamp()
-    });
-    toast({ title: "Status Updated", description: `Proposal marked as ${newStatus}.` });
-  };
-
-  const handleSendReminder = async (booking: BookingRecord) => {
-    if (!firestore) return;
-    setIsProcessing(true);
-    
-    try {
-      let targetEmail = "";
-      const userDoc = await fetch(`https://firestore.googleapis.com/v1/projects/${firestore.app.options.projectId}/databases/(default)/documents/users/${booking.userId}`).then(r => r.json());
-      targetEmail = userDoc.fields?.email?.stringValue || "";
-
-      if (!targetEmail) {
-        toast({ variant: "destructive", title: "Missing Contact", description: "Could not find an email address for this customer." });
-        return;
-      }
-
-      const emailBody = `Hello,\n\nThis is a friendly reminder for your upcoming experience: "${booking.tourName}" on ${booking.tourDate}.\n\nWe look forward to hosting you at the Maroma Campus!\n\nBest regards,\nThe Maroma Team`;
-
-      await sendEmailNotification({
-        to: targetEmail,
-        subject: `Reminder: Your experience at Maroma`,
-        textBody: emailBody
-      });
-
-      toast({ title: "Reminder Sent", description: `Notification delivered to ${targetEmail}.` });
-    } catch (err) {
-      toast({ variant: "destructive", title: "Delivery Failed", description: "Could not send the reminder email." });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const resetTourForm = () => {
-    setEditingId(null);
-    setNewTour({
-      name: "",
-      highlights: [],
-      location: "Maroma Campus",
-      duration: "60 minutes",
-      audience: "",
-      description: "",
-      price: 500,
-      capacity: 20,
-      minGroupSize: 8,
-      type: "workshop",
-      status: "live",
-      imageUrls: []
-    });
-  };
-
-  const handleEditTour = (tour: Tour) => {
-    setEditingId(tour.id);
-    setNewTour({
-      name: tour.name,
-      highlights: tour.highlights || [],
-      location: tour.location || "Maroma Campus",
-      duration: tour.duration || "60 minutes",
-      audience: tour.audience || "",
-      description: tour.description || "",
-      price: tour.price,
-      capacity: tour.capacity || 20,
-      minGroupSize: tour.minGroupSize || 8,
-      type: tour.type || "workshop",
-      status: tour.status || "live",
-      imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : [])
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleSaveTour = () => {
-    if (!newTour.name || !firestore || !user) return;
-    setIsProcessing(true);
-    const tourData: Partial<Tour> = {
-      ...newTour,
-      shortDescription: newTour.description.substring(0, 100),
-      pricePerPerson: newTour.price,
-      durationHours: parseInt(newTour.duration) || 1,
-      isActive: true,
-      updatedAt: serverTimestamp(),
-      imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`,
-    };
-    if (editingId) {
-      updateDocumentNonBlocking(doc(firestore, "tours", editingId), tourData);
-      toast({ title: "Changes Saved" });
-    } else {
-      addDocumentNonBlocking(collection(firestore, "tours"), { ...tourData, tourOwnerId: user.uid, createdAt: serverTimestamp(), bookedSpaces: 0 });
-      toast({ title: "Experience Published" });
-    }
-    setIsSuccess(true);
-    setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
-  };
-
-  const handleToggleAdmin = (userId: string, email: string, current: boolean) => {
-    if (!firestore) return;
-    const ref = doc(firestore, "roles_admin", userId);
-    if (current) deleteDocumentNonBlocking(ref);
-    else setDocumentNonBlocking(ref, { email, activatedAt: serverTimestamp(), role: "admin" }, { merge: true });
-    toast({ title: current ? "Admin Removed" : "Admin Added" });
-  };
-
-  const handleToggleFacilitator = (userId: string, email: string, current: boolean) => {
-    if (!firestore) return;
-    const ref = doc(firestore, "roles_facilitator", userId);
-    if (current) deleteDocumentNonBlocking(ref);
-    else setDocumentNonBlocking(ref, { email, activatedAt: serverTimestamp(), role: "facilitator" }, { merge: true });
-    toast({ title: current ? "Facilitator Removed" : "Facilitator Added" });
-  };
-
-  const handleBatchUpload = async () => {
-    if (!firestore || !user || selectedFiles.length === 0) return;
-    setIsMediaUploading(true);
-    setUploadProgress(0);
-
-    try {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        const reader = new FileReader();
-        const dataUrl = await new Promise<string>((resolve) => {
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-
-        addDocumentNonBlocking(collection(firestore, "media"), {
-          url: dataUrl,
-          type: 'image',
-          altText: file.name,
-          uploadedAt: serverTimestamp()
-        });
-        
-        setUploadProgress(((i + 1) / selectedFiles.length) * 100);
-      }
-
-      toast({ title: "Upload Complete", description: `Successfully added ${selectedFiles.length} assets.` });
-      setSelectedFiles([]);
-      setIsUploadDialogOpen(false);
-    } catch (err) {
-      toast({ variant: "destructive", title: "Upload Failed", description: "Could not process one or more files." });
-    } finally {
-      setIsMediaUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
   if (isUserLoading || isAdminDocLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
@@ -456,16 +424,10 @@ export default function AdminPage() {
               <AlertCircle className="w-10 h-10 text-destructive" />
             </div>
             <h2 className="text-3xl font-headline font-bold text-primary mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              This area is reserved for administrators only.
-            </p>
+            <p className="text-muted-foreground leading-relaxed">This area is reserved for administrators only.</p>
             <div className="mt-8 space-y-3">
-              <Button asChild className="w-full bg-primary rounded-full h-12 font-bold shadow-lg">
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button asChild variant="ghost" className="w-full rounded-full h-12">
-                <Link href="/">Return Home</Link>
-              </Button>
+              <Button asChild className="w-full bg-primary rounded-full h-12 font-bold shadow-lg"><Link href="/login">Sign In</Link></Button>
+              <Button asChild variant="ghost" className="w-full rounded-full h-12"><Link href="/">Return Home</Link></Button>
             </div>
           </Card>
         </main>
@@ -494,6 +456,9 @@ export default function AdminPage() {
                 <TabsTrigger value="proposals" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <ClipboardList className="w-5 h-5" /> Requests
                 </TabsTrigger>
+                <TabsTrigger value="calendar" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <CalendarIcon className="w-5 h-5" /> Schedule
+                </TabsTrigger>
                 <TabsTrigger value="brand" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Palette className="w-5 h-5" /> Brand
                 </TabsTrigger>
@@ -509,6 +474,77 @@ export default function AdminPage() {
               </TabsList>
             </div>
           </div>
+
+          <TabsContent value="calendar" className="m-0 focus-visible:ring-0">
+            <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
+              <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="font-headline text-2xl text-primary">Campus Activity Calendar</CardTitle>
+                  <p className="text-sm text-muted-foreground">Comprehensive view of all tours, workshops, and group events.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" size="icon" className="rounded-full" onClick={() => setCalendarMonth(addMonths(calendarMonth, -1))}>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="font-headline font-bold text-xl min-w-[140px] text-center">{format(calendarMonth, 'MMMM yyyy')}</span>
+                  <Button variant="outline" size="icon" className="rounded-full" onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-2xl overflow-hidden shadow-inner">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="bg-slate-50 py-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                      {day}
+                    </div>
+                  ))}
+                  {Array.from({ length: getDay(startOfMonth(calendarMonth)) }).map((_, i) => (
+                    <div key={`empty-${i}`} className="bg-white/50 h-32" />
+                  ))}
+                  {daysInMonth.map(day => {
+                    const dayStr = format(day, 'yyyy-MM-dd');
+                    const events = calendarEvents.filter(e => e.date === dayStr);
+                    const isToday = isSameDay(day, new Date());
+                    
+                    return (
+                      <div key={dayStr} className={cn("bg-white p-3 h-32 border-t border-slate-100 flex flex-col gap-1 transition-colors hover:bg-slate-50", isToday && "bg-accent/5")}>
+                        <span className={cn("text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full mb-1", isToday ? "bg-accent text-white" : "text-slate-400")}>
+                          {format(day, 'd')}
+                        </span>
+                        <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar">
+                          {events.map((e, idx) => (
+                            <div 
+                              key={`${e.id}-${idx}`} 
+                              className={cn(
+                                "text-[9px] font-bold px-2 py-1 rounded-md border truncate uppercase tracking-tighter",
+                                e.type === 'workshop' ? "bg-blue-50 text-blue-700 border-blue-100" :
+                                e.type === 'school' ? "bg-purple-50 text-purple-700 border-purple-100" :
+                                "bg-emerald-50 text-emerald-700 border-emerald-100"
+                              )}
+                            >
+                              {e.title}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-8 flex flex-wrap gap-6 justify-center">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <div className="w-3 h-3 rounded-full bg-blue-500" /> Public Workshops
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <div className="w-3 h-3 rounded-full bg-purple-500" /> School Tours
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500" /> Corporate Events
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
@@ -541,11 +577,8 @@ export default function AdminPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="outline" className="rounded-full h-9 gap-2 text-xs" onClick={() => handleSendReminder(b)}>
-                            <Bell className="w-3 h-3" /> Send Reminder
-                          </Button>
-                          <Button size="icon" variant="ghost" className="rounded-full hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "bookings", b.id))}>
-                            <Trash2 className="w-4 h-4" />
+                          <Button size="sm" variant="outline" className="rounded-full h-9 gap-2 text-xs" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "bookings", b.id))}>
+                            <Trash2 className="w-3 h-3" /> Remove
                           </Button>
                         </div>
                       </TableCell>
@@ -620,24 +653,14 @@ export default function AdminPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!proposals || proposals.length === 0) && !isProposalsLoading && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
-                        <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        No active requests found.
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             </Card>
 
-            {/* Proposal Details Modal - Refined high-fidelity styling */}
             <Dialog open={!!selectedProposal} onOpenChange={open => !open && setSelectedProposal(null)}>
-              <DialogContent className="w-[95vw] sm:max-w-3xl rounded-[2rem] sm:rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+              <DialogContent className="w-[95vw] sm:max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
                 {selectedProposal && (
                   <div className="flex flex-col h-[85vh]">
-                    {/* Header Section */}
                     <div className="bg-primary p-6 sm:p-10 pb-8 sm:pb-12 text-white shrink-0 relative">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                         <Badge className="bg-white/20 text-white border-none px-5 py-1.5 rounded-full uppercase tracking-[0.2em] text-[10px] font-bold w-fit">
@@ -647,9 +670,11 @@ export default function AdminPage() {
                           <span className="text-xs font-bold uppercase tracking-widest opacity-60">Status:</span>
                           <Select 
                             value={selectedProposal.status} 
-                            onValueChange={(val) => handleUpdateProposalStatus(selectedProposal.id, val)}
+                            onValueChange={(val) => {
+                              if (firestore) updateDocumentNonBlocking(doc(firestore, "proposals", selectedProposal.id), { status: val, updatedAt: serverTimestamp() });
+                            }}
                           >
-                            <SelectTrigger className="h-9 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[120px] sm:min-w-[130px] font-bold">
+                            <SelectTrigger className="h-9 bg-white/10 border-white/20 text-white rounded-full text-xs min-w-[120px] font-bold">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl shadow-2xl border-none">
@@ -666,107 +691,53 @@ export default function AdminPage() {
                       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-medium">
                         <div className="flex items-center gap-2.5 opacity-80"><User className="w-4 h-4 text-accent" /> {selectedProposal.contactName}</div>
                         <div className="flex items-center gap-2.5 opacity-80"><Mail className="w-4 h-4 text-accent" /> {selectedProposal.email}</div>
-                        {selectedProposal.phone && <div className="flex items-center gap-2.5 opacity-80"><Phone className="w-4 h-4 text-accent" /> {selectedProposal.phone}</div>}
                       </div>
                     </div>
 
-                    {/* Content Section */}
-                    <div className="flex-grow overflow-y-auto bg-slate-50/50 p-6 sm:p-10 space-y-10 sm:space-y-12">
-                      <div className="grid grid-cols-1 gap-10">
-                        {/* Logistics Section */}
-                        <section className="space-y-6">
-                          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-1">Experience Logistics</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex items-center justify-between bg-white p-5 sm:p-6 rounded-[1.5rem] shadow-sm border border-border/40">
-                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center shrink-0">
-                                  <CalendarDays className="w-5 h-5 text-accent" />
-                                </div>
-                                <span className="text-sm font-bold text-primary">Requested Date</span>
-                              </div>
-                              <span className="text-sm font-bold text-slate-600 ml-2">{selectedProposal.selectedDate || 'Flexible'}</span>
+                    <div className="flex-grow overflow-y-auto bg-slate-50/50 p-6 sm:p-10 space-y-10">
+                      <section className="space-y-6">
+                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-1">Experience Logistics</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex items-center justify-between bg-white p-5 rounded-[1.5rem] shadow-sm border border-border/40">
+                            <div className="flex items-center gap-4">
+                              <CalendarIcon className="w-5 h-5 text-accent" />
+                              <span className="text-sm font-bold text-primary">Requested Date</span>
                             </div>
-                            <div className="flex items-center justify-between bg-white p-5 sm:p-6 rounded-[1.5rem] shadow-sm border border-border/40">
-                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center shrink-0">
-                                  <Users className="w-5 h-5 text-accent" />
-                                </div>
-                                <span className="text-sm font-bold text-primary">Group Size</span>
-                              </div>
-                              <div className="text-right ml-2">
-                                {selectedProposal.type === 'School' ? (
-                                  <span className="text-sm font-bold text-slate-600">{selectedProposal.studentCount} Students, {selectedProposal.adultCount} Adults</span>
-                                ) : (
-                                  <span className="text-sm font-bold text-slate-600">{selectedProposal.participants || 'N/A'} Participants</span>
-                                )}
-                              </div>
+                            <span className="text-sm font-bold text-slate-600">{selectedProposal.selectedDate || 'Flexible'}</span>
+                          </div>
+                          <div className="flex items-center justify-between bg-white p-5 rounded-[1.5rem] shadow-sm border border-border/40">
+                            <div className="flex items-center gap-4">
+                              <Users className="w-5 h-5 text-accent" />
+                              <span className="text-sm font-bold text-primary">Group Size</span>
                             </div>
+                            <span className="text-sm font-bold text-slate-600">
+                              {selectedProposal.type === 'School' ? `${selectedProposal.studentCount} students` : `${selectedProposal.participants} participants`}
+                            </span>
                           </div>
-                        </section>
-
-                        {/* Itinerary Section */}
-                        <section className="space-y-6">
-                          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-1">Curated Itinerary</h3>
-                          <div className="space-y-3">
-                            {selectedProposal.itinerary?.map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-5 bg-white p-5 rounded-2xl border border-border/40 shadow-sm group">
-                                <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center shrink-0 transition-colors group-hover:bg-primary/10">
-                                  <Activity className="w-6 h-6 text-primary/40" />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-base font-bold text-primary">{item.name}</span>
-                                  <span className="text-[10px] text-accent uppercase font-black tracking-widest">{item.type || 'Program'}</span>
-                                </div>
-                              </div>
-                            ))}
-                            {selectedProposal.catering && (
-                              <div className="bg-white p-6 rounded-[1.5rem] border-l-4 border-accent shadow-sm mt-4">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-accent mb-2 block">Catering Strategy</Label>
-                                <p className="text-sm font-bold text-primary">{selectedProposal.catering}</p>
-                              </div>
-                            )}
-                          </div>
-                        </section>
-                      </div>
-
-                      {/* Email Confirmation Studio */}
-                      <section className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-border/60 shadow-xl space-y-8">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                          <h3 className="text-xl sm:text-2xl font-headline font-bold text-primary flex items-center gap-3">
-                            <Send className="w-6 h-6 text-accent" /> Confirmation Studio
-                          </h3>
-                          <Badge variant="outline" className="text-[9px] uppercase font-black tracking-tighter text-muted-foreground border-slate-200 px-3 w-fit">Official Response Template</Badge>
                         </div>
+                      </section>
+
+                      <section className="bg-white rounded-[2rem] p-6 sm:p-10 border border-border/60 shadow-xl space-y-8">
+                        <h3 className="text-xl sm:text-2xl font-headline font-bold text-primary flex items-center gap-3">
+                          <Send className="w-6 h-6 text-accent" /> Confirmation Studio
+                        </h3>
                         <div className="space-y-6">
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Subject Line</Label>
-                            <Input 
-                              value={emailDraft.subject} 
-                              onChange={e => setEmailDraft({...emailDraft, subject: e.target.value})}
-                              className="rounded-xl h-12 sm:h-14 bg-slate-50/50 border-slate-200 font-bold text-primary"
-                            />
+                            <Input value={emailDraft.subject} onChange={e => setEmailDraft({...emailDraft, subject: e.target.value})} className="rounded-xl h-12 bg-slate-50/50 border-slate-200 font-bold" />
                           </div>
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Email Body Content</Label>
-                            <Textarea 
-                              value={emailDraft.body} 
-                              onChange={e => setEmailDraft({...emailDraft, body: e.target.value})}
-                              className="min-h-[200px] sm:min-h-[250px] rounded-[1.5rem] bg-slate-50/50 border-slate-200 leading-relaxed text-sm font-body p-5 sm:p-6"
-                            />
+                            <Textarea value={emailDraft.body} onChange={e => setEmailDraft({...emailDraft, body: e.target.value})} className="min-h-[200px] rounded-[1.5rem] bg-slate-50/50 border-slate-200 text-sm font-body" />
                           </div>
                         </div>
                       </section>
                     </div>
 
-                    {/* Footer Actions */}
-                    <div className="p-4 sm:p-8 bg-white border-t flex flex-col sm:flex-row items-center justify-between shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] gap-4">
-                      <Button variant="ghost" className="rounded-full px-8 sm:px-10 h-12 sm:h-14 font-bold text-slate-400 hover:text-primary transition-colors w-full sm:w-auto" onClick={() => setSelectedProposal(null)}>Cancel</Button>
-                      <Button 
-                        className="bg-accent hover:bg-accent/90 text-white rounded-full px-6 sm:px-14 h-12 sm:h-16 font-bold text-base sm:text-xl shadow-2xl shadow-accent/20 gap-3 sm:gap-4 transition-transform active:scale-[0.98] w-full sm:w-auto"
-                        onClick={handleSendConfirmation}
-                        disabled={isEmailing}
-                      >
-                        {isEmailing ? <Loader2 className="animate-spin w-5 h-5 sm:w-6 h-6" /> : <Send className="w-5 h-5 sm:w-6 h-6" />}
+                    <div className="p-4 sm:p-8 bg-white border-t flex flex-col sm:flex-row items-center justify-between shrink-0 gap-4">
+                      <Button variant="ghost" className="rounded-full px-10 h-14 font-bold text-slate-400" onClick={() => setSelectedProposal(null)}>Cancel</Button>
+                      <Button className="bg-accent hover:bg-accent/90 text-white rounded-full px-14 h-16 font-bold text-xl shadow-2xl shadow-accent/20 gap-4" onClick={handleSendConfirmation} disabled={isEmailing}>
+                        {isEmailing ? <Loader2 className="animate-spin w-6 h-6" /> : <Send className="w-6 h-6" />}
                         Confirm & Send Email
                       </Button>
                     </div>
@@ -774,6 +745,157 @@ export default function AdminPage() {
                 )}
               </DialogContent>
             </Dialog>
+          </TabsContent>
+
+          <TabsContent value="admin" className="m-0 focus-visible:ring-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              <div className="lg:col-span-1">
+                <Card className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="font-headline text-2xl text-primary">
+                      {editingId ? "Edit Experience" : "New Experience"}
+                    </CardTitle>
+                    {editingId && (
+                      <Button variant="ghost" size="icon" onClick={resetTourForm} className="rounded-full">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Name</Label>
+                      <Input placeholder="Experience Name" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price (₹)</Label>
+                        <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Capacity</Label>
+                        <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
+                      </div>
+                    </div>
+
+                    {/* SCHEDULING INTERFACE */}
+                    <div className="space-y-4 pt-4 border-t border-border/50">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5" /> Date Management
+                        </Label>
+                        <Badge variant="outline" className="text-[9px] uppercase font-black">{newTour.scheduledDates.length} Dates</Badge>
+                      </div>
+                      
+                      <div className="p-4 bg-muted/20 rounded-2xl border border-border/50 space-y-4">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+                          {newTour.scheduledDates.map(date => (
+                            <Badge key={date} className="bg-primary/10 text-primary border-primary/20 shrink-0 gap-1.5 px-3 py-1">
+                              {format(new Date(date), 'MMM d')}
+                              <X className="w-3 h-3 cursor-pointer hover:text-destructive" onClick={() => setNewTour(prev => ({ ...prev, scheduledDates: prev.scheduledDates.filter(d => d !== date) }))} />
+                            </Badge>
+                          ))}
+                          {newTour.scheduledDates.length === 0 && <span className="text-[10px] text-muted-foreground italic">No dates scheduled.</span>}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Batch Generate (12 Months)</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button variant="outline" size="sm" className="text-[10px] uppercase font-bold h-9 rounded-xl" onClick={() => generateDatesForDay(1)}>
+                              Every Monday
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-[10px] uppercase font-bold h-9 rounded-xl" onClick={() => generateDatesForDay(5)}>
+                              Every Friday
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Separator className="bg-border/50" />
+
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" className="w-full text-xs font-bold gap-2 text-accent hover:bg-accent/5 rounded-xl h-10 border border-dashed border-accent/30">
+                              <Plus className="w-3.5 h-3.5" /> Open Date Picker
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md rounded-3xl">
+                            <DialogHeader><DialogTitle>Select Workshop Dates</DialogTitle></DialogHeader>
+                            <div className="p-4 flex justify-center">
+                              <Calendar
+                                mode="multiple"
+                                selected={dateSelection}
+                                onSelect={(dates) => {
+                                  setDateSelection(dates || []);
+                                  if (dates) {
+                                    setNewTour(prev => ({
+                                      ...prev,
+                                      scheduledDates: dates.map(d => format(d, 'yyyy-MM-dd')).sort()
+                                    }));
+                                  }
+                                }}
+                                className="rounded-xl border shadow-sm"
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button className="w-full bg-primary rounded-full font-bold h-12" onClick={(e) => (e.target as any).closest('button[data-state="open"]')?.click()}>
+                                Done Selecting
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Description</Label>
+                      <Textarea className="min-h-[100px] rounded-2xl" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} />
+                    </div>
+
+                    <Button 
+                      className={cn("w-full rounded-full h-12 font-bold shadow-lg transition-all duration-500", isSuccess ? "bg-green-600" : "bg-primary")}
+                      onClick={handleSaveTour}
+                      disabled={isProcessing || isSuccess}
+                    >
+                      {isProcessing ? <Loader2 className="animate-spin" /> : isSuccess ? <Check className="w-4 h-4" /> : <Save className="mr-2 h-4 w-4" />}
+                      {editingId ? "Save Changes" : "Publish Experience"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2 space-y-12">
+                <section>
+                  <Label className="text-xl font-headline font-bold text-primary mb-4 block">Visual Assets</Label>
+                  <ImageLibrary selectedUrls={newTour.imageUrls} onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} />
+                </section>
+                <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
+                  <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Experience Catalog</CardTitle></CardHeader>
+                  <Table>
+                    <TableHeader><TableRow className="bg-muted/30">
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Dates</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {tours?.map(t => (
+                        <TableRow key={t.id}>
+                          <TableCell className="font-bold">{t.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="font-mono text-[9px]">{t.scheduledDates?.length || 0} Slots</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">₹{t.price}</TableCell>
+                          <TableCell className="text-right">
+                            <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "tours", t.id))}><Trash2 className="w-4 h-4" /></Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="brand" className="m-0 focus-visible:ring-0">
@@ -807,15 +929,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-3xl font-headline font-bold text-primary tracking-tight leading-none uppercase">MAROMA</span>
-                            <span 
-                              className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 transition-all block relative"
-                              style={{ 
-                                letterSpacing: `${localBrandSettings.navbarKerning}em`,
-                                left: `${localBrandSettings.navbarOffset}em`
-                              }}
-                            >
-                              Experiences
-                            </span>
+                            <span className="text-[8px] font-body font-medium text-accent uppercase leading-none mt-0.5 relative" style={{ letterSpacing: `${localBrandSettings.navbarKerning}em`, left: `${localBrandSettings.navbarOffset}em` }}>Experiences</span>
                           </div>
                         </div>
                       </div>
@@ -849,15 +963,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-5xl font-headline font-bold text-white tracking-tight leading-none uppercase">MAROMA</span>
-                            <span 
-                              className="text-[12px] font-body font-medium text-accent uppercase leading-none transition-all block relative mt-2"
-                              style={{ 
-                                letterSpacing: `${localBrandSettings.loadingKerning}em`,
-                                left: `${localBrandSettings.loadingOffset + 0.47}em`
-                              }}
-                            >
-                              Experiences
-                            </span>
+                            <span className="text-[12px] font-body font-medium text-accent uppercase leading-none relative mt-2" style={{ letterSpacing: `${localBrandSettings.loadingKerning}em`, left: `${localBrandSettings.loadingOffset + 0.47}em` }}>Experiences</span>
                           </div>
                         </div>
                       </div>
@@ -875,142 +981,6 @@ export default function AdminPage() {
                   </Card>
                 </div>
               </section>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="admin" className="m-0 focus-visible:ring-0">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-              <div className="lg:col-span-1">
-                <Card className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="font-headline text-2xl text-primary">
-                      {editingId ? "Edit Experience" : "New Experience"}
-                    </CardTitle>
-                    {editingId && (
-                      <Button variant="ghost" size="icon" onClick={resetTourForm} className="rounded-full">
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
-                      <div className="flex flex-col gap-0.5">
-                        <Label className="text-sm font-bold text-primary">Status</Label>
-                        <span className="text-xs text-muted-foreground">Live or Coming Soon</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className={cn("rounded-full px-3 py-0.5 uppercase text-[10px] tracking-widest border-none", newTour.status === 'live' ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700")}>
-                          {newTour.status}
-                        </Badge>
-                        <Switch 
-                          checked={newTour.status === 'live'}
-                          onCheckedChange={(checked) => setNewTour({...newTour, status: checked ? 'live' : 'coming-soon'})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Name</Label>
-                      <Input placeholder="Experience Name" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Location</Label>
-                        <Select value={newTour.location} onValueChange={v => setNewTour({...newTour, location: v})}>
-                          <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Maroma Campus">Maroma Campus</SelectItem>
-                            <SelectItem value="Maroma Spa">Maroma Spa</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Duration</Label>
-                        <Select value={newTour.duration} onValueChange={v => setNewTour({...newTour, duration: v})}>
-                          <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="30 minutes">30m</SelectItem>
-                            <SelectItem value="60 minutes">1h</SelectItem>
-                            <SelectItem value="90 minutes">1h 30m</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price (₹)</Label>
-                        <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Capacity</Label>
-                        <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Description</Label>
-                      <Textarea className="min-h-[100px] rounded-2xl" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Highlights</Label>
-                      <div className="grid grid-cols-2 gap-2 p-4 bg-muted/20 rounded-2xl border border-border/50">
-                        {HIGHLIGHT_OPTIONS.map((h) => (
-                          <div key={h} className="flex items-center space-x-2">
-                            <Checkbox id={`h-${h}`} checked={newTour.highlights.includes(h)} onCheckedChange={() => {
-                              const curr = newTour.highlights;
-                              setNewTour({...newTour, highlights: curr.includes(h) ? curr.filter(x => x !== h) : [...curr, h]});
-                            }} />
-                            <Label htmlFor={`h-${h}`} className="text-xs font-medium truncate">{h}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Button 
-                      className={cn("w-full rounded-full h-12 font-bold shadow-lg transition-all duration-500", isSuccess ? "bg-green-600" : "bg-primary")}
-                      onClick={handleSaveTour}
-                      disabled={isProcessing || isSuccess}
-                    >
-                      {isProcessing ? <Loader2 className="animate-spin" /> : isSuccess ? <Check className="w-4 h-4" /> : <Save className="mr-2 h-4 w-4" />}
-                      {editingId ? "Save Changes" : "Publish Experience"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="lg:col-span-2 space-y-12">
-                <section>
-                  <Label className="text-xl font-headline font-bold text-primary mb-4 block">Visual Assets</Label>
-                  <ImageLibrary selectedUrls={newTour.imageUrls} onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} />
-                </section>
-                <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-                  <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Experience Catalog</CardTitle></CardHeader>
-                  <Table>
-                    <TableHeader><TableRow className="bg-muted/30">
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow></TableHeader>
-                    <TableBody>
-                      {tours?.map(t => (
-                        <TableRow key={t.id}>
-                          <TableCell className="font-bold">{t.name}</TableCell>
-                          <TableCell><Badge variant="outline" className="capitalize">{t.status}</Badge></TableCell>
-                          <TableCell className="font-medium">₹{t.price}</TableCell>
-                          <TableCell className="text-right">
-                            <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
-                            <Button size="icon" variant="ghost" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "tours", t.id))}><Trash2 className="w-4 h-4" /></Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </div>
             </div>
           </TabsContent>
 
@@ -1052,11 +1022,14 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
-                            <Button size="sm" variant={isAdm ? "destructive" : "outline"} className="rounded-full h-9 px-4" onClick={() => handleToggleAdmin(u.id, u.email, isAdm)}>
-                              <Shield className="w-3.5 h-3.5 mr-2" /> {isAdm ? "Revoke" : "Make Admin"}
-                            </Button>
-                            <Button size="sm" variant="outline" className="rounded-full h-9 px-4" onClick={() => handleToggleFacilitator(u.id, u.email, isFac)}>
-                              <UserCheck className="w-3.5 h-3.5 mr-2" /> {isFac ? "Revoke" : "Make Facilitator"}
+                            <Button size="sm" variant="outline" className="rounded-full h-9 px-4" onClick={() => {
+                              if (firestore) {
+                                const ref = doc(firestore, "roles_admin", u.id);
+                                if (isAdm) deleteDocumentNonBlocking(ref);
+                                else setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
+                              }
+                            }}>
+                              <Shield className="w-3.5 h-3.5 mr-2" /> {isAdm ? "Revoke Admin" : "Make Admin"}
                             </Button>
                           </div>
                         </TableCell>
@@ -1087,18 +1060,25 @@ export default function AdminPage() {
                         <p className="font-medium">Select Images</p>
                         <Input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={e => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files || [])])} />
                       </div>
-                      <div className="max-h-40 overflow-auto space-y-1">
-                        {selectedFiles.map((f, i) => (
-                          <div key={i} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg text-xs">
-                            <span className="truncate">{f.name}</span>
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))} />
-                          </div>
-                        ))}
-                      </div>
                     </div>
                     <DialogFooter>
                       <Button variant="ghost" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
-                      <Button onClick={handleBatchUpload} disabled={isMediaUploading || selectedFiles.length === 0} className="bg-primary rounded-full px-8">
+                      <Button onClick={async () => {
+                        if (!firestore || !user || selectedFiles.length === 0) return;
+                        setIsMediaUploading(true);
+                        for (const file of selectedFiles) {
+                          const reader = new FileReader();
+                          const dataUrl = await new Promise<string>((resolve) => {
+                            reader.onload = (e) => resolve(e.target?.result as string);
+                            reader.readAsDataURL(file);
+                          });
+                          addDocumentNonBlocking(collection(firestore, "media"), { url: dataUrl, type: 'image', altText: file.name, uploadedAt: serverTimestamp() });
+                        }
+                        setSelectedFiles([]);
+                        setIsUploadDialogOpen(false);
+                        setIsMediaUploading(false);
+                        toast({ title: "Upload Complete" });
+                      }} disabled={isMediaUploading || selectedFiles.length === 0} className="bg-primary rounded-full px-8">
                         {isMediaUploading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2" />} Start Upload
                       </Button>
                     </DialogFooter>
