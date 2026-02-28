@@ -113,7 +113,7 @@ const CAMPUS_TOUR_PROGRAM = {
   name: 'The Maroma Tour',
   type: 'Campus Experience',
   imageUrl: SCHOOL_HERO_URL,
-  duration: '3-4 Hours'
+  duration: '90 Minutes (10:30am - 12:00pm)'
 };
 
 export default function SchoolsPage() {
@@ -141,7 +141,6 @@ export default function SchoolsPage() {
   }, [firestore, user]);
   const { data: userData } = useDoc(userDocRef);
 
-  // Fetch the Maroma Tour to get available dates
   const tourQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "tours"), where("name", "==", "The Maroma Tour"), where("isActive", "==", true));
@@ -153,7 +152,6 @@ export default function SchoolsPage() {
     if (tourData?.scheduledDates && tourData.scheduledDates.length > 0) {
       return tourData.scheduledDates;
     }
-    // Fallback planned dates if not in DB
     return ["2025-04-14", "2025-04-21", "2025-04-28", "2025-05-05", "2025-05-12", "2025-05-19"];
   }, [tourData]);
 
@@ -207,11 +205,10 @@ export default function SchoolsPage() {
         updatedAt: serverTimestamp()
       });
 
-      // Send to Admin
       await sendEmailNotification({
-        to: contactForm.email, // This helper sends to both user and admin
+        to: contactForm.email,
         subject: `Booking Request: The Maroma Tour`,
-        textBody: `Hello ${contactForm.contactName},\n\nYour request for "The Maroma Tour" on ${selectedDate} has been received for "${contactForm.schoolName}".\n\nWe will confirm your booking as soon as possible after reviewing our campus schedule.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
+        textBody: `Hello ${contactForm.contactName},\n\nYour request for "The Maroma Tour" on ${selectedDate} has been received for "${contactForm.schoolName}".\n\nTiming: 10:30 AM - 12:00 PM\n\nWe will confirm your booking as soon as possible after reviewing our campus schedule.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
       });
 
       toast({
@@ -232,7 +229,6 @@ export default function SchoolsPage() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section */}
         <section className="relative min-h-[85vh] py-24 md:py-32 flex items-center justify-center overflow-hidden">
           <Image
             src={SCHOOL_HERO_URL}
@@ -257,7 +253,6 @@ export default function SchoolsPage() {
           </div>
         </section>
 
-        {/* Programme Steps */}
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
@@ -290,7 +285,6 @@ export default function SchoolsPage() {
           </div>
         </section>
 
-        {/* Simulator Section */}
         <section className="bg-slate-900 py-24 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative group shadow-2xl">
@@ -333,7 +327,6 @@ export default function SchoolsPage() {
           </div>
         </section>
 
-        {/* Builder Dialog */}
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
           <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden border-none rounded-3xl lg:rounded-[3rem] flex flex-col bg-white">
             <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
@@ -389,7 +382,7 @@ export default function SchoolsPage() {
                         </button>
                       ))}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates subject to production cycle availability. All school tours generally run on Monday or Friday mornings.</p>
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates subject to production cycle availability. All school tours generally run on Monday or Friday mornings (10:30 AM — 12:00 PM).</p>
                   </section>
 
                   <section className="space-y-6">
@@ -403,8 +396,9 @@ export default function SchoolsPage() {
                       </div>
                       <div>
                         <h4 className="text-xl font-headline font-bold text-primary mb-1">{CAMPUS_TOUR_PROGRAM.name}</h4>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground uppercase tracking-widest font-bold">
-                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {CAMPUS_TOUR_PROGRAM.duration}</span>
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground uppercase tracking-widest font-bold">
+                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 90 Minutes</span>
+                          <span className="flex items-center gap-1.5 text-accent font-black">10:30AM — 12:00PM</span>
                           <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> 8-Step Programme</span>
                         </div>
                         <p className="text-sm text-primary/70 mt-3 leading-relaxed">
@@ -427,7 +421,7 @@ export default function SchoolsPage() {
                         <div className="flex-grow min-w-0">
                           <div className="text-[8px] font-bold text-accent uppercase tracking-widest">Selected Program</div>
                           <h5 className="text-xs font-bold text-primary truncate">{CAMPUS_TOUR_PROGRAM.name}</h5>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{selectedDate ? `Date: ${selectedDate}` : CAMPUS_TOUR_PROGRAM.duration}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{selectedDate ? `Date: ${selectedDate}` : '90 Mins (10:30 AM — 12:00 PM)'}</span>
                         </div>
                       </div>
                     </div>
