@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -38,8 +39,11 @@ import {
   ShoppingBag,
   Image as ImageIcon,
   MessageSquare,
-  PlayCircle
+  PlayCircle,
+  Palette,
+  History
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -102,6 +106,9 @@ const EDUCATION_LEVELS = [
   { id: 'higher', name: "Higher Education", desc: "Design, sustainability, and business focus." },
 ];
 
+const STUDENT_COUNT_OPTIONS = ["10", "15", "20", "25", "30", "35", "40", "50", "60", "70", "80", "90", "100"];
+const ADULT_COUNT_OPTIONS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "20"];
+
 export default function SchoolsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -116,7 +123,8 @@ export default function SchoolsPage() {
     contactName: "",
     email: "",
     phone: "",
-    studentCount: "20"
+    studentCount: "20",
+    adultCount: "2"
   });
 
   const isInitialized = useRef(false);
@@ -133,7 +141,8 @@ export default function SchoolsPage() {
         contactName: `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
         email: userData.email || "",
         phone: userData.phoneNumber || "",
-        studentCount: "20"
+        studentCount: "20",
+        adultCount: "2"
       });
       isInitialized.current = true;
     }
@@ -190,7 +199,7 @@ export default function SchoolsPage() {
       await sendEmailNotification({
         to: contactForm.email,
         subject: `School Inquiry Received: Maroma Experiences`,
-        textBody: `Hello ${contactForm.contactName},\n\nThank you for reaching out to Maroma Experiences. We have received your educational group inquiry for "${contactForm.schoolName}".\n\nOur educational design team is reviewing your custom itinerary for ${contactForm.studentCount} students. We will be in touch within 24 hours with a detailed educational plan and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
+        textBody: `Hello ${contactForm.contactName},\n\nThank you for reaching out to Maroma Experiences. We have received your educational group inquiry for "${contactForm.schoolName}".\n\nOur educational design team is reviewing your custom itinerary for ${contactForm.studentCount} students and ${contactForm.adultCount} adults/teachers. We will be in touch within 24 hours with a detailed educational plan and quote.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
       });
 
       toast({
@@ -237,7 +246,7 @@ export default function SchoolsPage() {
           </div>
         </section>
 
-        {/* The Journey Section */}
+        {/* Programme Steps */}
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
@@ -458,9 +467,33 @@ export default function SchoolsPage() {
                             <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Email Address *</Label>
                             <Input placeholder="smith@school.edu" className="h-11 text-sm rounded-xl" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Student Count</Label>
-                            <Input type="number" className="h-11 text-sm rounded-xl" value={contactForm.studentCount} onChange={e => setContactForm({...contactForm, studentCount: e.target.value})} />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Number of students *</Label>
+                              <Select value={contactForm.studentCount} onValueChange={v => setContactForm({...contactForm, studentCount: v})}>
+                                <SelectTrigger className="h-11 text-sm rounded-xl bg-white">
+                                  <SelectValue placeholder="Count" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {STUDENT_COUNT_OPTIONS.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt} Students</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Number of adults *</Label>
+                              <Select value={contactForm.adultCount} onValueChange={v => setContactForm({...contactForm, adultCount: v})}>
+                                <SelectTrigger className="h-11 text-sm rounded-xl bg-white">
+                                  <SelectValue placeholder="Count" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {ADULT_COUNT_OPTIONS.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt} Adult(s)</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                         </div>
                       )}
