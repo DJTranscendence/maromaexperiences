@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -99,12 +98,6 @@ const PROGRAMME_STEPS = [
   }
 ];
 
-const EDUCATION_LEVELS = [
-  { id: 'primary', name: "Primary (K-6)", desc: "Focus on sensory exploration and nature." },
-  { id: 'secondary', name: "Secondary (7-12)", desc: "Deep dives into chemistry, history, and craft." },
-  { id: 'higher', name: "Higher Education", desc: "Design, sustainability, and business focus." },
-];
-
 const STUDENT_COUNT_OPTIONS = ["10", "15", "20", "25", "30", "35", "40", "50", "60", "70", "80", "90", "100"];
 const ADULT_COUNT_OPTIONS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "20"];
 
@@ -121,7 +114,6 @@ export default function SchoolsPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<string>('secondary');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -196,7 +188,6 @@ export default function SchoolsPage() {
         userId: user.uid,
         ...contactForm,
         type: 'School',
-        educationLevel: selectedLevel,
         selectedDate: selectedDate,
         itinerary: [{ id: CAMPUS_TOUR_PROGRAM.id, name: CAMPUS_TOUR_PROGRAM.name, type: CAMPUS_TOUR_PROGRAM.type }],
         catering: "Standard Ethical Refreshments",
@@ -332,38 +323,14 @@ export default function SchoolsPage() {
             <div className="p-4 lg:p-8 border-b bg-muted/10 flex flex-col lg:flex-row lg:items-center justify-between shrink-0 gap-4">
               <div>
                 <DialogTitle className="text-2xl lg:text-3xl font-headline font-bold text-primary">
-                  Educational Planner
+                  Book your school tour
                 </DialogTitle>
-                <DialogDescription className="text-muted-foreground mt-1 text-sm lg:text-base">
-                  Reconfigure your campus visit for your school group.
-                </DialogDescription>
               </div>
             </div>
 
             <div className="flex-grow overflow-y-auto">
               <div className="flex flex-col lg:flex-row min-h-full">
                 <div className="flex-1 lg:flex-[2] p-4 lg:p-8 space-y-8 lg:space-y-12 pb-12 border-b lg:border-b-0 lg:border-r border-primary/5">
-                  <section>
-                    <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                      <GraduationCap className="w-5 h-5 text-accent" /> Select Learning Level
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {EDUCATION_LEVELS.map(level => (
-                        <button 
-                          key={level.id} 
-                          onClick={() => setSelectedLevel(level.id)}
-                          className={cn(
-                            "p-4 text-left rounded-2xl border transition-all",
-                            selectedLevel === level.id ? "bg-accent/5 border-accent shadow-sm" : "bg-white border-border hover:border-accent/30"
-                          )}
-                        >
-                          <h4 className="font-bold text-primary text-sm lg:text-base mb-1">{level.name}</h4>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed">{level.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
                   <section id="date-section">
                     <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
                       <Calendar className="w-5 h-5 text-accent" /> Select Preferred Date
