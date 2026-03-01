@@ -58,7 +58,7 @@ export default function Home() {
             <Button 
               size="lg" 
               onClick={scrollToWorkshops}
-              className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 text-lg h-14 font-bold shadow-xl transition-all hover:scale-105 active:scale-95"
+              className="bg-primary text-white hover:bg-primary/90 rounded-full px-16 text-xl h-16 font-bold shadow-2xl transition-all hover:scale-105 active:scale-95"
             >
               Book Now
             </Button>
