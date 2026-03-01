@@ -74,11 +74,11 @@ export default function AuthProvider({
           */}
           <div 
             className={cn(
-              "relative transition-all duration-1000 ease-in-out overflow-hidden flex items-center justify-center shrink-0",
+              "relative transition-all duration-1000 ease-in-out flex items-center justify-center shrink-0",
               isLogoVisible ? "w-20 opacity-100 mr-2" : "w-0 opacity-0 mr-0"
             )}
           >
-            <div className="relative w-16 h-16 -translate-y-[2mm] -translate-x-[1.5mm]">
+            <div className="relative w-16 h-16">
               <Image 
                 src={LOGO_URL} 
                 alt="Maroma Logo" 
