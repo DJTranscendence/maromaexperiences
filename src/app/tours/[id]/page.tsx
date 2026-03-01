@@ -161,7 +161,7 @@ export default function TourDetailsPage() {
                 {tour.type}
               </Badge>
               {isComingSoon ? (
-                <Badge className="bg-[#fec600] text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2 shadow-lg">
+                <Badge className="bg-[#FF8C00] text-white border-none rounded-full px-4 py-1.5 flex items-center gap-2 shadow-lg">
                   <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                 </Badge>
               ) : (
@@ -257,30 +257,30 @@ export default function TourDetailsPage() {
                 {isComingSoon ? (
                   <div className="space-y-6 relative">
                     <div className="flex flex-col gap-4">
-                      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-4">
-                        <Bell className="w-6 h-6 text-[#fec600] shrink-0" />
+                      <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center gap-4">
+                        <Bell className="w-6 h-6 text-[#FF8C00] shrink-0" />
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-amber-900 font-headline">Coming Soon!</span>
-                          <span className="text-[11px] text-amber-800 leading-tight">Click the button below to be notified when this event goes live</span>
+                          <span className="text-sm font-bold text-orange-900 font-headline">Coming Soon!</span>
+                          <span className="text-[11px] text-orange-800 leading-tight">Click the button below to be notified when this event goes live</span>
                         </div>
                       </div>
                       <h3 className="text-3xl font-headline font-bold text-primary leading-tight px-1">Launching Shortly</h3>
                     </div>
 
-                    <div className="p-6 bg-amber-50/30 rounded-2xl border border-amber-100/50 space-y-4">
+                    <div className="p-6 bg-orange-50/30 rounded-2xl border border-orange-100/50 space-y-4">
                       <form onSubmit={handleNotifyMe} className="space-y-4">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Email Registration</label>
                           <Input 
                             type="email" 
                             placeholder="your@email.com" 
-                            className="rounded-xl h-12 border-amber-200 focus-visible:ring-amber-500"
+                            className="rounded-xl h-12 border-orange-200 focus-visible:ring-orange-500"
                             value={notifyEmail}
                             onChange={(e) => setNotifyEmail(e.target.value)}
                             required
                           />
                         </div>
-                        <Button className="w-full bg-[#fec600] hover:bg-[#fec600]/90 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-[#fec600]/20" disabled={isRegistering}>
+                        <Button className="w-full bg-[#FF8C00] hover:bg-[#FF8C00]/90 rounded-full h-12 gap-2 text-white font-bold shadow-lg shadow-[#FF8C00]/20" disabled={isRegistering}>
                           {isRegistering ? <Loader2 className="animate-spin w-4 h-4" /> : <Send className="w-4 h-4" />}
                           Notify Me
                         </Button>

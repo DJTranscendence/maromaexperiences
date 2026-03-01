@@ -116,7 +116,7 @@ export default function Home() {
                       tour.status === 'coming-soon' ? "items-center" : "items-start"
                     )}>
                       {tour.status === 'coming-soon' ? (
-                        <Badge className="bg-[#fec600] text-white hover:bg-[#fec600]/90 border-none shadow-lg rounded-full px-5 py-2 gap-2 backdrop-blur-sm font-bold uppercase tracking-widest text-[10px]">
+                        <Badge className="bg-[#FF8C00] text-white hover:bg-[#FF8C00]/90 border-none shadow-lg rounded-full px-5 py-2 gap-2 backdrop-blur-sm font-bold uppercase tracking-widest text-[10px]">
                           <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
                         </Badge>
                       ) : (
@@ -129,10 +129,10 @@ export default function Home() {
                       )}
                       
                       {tour.status === 'coming-soon' && (
-                        <div className="w-full mt-2 p-4 bg-[#fec600]/5 rounded-2xl border border-[#fec600]/20 flex items-center gap-4">
-                          <Bell className="w-5 h-5 text-[#fec600] shrink-0" />
+                        <div className="w-full mt-2 p-4 bg-[#FF8C00]/5 rounded-2xl border border-[#FF8C00]/20 flex items-center gap-4">
+                          <Bell className="w-5 h-5 text-[#FF8C00] shrink-0" />
                           <div className="flex flex-col">
-                            <span className="text-xs text-[#fec600] leading-snug font-medium">Be notified when this event goes live on campus.</span>
+                            <span className="text-xs text-[#FF8C00] leading-snug font-medium">Be notified when this event goes live on campus.</span>
                           </div>
                         </div>
                       )}
@@ -150,7 +150,7 @@ export default function Home() {
                       className={cn(
                         "text-white rounded-full px-12 font-bold h-12 shadow-xl transition-all hover:scale-105 active:scale-95",
                         tour.status === 'coming-soon' 
-                          ? "bg-[#fec600] hover:bg-[#fec600]/90 shadow-[#fec600]/20" 
+                          ? "bg-[#FF8C00] hover:bg-[#FF8C00]/90 shadow-[#FF8C00]/20" 
                           : "bg-accent hover:bg-accent/90 shadow-accent/20"
                       )}
                     >
