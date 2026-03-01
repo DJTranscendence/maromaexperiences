@@ -77,7 +77,7 @@ export default function AuthProvider({
               isLogoVisible ? "w-20 opacity-100 mr-2" : "w-0 opacity-0 mr-0"
             )}
           >
-            <div className="relative w-16 h-16 -translate-y-1">
+            <div className="relative w-16 h-16 translate-y-[2px]">
               <Image 
                 src={LOGO_URL} 
                 alt="Maroma Logo" 

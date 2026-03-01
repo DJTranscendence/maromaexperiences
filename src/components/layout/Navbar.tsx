@@ -133,7 +133,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center space-x-1 group">
-              <div className="relative w-8 h-8 flex-shrink-0 -translate-y-[4px]">
+              <div className="relative w-8 h-8 flex-shrink-0 translate-y-[1px]">
                 <Image 
                   src={LOGO_URL}
                   alt="Maroma Logo"
@@ -236,7 +236,7 @@ export default function Navbar() {
               variant="default" 
               size="sm" 
               onClick={handleBookNowClick}
-              className="bg-primary text-white hover:bg-primary/90 rounded-full px-6 ml-4"
+              className="bg-primary text-white hover:bg-primary/90 rounded-full px-16 ml-4"
             >
               Book Now
             </Button>
