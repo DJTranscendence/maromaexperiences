@@ -160,7 +160,7 @@ export default function Navbar() {
             {isAdmin && (
               <Popover open={isEditingBrand} onOpenChange={setIsEditingBrand}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-muted-foreground/40 hover:text-accent hover:bg-accent/5 -mt-4">
+                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-muted-foreground/40 hover:text-accent hover:bg-accent/5">
                     <Edit2 className="h-3 w-3" />
                   </Button>
                 </PopoverTrigger>
