@@ -1,13 +1,13 @@
-
 "use client";
 
 import Link from "next/link";
-import { Mail, Phone, Smartphone, Download, Info } from "lucide-react";
+import { Mail, Phone, Download, Info, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
@@ -15,6 +15,7 @@ export default function Footer() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   // Load Brand Identity Settings
   const brandSettingsRef = useMemoFirebase(() => {
@@ -27,6 +28,11 @@ export default function Footer() {
   const offset = brandSettings?.navbarOffset ?? 0;
 
   useEffect(() => {
+    // Check if app is already launched in standalone mode
+    if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
     const handleBeforeInstallPrompt = (e: any) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
@@ -48,12 +54,17 @@ export default function Footer() {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
+        setIsInstalled(true);
+        toast({
+          title: "Installation Started",
+          description: "Maroma Experiences is being added to your home screen.",
+        });
       }
     } else {
       // Manual instructions for all platforms
       toast({
-        title: "How to Install Maroma App",
-        description: "iPhone: Tap 'Share' then 'Add to Home Screen'. Android/Desktop: Look for 'Install App' in your browser menu.",
+        title: "PWA Installation",
+        description: "On Android: Tap the three dots menu in Chrome and select 'Install app'. On iPhone: Tap 'Share' then 'Add to Home Screen'.",
       });
     }
   };
@@ -100,22 +111,30 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Get the App</h3>
+            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Maroma App</h3>
             <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-              Install the Maroma app to access your bookings and explore experiences instantly from your home screen.
+              Access your bookings and explore experiences instantly from your home screen.
             </p>
             
-            <button 
-              onClick={handleInstallApp}
-              className="flex items-center gap-2 text-sm font-bold text-accent hover:text-primary transition-colors group"
-            >
-              <div className="p-2 bg-accent/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                <Download className="w-4 h-4" />
+            {isInstalled ? (
+              <div className="flex items-center gap-2 text-sm font-bold text-green-600">
+                <div className="p-2 bg-green-50 rounded-lg">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                App Installed
               </div>
-              Install Maroma App
-            </button>
-            <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1.5 opacity-60">
-              <Info className="w-3 h-3" /> Pin to home screen for offline access.
+            ) : (
+              <Button 
+                onClick={handleInstallApp}
+                className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white rounded-full h-12 gap-2 font-bold shadow-lg shadow-accent/20"
+              >
+                <Download className="w-4 h-4" />
+                Install Maroma App
+              </Button>
+            )}
+            
+            <p className="text-[10px] text-muted-foreground mt-3 flex items-center gap-1.5 opacity-60">
+              <Info className="w-3 h-3" /> Android users: Tap the button or Chrome menu to install.
             </p>
           </div>
         </div>
