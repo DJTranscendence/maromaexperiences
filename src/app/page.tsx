@@ -175,7 +175,7 @@ export default function Home() {
       {/* Simulator Portal Banner */}
       <section className="bg-slate-900 py-16 md:py-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative group shadow-2xl">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 py-10 px-8 md:p-16 flex flex-col md:flex-row items-center gap-6 md:gap-12 overflow-hidden relative group shadow-2xl">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
             
             <div className="relative w-56 h-56 md:w-80 md:h-80 shrink-0 flex items-center justify-center">
@@ -193,10 +193,10 @@ export default function Home() {
                   Workshop Session Active
                 </Badge>
                 <h2 className="text-4xl md:text-6xl font-headline font-bold text-white leading-tight">
-                  Join The Live <br className="hidden lg:block" /> Product Simulator
+                  Join the game here
                 </h2>
                 <p className="text-slate-300 text-xl max-w-xl font-body leading-relaxed">
-                  Enter your workshop team credentials to access the laboratory, create your ethical product prototype, and see your Year 1 market trajectory.
+                  Name your team, create your product and see how it performs!
                 </p>
               </div>
 
