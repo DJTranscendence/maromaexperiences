@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Phone, Smartphone, Download } from "lucide-react";
+import { Mail, Phone, Smartphone, Download, Info } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -15,7 +15,6 @@ export default function Footer() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   // Load Brand Identity Settings
   const brandSettingsRef = useMemoFirebase(() => {
@@ -28,14 +27,6 @@ export default function Footer() {
   const offset = brandSettings?.navbarOffset ?? 0;
 
   useEffect(() => {
-    // Check if app is running in standalone mode (installed)
-    const checkStandalone = () => {
-      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
-      setIsStandalone(isStandaloneMode);
-    };
-
-    checkStandalone();
-
     const handleBeforeInstallPrompt = (e: any) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
@@ -54,16 +45,15 @@ export default function Footer() {
     if (deferredPrompt) {
       // Show the native install prompt
       deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
       }
     } else {
-      // Logic for iOS or devices where prompt isn't supported yet or triggered
+      // Manual instructions for all platforms
       toast({
-        title: "Install Maroma App",
-        description: "To add this app to your home screen: Tap the 'Share' button in your browser and select 'Add to Home Screen'.",
+        title: "How to Install Maroma App",
+        description: "iPhone: Tap 'Share' then 'Add to Home Screen'. Android/Desktop: Look for 'Install App' in your browser menu.",
       });
     }
   };
@@ -110,26 +100,23 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Maroma Mobile</h3>
+            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Get the App</h3>
             <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-              Access your bookings and explore experiences directly from your home screen.
+              Install the Maroma app to access your bookings and explore experiences instantly from your home screen.
             </p>
-            {isStandalone ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-50 cursor-default">
-                <Smartphone className="w-4 h-4" />
-                App is installed
+            
+            <button 
+              onClick={handleInstallApp}
+              className="flex items-center gap-2 text-sm font-bold text-accent hover:text-primary transition-colors group"
+            >
+              <div className="p-2 bg-accent/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                <Download className="w-4 h-4" />
               </div>
-            ) : (
-              <button 
-                onClick={handleInstallApp}
-                className="flex items-center gap-2 text-sm font-bold text-accent hover:text-primary transition-colors group"
-              >
-                <div className="p-2 bg-accent/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                  <Download className="w-4 h-4" />
-                </div>
-                Install Maroma App
-              </button>
-            )}
+              Install Maroma App
+            </button>
+            <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1.5 opacity-60">
+              <Info className="w-3 h-3" /> Pin to home screen for offline access.
+            </p>
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center">

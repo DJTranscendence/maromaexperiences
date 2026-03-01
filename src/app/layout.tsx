@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: "Maroma Experiences | Curated Tours & Workshops",
   description:
     "Premium curated tours and workshops for individuals, schools, and corporations.",
+  manifest: "/manifest.json",
+  themeColor: "#4b828b",
 };
 
 export default function RootLayout({
