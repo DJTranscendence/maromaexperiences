@@ -873,11 +873,11 @@ export default function SimulatorPage() {
                       <img src={emblem.url} alt="Logo" className="w-full h-full object-contain p-0.5" />
                       {isSelected && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center"><CheckCircle2 className="text-primary w-8 h-8" /></div>}
                       {isTakenByOther && (
-                        <div className="absolute inset-0 bg-orange-600/90 flex flex-col items-center justify-center p-2 text-center animate-in fade-in duration-500">
+                        <div className="absolute inset-0 bg-orange-600/40 backdrop-blur-[1px] flex flex-col items-center justify-center p-2 text-center animate-in fade-in duration-500">
                           <span className="text-[10px] font-black text-white leading-tight uppercase drop-shadow-md">
                             {claimingTeam}
                           </span>
-                          <div className="absolute bottom-0 inset-x-0 bg-black/20 text-[7px] text-white font-bold py-1 uppercase tracking-tighter">CLAIMED</div>
+                          <div className="absolute bottom-0 inset-x-0 bg-black/40 text-[7px] text-white font-bold py-1 uppercase tracking-tighter">CLAIMED</div>
                         </div>
                       )}
                     </button>
@@ -1378,7 +1378,7 @@ export default function SimulatorPage() {
                             <Label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest flex items-center gap-2">
                               <ThumbsDown className="w-3 h-3" /> Friction Points
                             </Label>
-                            {aiFeedback.negativeReviews.map((r, i) => (
+                            {aiFeedback.positiveReviews.map((r, i) => (
                               <div key={i} className="space-y-2">
                                 <div className="text-xs p-4 bg-rose-500/5 rounded-2xl border border-rose-500/10 text-slate-300 italic">
                                   "{r}"
