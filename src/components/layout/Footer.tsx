@@ -14,7 +14,7 @@ export default function Footer() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // Load Brand Identity Settings
   const brandSettingsRef = useMemoFirebase(() => {
@@ -27,23 +27,22 @@ export default function Footer() {
   const offset = brandSettings?.navbarOffset ?? 0;
 
   useEffect(() => {
+    // Check if app is running in standalone mode (installed)
+    const checkStandalone = () => {
+      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+      setIsStandalone(isStandaloneMode);
+    };
+
+    checkStandalone();
+
     const handleBeforeInstallPrompt = (e: any) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      setIsInstallable(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Check if it's iOS which doesn't support beforeinstallprompt
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
-    if (isIOS && !isStandalone) {
-      setIsInstallable(true);
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -58,10 +57,9 @@ export default function Footer() {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
-        setIsInstallable(false);
       }
     } else {
-      // Logic for iOS or devices where prompt isn't supported
+      // Logic for iOS or devices where prompt isn't supported yet or triggered
       toast({
         title: "Install Maroma App",
         description: "To add this app to your home screen: Tap the 'Share' button in your browser and select 'Add to Home Screen'.",
@@ -115,7 +113,12 @@ export default function Footer() {
             <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
               Access your bookings and explore experiences directly from your home screen.
             </p>
-            {isInstallable ? (
+            {isStandalone ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-50 cursor-default">
+                <Smartphone className="w-4 h-4" />
+                App is installed
+              </div>
+            ) : (
               <button 
                 onClick={handleInstallApp}
                 className="flex items-center gap-2 text-sm font-bold text-accent hover:text-primary transition-colors group"
@@ -125,11 +128,6 @@ export default function Footer() {
                 </div>
                 Install Maroma App
               </button>
-            ) : (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-50 cursor-default">
-                <Smartphone className="w-4 h-4" />
-                App is installed
-              </div>
             )}
           </div>
         </div>
