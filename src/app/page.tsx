@@ -66,49 +66,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Simulator Portal Banner */}
-      <section className="bg-slate-900 py-16 md:py-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative group shadow-2xl">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-            
-            <div className="relative w-56 h-56 md:w-80 md:h-80 shrink-0 flex items-center justify-center">
-              <Image 
-                src={GAME_TITLE_URL}
-                alt="The Maroma Product Game"
-                fill
-                className="object-contain group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-
-            <div className="flex-grow text-center md:text-left space-y-8 relative z-10">
-              <div className="space-y-4">
-                <Badge className="bg-accent text-white px-6 py-1.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-bold border-none shadow-lg">
-                  Workshop Session Active
-                </Badge>
-                <h2 className="text-4xl md:text-6xl font-headline font-bold text-white leading-tight">
-                  Join The Live <br className="hidden lg:block" /> Product Simulator
-                </h2>
-                <p className="text-slate-300 text-xl max-w-xl font-body leading-relaxed">
-                  Enter your workshop team credentials to access the laboratory, create your ethical product prototype, and see your Year 1 market trajectory.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-16 text-xl font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
-                  <Link href="/simulator">
-                    <PlayCircle className="w-6 h-6" /> Join Game
-                  </Link>
-                </Button>
-                <div className="flex items-center gap-2 text-slate-500 text-sm font-bold uppercase tracking-widest mt-2 sm:mt-0 sm:ml-4">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Workshop Connection
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Tours Grid */}
       <main id="workshops" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
@@ -208,6 +165,49 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Simulator Portal Banner - Now below the experiences */}
+      <section className="bg-slate-900 py-16 md:py-24 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative group shadow-2xl">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            
+            <div className="relative w-56 h-56 md:w-80 md:h-80 shrink-0 flex items-center justify-center">
+              <Image 
+                src={GAME_TITLE_URL}
+                alt="The Maroma Product Game"
+                fill
+                className="object-contain group-hover:scale-105 transition-transform duration-700"
+              />
+            </div>
+
+            <div className="flex-grow text-center md:text-left space-y-8 relative z-10">
+              <div className="space-y-4">
+                <Badge className="bg-accent text-white px-6 py-1.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-bold border-none shadow-lg">
+                  Workshop Session Active
+                </Badge>
+                <h2 className="text-4xl md:text-6xl font-headline font-bold text-white leading-tight">
+                  Join The Live <br className="hidden lg:block" /> Product Simulator
+                </h2>
+                <p className="text-slate-300 text-xl max-w-xl font-body leading-relaxed">
+                  Enter your workshop team credentials to access the laboratory, create your ethical product prototype, and see your Year 1 market trajectory.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-16 text-xl font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+                  <Link href="/simulator">
+                    <PlayCircle className="w-6 h-6" /> Join Game
+                  </Link>
+                </Button>
+                <div className="flex items-center gap-2 text-slate-500 text-sm font-bold uppercase tracking-widest mt-2 sm:mt-0 sm:ml-4">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Workshop Connection
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>
