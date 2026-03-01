@@ -175,10 +175,10 @@ export default function Home() {
       {/* Simulator Portal Banner */}
       <section className="bg-slate-900 py-16 md:py-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 pt-6 pb-12 px-8 flex flex-col items-center overflow-hidden relative group shadow-2xl">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-950 rounded-[3rem] border border-white/10 pt-20 pb-16 px-8 flex flex-col items-center overflow-hidden relative group shadow-2xl">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
             
-            <div className="relative w-64 h-32 sm:w-80 sm:h-40 shrink-0 z-10">
+            <div className="relative w-full max-w-[280px] h-40 sm:max-w-[440px] sm:h-60 shrink-0 z-10 mb-8">
               <Image 
                 src={GAME_TITLE_URL}
                 alt="The Maroma Product Game"
@@ -189,7 +189,7 @@ export default function Home() {
 
             <div className="flex-grow text-center space-y-8 relative z-10 flex flex-col items-center">
               <div className="space-y-4 flex flex-col items-center">
-                <Badge className="bg-accent text-white px-6 py-1.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-bold border-none shadow-lg -mt-4">
+                <Badge className="bg-accent text-white px-6 py-1.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-bold border-none shadow-lg">
                   Workshop Session Active
                 </Badge>
                 <h2 className="text-4xl md:text-6xl font-headline font-bold text-white leading-tight">
@@ -200,8 +200,8 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-16 text-xl font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-16 text-xl font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3 w-full sm:w-auto">
                   <Link href="/simulator">
                     <PlayCircle className="w-6 h-6" /> Join Game
                   </Link>
