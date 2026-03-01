@@ -63,8 +63,8 @@ export default function Footer() {
     } else {
       // Manual instructions for all platforms
       toast({
-        title: "PWA Installation",
-        description: "On Android: Tap the three dots menu in Chrome and select 'Install app'. On iPhone: Tap 'Share' then 'Add to Home Screen'.",
+        title: "Install Maroma Experiences",
+        description: "On Android: Tap the three dots (⋮) in Chrome and select 'Install app'. On iPhone: Tap 'Share' then 'Add to Home Screen'.",
       });
     }
   };
@@ -121,7 +121,7 @@ export default function Footer() {
                 <div className="p-2 bg-green-50 rounded-lg">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
-                App Installed
+                Maroma Experiences Ready
               </div>
             ) : (
               <Button 
@@ -133,8 +133,8 @@ export default function Footer() {
               </Button>
             )}
             
-            <p className="text-[10px] text-muted-foreground mt-3 flex items-center gap-1.5 opacity-60">
-              <Info className="w-3 h-3" /> Android users: Tap the button or Chrome menu to install.
+            <p className="text-[10px] text-muted-foreground mt-3 flex items-center gap-1.5 opacity-60 font-medium">
+              <Info className="w-3 h-3" /> Android: Tap '⋮' then 'Install app' to distinguish from Spa app.
             </p>
           </div>
         </div>
