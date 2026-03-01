@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -73,7 +74,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="col-span-1">
             <Link href="/" className="flex items-center space-x-1 mb-4 group">
-              <div className="relative w-10 h-10 flex-shrink-0 translate-y-[1px]">
+              <div className="relative w-10 h-10 flex-shrink-0 -translate-y-[2mm] -translate-x-[1.5mm]">
                 <Image 
                   src={LOGO_URL}
                   alt="Maroma Logo"

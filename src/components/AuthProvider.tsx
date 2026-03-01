@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, setDocumentNonBlocking, useMemoFirebase, useDoc } from "@/firebase";
@@ -77,7 +78,7 @@ export default function AuthProvider({
               isLogoVisible ? "w-20 opacity-100 mr-2" : "w-0 opacity-0 mr-0"
             )}
           >
-            <div className="relative w-16 h-16 translate-y-[2px]">
+            <div className="relative w-16 h-16 -translate-y-[2mm] -translate-x-[1.5mm]">
               <Image 
                 src={LOGO_URL} 
                 alt="Maroma Logo" 
