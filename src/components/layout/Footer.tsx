@@ -129,7 +129,7 @@ export default function Footer() {
                 className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white rounded-full h-12 gap-2 font-bold shadow-lg shadow-accent/20"
               >
                 <Download className="w-4 h-4" />
-                Install Maroma App
+                Install Maroma Experiences app
               </Button>
             )}
             
