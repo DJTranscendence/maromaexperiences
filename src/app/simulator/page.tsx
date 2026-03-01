@@ -847,7 +847,7 @@ export default function SimulatorPage() {
           <div id="join-game-section" className="max-w-3xl mx-auto py-12 px-6 sm:px-10 bg-white rounded-[3rem] shadow-2xl border border-white/10 space-y-10 scroll-mt-24">
             <div className="space-y-4">
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">1. Team Name</Label>
-              <Input placeholder="e.g. The Eco-Warriors" value={teamName} onChange={e => setTeamName(e.target.value)} className="rounded-3xl h-20 text-center text-2xl sm:text-3xl font-headline border-primary/20 bg-slate-50" />
+              <Input placeholder="Enter Team Name Here" value={teamName} onChange={e => setTeamName(e.target.value)} className="rounded-3xl h-20 text-center text-2xl sm:text-3xl font-headline border-primary/20 bg-slate-50" />
             </div>
             <div className="space-y-6">
               <Label className="text-sm font-bold text-slate-500 tracking-[0.2em] uppercase px-2">2. Team Logo</Label>
