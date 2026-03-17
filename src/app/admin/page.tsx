@@ -511,7 +511,7 @@ export default function AdminPage() {
             <div className="w-full overflow-x-auto no-scrollbar pb-4 -mb-4">
               <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50 min-w-max flex">
                 <TabsTrigger value="calendar" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                  <CalendarIcon className="w-5 h-5" /> Schedule
+                  <CalendarIcon className="w-5 h-5" /> Calendar
                 </TabsTrigger>
                 <TabsTrigger value="bookings" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <CalendarDays className="w-5 h-5" /> Bookings
@@ -757,7 +757,7 @@ export default function AdminPage() {
                       <h2 className="text-3xl sm:text-5xl font-headline font-bold leading-tight tracking-tight mb-6 line-clamp-2">
                         {selectedProposal.schoolName || selectedProposal.companyName}
                       </h2>
-                      <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-medium">
+                      <div className="flex wrap items-center gap-x-8 gap-y-3 text-sm font-medium">
                         <div className="flex items-center gap-2.5 opacity-80"><Users className="w-4 h-4 text-accent" /> {selectedProposal.contactName}</div>
                         <div className="flex items-center gap-2.5 opacity-80"><Mail className="w-4 h-4 text-accent" /> {selectedProposal.email}</div>
                       </div>
