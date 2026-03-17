@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -20,7 +19,7 @@ import {
   Settings, Image as ImageIcon, Search, Shield, 
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
-  Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -190,7 +189,7 @@ export default function AdminPage() {
     const start = parseISO(recurrence.startDate);
     const end = parseISO(recurrence.endDate);
     
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+    if (isNaN(start.getTime()) || iNaN(end.getTime()) || end < start) {
       toast({ variant: "destructive", title: "Invalid Range", description: "Please check your start and end dates." });
       return;
     }
