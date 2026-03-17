@@ -21,7 +21,7 @@ import {
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
   Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin, Navigation,
-  Calendar as CalendarIcon, Plus, Wand2, ChevronLeft, ChevronRight
+  Calendar as CalendarIcon, Plus, Wand2, ChevronLeft, ChevronRight, Repeat
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -34,7 +34,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
-import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay } from "date-fns";
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay, parseISO } from "date-fns";
 
 interface UserProfile {
   id: string;
@@ -86,15 +86,6 @@ interface MediaItem {
   uploadedAt: any;
 }
 
-const HIGHLIGHT_OPTIONS = [
-  "Tour",
-  "Workshop",
-  "Q&A",
-  "Refreshments",
-  "Take-home gift",
-  "Certificate"
-];
-
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
 
 export default function AdminPage() {
@@ -102,6 +93,9 @@ export default function AdminPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // --- TAB STATE ---
+  const [activeTab, setActiveTab] = useState("bookings");
 
   // --- AUTH GUARD ---
   const isWorkshopOwner = user?.email === "indispirit@gmail.com";
@@ -183,27 +177,43 @@ export default function AdminPage() {
     scheduledDates: [] as string[]
   });
 
-  // --- SCHEDULING LOGIC ---
-  const [dateSelection, setDateSelection] = useState<Date[]>([]);
-  
-  const generateDatesForDay = (dayIndex: number) => {
-    const dates: Date[] = [];
-    let current = new Date();
-    const end = addMonths(new Date(), 12);
+  // --- RECURRENCE BUILDER ---
+  const [recurrence, setRecurrence] = useState({
+    day: "6", // Saturday
+    interval: "2", // Every 2 weeks
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: format(addMonths(new Date(), 6), 'yyyy-MM-dd')
+  });
+
+  const handleGenerateRecurring = () => {
+    const dayIndex = parseInt(recurrence.day);
+    const intervalWeeks = parseInt(recurrence.interval);
+    const start = parseISO(recurrence.startDate);
+    const end = parseISO(recurrence.endDate);
     
-    while (current <= end) {
-      if (getDay(current) === dayIndex) {
-        dates.push(new Date(current));
-      }
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+      toast({ variant: "destructive", title: "Invalid Range", description: "Please check your start and end dates." });
+      return;
+    }
+
+    const dates: string[] = [];
+    let current = new Date(start);
+    
+    // Nudge to first occurrence of that day
+    while (getDay(current) !== dayIndex) {
       current = addDays(current, 1);
     }
     
-    const formatted = dates.map(d => format(d, 'yyyy-MM-dd'));
+    while (current <= end) {
+      dates.push(format(current, 'yyyy-MM-dd'));
+      current = addDays(current, 7 * intervalWeeks);
+    }
+    
     setNewTour(prev => ({
       ...prev,
-      scheduledDates: Array.from(new Set([...prev.scheduledDates, ...formatted])).sort()
+      scheduledDates: Array.from(new Set([...prev.scheduledDates, ...dates])).sort()
     }));
-    toast({ title: "Schedule Generated", description: `Added ${dates.length} occurrences over the next 12 months.` });
+    toast({ title: "Recurrence Set", description: `Generated ${dates.length} occurrences based on frequency.` });
   };
 
   // --- CALENDAR VIEW LOGIC ---
@@ -244,6 +254,22 @@ export default function AdminPage() {
       end: endOfMonth(calendarMonth)
     });
   }, [calendarMonth]);
+
+  const handleCalendarEventClick = (e: any) => {
+    if (e.type === 'workshop') {
+      const tour = tours?.find(t => t.id === e.id);
+      if (tour) {
+        handleEditTour(tour);
+        setActiveTab("admin");
+      }
+    } else {
+      const proposal = proposals?.find(p => p.id === e.id);
+      if (proposal) {
+        handleOpenProposal(proposal);
+        setActiveTab("proposals");
+      }
+    }
+  };
 
   // --- BRAND SETTINGS ---
   const brandSettingsRef = useMemoFirebase(() => {
@@ -296,7 +322,6 @@ export default function AdminPage() {
       imageUrls: [],
       scheduledDates: []
     });
-    setDateSelection([]);
   };
 
   const handleEditTour = (tour: Tour) => {
@@ -316,7 +341,6 @@ export default function AdminPage() {
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : []),
       scheduledDates: tour.scheduledDates || []
     });
-    setDateSelection((tour.scheduledDates || []).map(d => new Date(d)));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -343,7 +367,7 @@ export default function AdminPage() {
     setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
   };
 
-  // --- USER STATE & QUERIES ---
+  // --- USERS & BOOKINGS ---
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || !isAdmin) return null;
@@ -371,19 +395,17 @@ export default function AdminPage() {
     u.lastName?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
-  // --- BOOKINGS QUERY ---
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
   }, [firestore, isAdmin]);
   const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
 
-  // --- MEDIA STATE & QUERIES ---
+  // --- MEDIA ---
   const [mediaSearchQuery, setMediaSearchQuery] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isMediaUploading, setIsMediaUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const mediaQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
@@ -440,7 +462,7 @@ export default function AdminPage() {
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
         
-        <Tabs defaultValue="bookings" className="space-y-10">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Dashboard</h1>
@@ -479,7 +501,7 @@ export default function AdminPage() {
               <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="font-headline text-2xl text-primary">Campus Activity Calendar</CardTitle>
-                  <p className="text-sm text-muted-foreground">Comprehensive view of all tours, workshops, and group events.</p>
+                  <p className="text-sm text-muted-foreground">Comprehensive view of all tours, workshops, and group events. Click an event to edit.</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <Button variant="outline" size="icon" className="rounded-full" onClick={() => setCalendarMonth(addMonths(calendarMonth, -1))}>
@@ -515,8 +537,9 @@ export default function AdminPage() {
                           {events.map((e, idx) => (
                             <div 
                               key={`${e.id}-${idx}`} 
+                              onClick={() => handleCalendarEventClick(e)}
                               className={cn(
-                                "text-[9px] font-bold px-2 py-1 rounded-md border truncate uppercase tracking-tighter",
+                                "text-[9px] font-bold px-2 py-1 rounded-md border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all",
                                 e.type === 'workshop' ? "bg-blue-50 text-blue-700 border-blue-100" :
                                 e.type === 'school' ? "bg-purple-50 text-purple-700 border-purple-100" :
                                 "bg-emerald-50 text-emerald-700 border-emerald-100"
@@ -777,71 +800,97 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* SCHEDULING INTERFACE */}
                     <div className="space-y-4 pt-4 border-t border-border/50">
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                          <CalendarIcon className="w-3.5 h-3.5" /> Date Management
+                          <CalendarIcon className="w-3.5 h-3.5" /> Frequency Engine
                         </Label>
-                        <Badge variant="outline" className="text-[9px] uppercase font-black">{newTour.scheduledDates.length} Dates</Badge>
+                        <Badge variant="outline" className="text-[9px] uppercase font-black">{newTour.scheduledDates.length} Active Slots</Badge>
                       </div>
                       
-                      <div className="p-4 bg-muted/20 rounded-2xl border border-border/50 space-y-4">
-                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-                          {newTour.scheduledDates.map(date => (
-                            <Badge key={date} className="bg-primary/10 text-primary border-primary/20 shrink-0 gap-1.5 px-3 py-1">
-                              {format(new Date(date), 'MMM d')}
-                              <X className="w-3 h-3 cursor-pointer hover:text-destructive" onClick={() => setNewTour(prev => ({ ...prev, scheduledDates: prev.scheduledDates.filter(d => d !== date) }))} />
-                            </Badge>
-                          ))}
-                          {newTour.scheduledDates.length === 0 && <span className="text-[10px] text-muted-foreground italic">No dates scheduled.</span>}
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-3">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Batch Generate (12 Months)</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button variant="outline" size="sm" className="text-[10px] uppercase font-bold h-9 rounded-xl" onClick={() => generateDatesForDay(1)}>
-                              Every Monday
-                            </Button>
-                            <Button variant="outline" size="sm" className="text-[10px] uppercase font-bold h-9 rounded-xl" onClick={() => generateDatesForDay(5)}>
-                              Every Friday
-                            </Button>
+                      <div className="p-5 bg-muted/20 rounded-2xl border border-border/50 space-y-6">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase px-1">Repeat Day</Label>
+                            <Select value={recurrence.day} onValueChange={v => setRecurrence({...recurrence, day: v})}>
+                              <SelectTrigger className="h-10 text-xs rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+                                  <SelectItem key={i} value={i.toString()}>{d}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase px-1">Every</Label>
+                            <Select value={recurrence.interval} onValueChange={v => setRecurrence({...recurrence, interval: v})}>
+                              <SelectTrigger className="h-10 text-xs rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1 Week</SelectItem>
+                                <SelectItem value="2">2 Weeks</SelectItem>
+                                <SelectItem value="3">3 Weeks</SelectItem>
+                                <SelectItem value="4">4 Weeks</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase px-1">Start Date</Label>
+                              <Input type="date" value={recurrence.startDate} onChange={e => setRecurrence({...recurrence, startDate: e.target.value})} className="h-10 text-xs rounded-xl bg-white" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase px-1">End Date</Label>
+                              <Input type="date" value={recurrence.endDate} onChange={e => setRecurrence({...recurrence, endDate: e.target.value})} className="h-10 text-xs rounded-xl bg-white" />
+                            </div>
+                          </div>
+                          <Button className="w-full h-11 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl font-bold text-[10px] uppercase gap-2" onClick={handleGenerateRecurring}>
+                            <Repeat className="w-3.5 h-3.5" /> Generate Frequency
+                          </Button>
                         </div>
 
                         <Separator className="bg-border/50" />
 
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" className="w-full text-xs font-bold gap-2 text-accent hover:bg-accent/5 rounded-xl h-10 border border-dashed border-accent/30">
-                              <Plus className="w-3.5 h-3.5" /> Open Date Picker
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md rounded-3xl">
-                            <DialogHeader><DialogTitle>Select Workshop Dates</DialogTitle></DialogHeader>
-                            <div className="p-4 flex justify-center">
-                              <Calendar
-                                mode="multiple"
-                                selected={dateSelection}
-                                onSelect={(dates) => {
-                                  setDateSelection(dates || []);
-                                  if (dates) {
-                                    setNewTour(prev => ({
-                                      ...prev,
-                                      scheduledDates: dates.map(d => format(d, 'yyyy-MM-dd')).sort()
-                                    }));
-                                  }
-                                }}
-                                className="rounded-xl border shadow-sm"
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button className="w-full bg-primary rounded-full font-bold h-12" onClick={(e) => (e.target as any).closest('button[data-state="open"]')?.click()}>
-                                Done Selecting
+                        <div className="space-y-3">
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase px-1">Selected Dates</Label>
+                          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 min-h-10">
+                            {newTour.scheduledDates.map(date => (
+                              <Badge key={date} className="bg-white text-primary border-border shrink-0 gap-1.5 px-3 py-1.5 shadow-sm rounded-lg">
+                                {format(parseISO(date), 'MMM d, yyyy')}
+                                <X className="w-3 h-3 cursor-pointer text-slate-400 hover:text-destructive" onClick={() => setNewTour(prev => ({ ...prev, scheduledDates: prev.scheduledDates.filter(d => d !== date) }))} />
+                              </Badge>
+                            ))}
+                            {newTour.scheduledDates.length === 0 && <span className="text-[10px] text-muted-foreground italic px-1">Manual selection required.</span>}
+                          </div>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" className="w-full text-xs font-bold gap-2 text-accent hover:bg-accent/5 rounded-xl h-10 border border-dashed border-accent/30">
+                                <Plus className="w-3.5 h-3.5" /> Manual Date Picker
                               </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md rounded-3xl">
+                              <DialogHeader><DialogTitle>Toggle Workshop Dates</DialogTitle></DialogHeader>
+                              <div className="p-4 flex justify-center">
+                                <Calendar
+                                  mode="multiple"
+                                  selected={newTour.scheduledDates.map(d => parseISO(d))}
+                                  onSelect={(dates) => {
+                                    if (dates) {
+                                      setNewTour(prev => ({
+                                        ...prev,
+                                        scheduledDates: dates.map(d => format(d, 'yyyy-MM-dd')).sort()
+                                      }));
+                                    }
+                                  }}
+                                  className="rounded-xl border shadow-sm"
+                                />
+                              </div>
+                              <DialogFooter><Button className="w-full bg-primary rounded-full font-bold h-12" onClick={(e) => (e.target as any).closest('button[data-state="open"]')?.click()}>Done</Button></DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </div>
                     </div>
 
@@ -872,7 +921,7 @@ export default function AdminPage() {
                   <Table>
                     <TableHeader><TableRow className="bg-muted/30">
                       <TableHead>Experience</TableHead>
-                      <TableHead>Dates</TableHead>
+                      <TableHead>Slots</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow></TableHeader>
@@ -881,7 +930,7 @@ export default function AdminPage() {
                         <TableRow key={t.id}>
                           <TableCell className="font-bold">{t.name}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="font-mono text-[9px]">{t.scheduledDates?.length || 0} Slots</Badge>
+                            <Badge variant="outline" className="font-mono text-[9px]">{t.scheduledDates?.length || 0} Dates</Badge>
                           </TableCell>
                           <TableCell className="font-medium">₹{t.price}</TableCell>
                           <TableCell className="text-right">
