@@ -241,8 +241,9 @@ export default function AdminPage() {
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   
   const calendarEvents = useMemo(() => {
-    const events: { date: string, title: string, type: 'workshop' | 'school' | 'corporate', id: string, count: number }[] = [];
+    const events: { date: string, title: string, type: 'workshop' | 'school' | 'corporate' | 'draft', id: string, count: number }[] = [];
     
+    // 1. Existing Saved Tours
     tours?.forEach(t => {
       t.scheduledDates?.forEach(d => {
         const key = `${t.id}_${d}`;
@@ -251,6 +252,18 @@ export default function AdminPage() {
       });
     });
     
+    // 2. Draft / New Tour (Live Preview)
+    if (newTour.name && newTour.scheduledDates.length > 0) {
+      newTour.scheduledDates.forEach(d => {
+        // Only show draft if not already saved (or if editing this specific one)
+        const isAlreadySaved = tours?.some(t => t.id === editingId && t.scheduledDates.includes(d));
+        if (!isAlreadySaved) {
+          events.push({ date: d, title: `[Draft] ${newTour.name}`, type: 'draft', id: editingId || 'draft-new', count: 0 });
+        }
+      });
+    }
+    
+    // 3. Group Proposals
     proposals?.forEach(p => {
       if (p.selectedDate) {
         let count = 0;
@@ -270,7 +283,7 @@ export default function AdminPage() {
     });
     
     return events;
-  }, [tours, proposals, bookingsByDate]);
+  }, [tours, proposals, bookingsByDate, newTour, editingId]);
 
   const daysInMonth = useMemo(() => {
     return eachDayOfInterval({
@@ -280,10 +293,12 @@ export default function AdminPage() {
   }, [calendarMonth]);
 
   const handleCalendarEventClick = (e: any) => {
-    if (e.type === 'workshop') {
+    if (e.type === 'workshop' || e.type === 'draft') {
       const tour = tours?.find(t => t.id === e.id);
       if (tour) {
         handleEditTour(tour);
+        setActiveTab("admin");
+      } else if (e.id === 'draft-new') {
         setActiveTab("admin");
       }
     } else {
@@ -365,7 +380,9 @@ export default function AdminPage() {
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : []),
       scheduledDates: tour.scheduledDates || []
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to form
+    const editor = document.getElementById('tour-editor-card');
+    if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleSaveTour = () => {
@@ -555,20 +572,21 @@ export default function AdminPage() {
                         <span className={cn("text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full mb-1", isToday ? "bg-accent text-white" : "text-slate-400")}>
                           {format(day, 'd')}
                         </span>
-                        <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar">
+                        <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar pr-1">
                           {events.map((e, idx) => (
                             <div 
                               key={`${e.id}-${idx}`} 
                               onClick={() => handleCalendarEventClick(e)}
                               className={cn(
-                                "text-[10px] font-bold px-2 py-1.5 rounded-lg border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center group/evt",
+                                "text-[9px] font-bold px-2 py-1 rounded-lg border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center group/evt",
                                 e.type === 'workshop' ? "bg-blue-600 text-white border-blue-700" :
                                 e.type === 'school' ? "bg-purple-600 text-white border-purple-700" :
-                                "bg-emerald-600 text-white border-emerald-700"
+                                e.type === 'corporate' ? "bg-emerald-600 text-white border-emerald-700" :
+                                "bg-slate-100 text-slate-500 border-dashed border-slate-300 opacity-60"
                               )}
                             >
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {e.type === 'workshop' ? <Wrench className="w-3 h-3 shrink-0" /> : e.type === 'school' ? <GraduationCap className="w-3 h-3 shrink-0" /> : <Building2 className="w-3 h-3 shrink-0" />}
+                              <div className="flex items-center gap-1 min-w-0">
+                                {e.type === 'workshop' ? <Wrench className="w-2.5 h-2.5 shrink-0" /> : e.type === 'school' ? <GraduationCap className="w-2.5 h-2.5 shrink-0" /> : e.type === 'corporate' ? <Building2 className="w-2.5 h-2.5 shrink-0" /> : <Edit className="w-2.5 h-2.5 shrink-0" />}
                                 <span className="truncate">{e.title}</span>
                               </div>
                               <span className="shrink-0 opacity-80 ml-1 font-mono">({e.count})</span>
@@ -588,6 +606,9 @@ export default function AdminPage() {
                   </div>
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
                     <div className="w-3 h-3 rounded-full bg-emerald-600" /> Corporate Events
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <div className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300" /> Draft Dates
                   </div>
                 </div>
               </CardContent>
@@ -798,7 +819,7 @@ export default function AdminPage() {
           <TabsContent value="admin" className="m-0 focus-visible:ring-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
-                <Card className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
+                <Card id="tour-editor-card" className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="font-headline text-2xl text-primary">
                       {editingId ? "Edit Experience" : "New Experience"}
