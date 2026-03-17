@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -216,6 +217,23 @@ export default function AdminPage() {
     toast({ title: "Recurrence Set", description: `Generated ${dates.length} occurrences based on frequency.` });
   };
 
+  // --- INDIVIDUAL BOOKINGS (FOR AGGREGATION) ---
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
+  }, [firestore, isAdmin]);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
+
+  // Aggregated bookings map: "tourId_date" -> totalAttendees
+  const bookingsByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    bookings?.forEach(b => {
+      const key = `${b.tourId}_${b.tourDate}`;
+      map[key] = (map[key] || 0) + (b.numberOfAttendees || 0);
+    });
+    return map;
+  }, [bookings]);
+
   // --- CALENDAR VIEW LOGIC ---
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
@@ -226,27 +244,35 @@ export default function AdminPage() {
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   
   const calendarEvents = useMemo(() => {
-    const events: { date: string, title: string, type: 'workshop' | 'school' | 'corporate', id: string }[] = [];
+    const events: { date: string, title: string, type: 'workshop' | 'school' | 'corporate', id: string, count: number }[] = [];
     
     tours?.forEach(t => {
       t.scheduledDates?.forEach(d => {
-        events.push({ date: d, title: t.name, type: 'workshop', id: t.id });
+        const count = bookingsByDate[`${t.id}_${d}`] || 0;
+        events.push({ date: d, title: t.name, type: 'workshop', id: t.id, count });
       });
     });
     
     proposals?.forEach(p => {
       if (p.selectedDate) {
+        let count = 0;
+        if (p.type === 'School') {
+          count = (parseInt(p.studentCount || "0")) + (parseInt(p.adultCount || "0"));
+        } else {
+          count = parseInt(p.participants || "0");
+        }
         events.push({ 
           date: p.selectedDate, 
           title: p.schoolName || p.companyName || "Group Tour", 
           type: p.type === 'School' ? 'school' : 'corporate',
-          id: p.id 
+          id: p.id,
+          count
         });
       }
     });
     
     return events;
-  }, [tours, proposals]);
+  }, [tours, proposals, bookingsByDate]);
 
   const daysInMonth = useMemo(() => {
     return eachDayOfInterval({
@@ -367,7 +393,7 @@ export default function AdminPage() {
     setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
   };
 
-  // --- USERS & BOOKINGS ---
+  // --- USERS ---
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || !isAdmin) return null;
@@ -394,12 +420,6 @@ export default function AdminPage() {
     u.firstName?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
     u.lastName?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
-
-  const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
-  }, [firestore, isAdmin]);
-  const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
 
   // --- MEDIA ---
   const [mediaSearchQuery, setMediaSearchQuery] = useState('');
@@ -539,13 +559,14 @@ export default function AdminPage() {
                               key={`${e.id}-${idx}`} 
                               onClick={() => handleCalendarEventClick(e)}
                               className={cn(
-                                "text-[9px] font-bold px-2 py-1 rounded-md border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all",
+                                "text-[9px] font-bold px-2 py-1.5 rounded-md border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center",
                                 e.type === 'workshop' ? "bg-blue-50 text-blue-700 border-blue-100" :
                                 e.type === 'school' ? "bg-purple-50 text-purple-700 border-purple-100" :
                                 "bg-emerald-50 text-emerald-700 border-emerald-100"
                               )}
                             >
-                              {e.title}
+                              <span className="truncate mr-1">{e.title}</span>
+                              <span className="shrink-0 opacity-60">({e.count})</span>
                             </div>
                           ))}
                         </div>
@@ -595,7 +616,7 @@ export default function AdminPage() {
                         <Badge variant="outline" className="bg-green-100 text-green-700 capitalize border-none px-3">{b.bookingStatus}</Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {b.bookedAt?.toDate?.()?.toLocaleDateString() || "Recent"}
+                        {b.tourDate || "Recent"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
