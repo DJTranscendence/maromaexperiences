@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -22,7 +21,7 @@ import {
   Settings, Image as ImageIcon, Search, Shield, UserCheck, 
   User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
   Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin, Navigation,
-  Calendar as CalendarIcon, Plus, Wand2, ChevronLeft, ChevronRight, Repeat
+  Calendar as CalendarIcon, Plus, Wand2, ChevronLeft, ChevronRight, Repeat, Wrench
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -559,14 +558,17 @@ export default function AdminPage() {
                               key={`${e.id}-${idx}`} 
                               onClick={() => handleCalendarEventClick(e)}
                               className={cn(
-                                "text-[9px] font-bold px-2 py-1.5 rounded-md border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center",
+                                "text-[9px] font-bold px-2 py-1.5 rounded-md border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center group/evt",
                                 e.type === 'workshop' ? "bg-blue-50 text-blue-700 border-blue-100" :
                                 e.type === 'school' ? "bg-purple-50 text-purple-700 border-purple-100" :
                                 "bg-emerald-50 text-emerald-700 border-emerald-100"
                               )}
                             >
-                              <span className="truncate mr-1">{e.title}</span>
-                              <span className="shrink-0 opacity-60">({e.count})</span>
+                              <div className="flex items-center gap-1 min-w-0">
+                                {e.type === 'workshop' ? <Wrench className="w-2.5 h-2.5 shrink-0" /> : e.type === 'school' ? <GraduationCap className="w-2.5 h-2.5 shrink-0" /> : <Building2 className="w-2.5 h-2.5 shrink-0" />}
+                                <span className="truncate">{e.title}</span>
+                              </div>
+                              <span className="shrink-0 opacity-60 ml-1">({e.count})</span>
                             </div>
                           ))}
                         </div>
