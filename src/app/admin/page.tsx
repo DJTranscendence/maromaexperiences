@@ -562,16 +562,16 @@ export default function AdminPage() {
                               onClick={() => handleCalendarEventClick(e)}
                               className={cn(
                                 "text-[10px] font-bold px-2 py-1.5 rounded-lg border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center group/evt",
-                                e.type === 'workshop' ? "bg-blue-50 text-blue-700 border-blue-100" :
-                                e.type === 'school' ? "bg-purple-50 text-purple-700 border-purple-100" :
-                                "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                e.type === 'workshop' ? "bg-blue-600 text-white border-blue-700" :
+                                e.type === 'school' ? "bg-purple-600 text-white border-purple-700" :
+                                "bg-emerald-600 text-white border-emerald-700"
                               )}
                             >
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {e.type === 'workshop' ? <Wrench className="w-3 h-3 shrink-0" /> : e.type === 'school' ? <GraduationCap className="w-3 h-3 shrink-0" /> : <Building2 className="w-3 h-3 shrink-0" />}
                                 <span className="truncate">{e.title}</span>
                               </div>
-                              <span className="shrink-0 opacity-60 ml-1 font-mono">({e.count})</span>
+                              <span className="shrink-0 opacity-80 ml-1 font-mono">({e.count})</span>
                             </div>
                           ))}
                         </div>
@@ -581,13 +581,13 @@ export default function AdminPage() {
                 </div>
                 <div className="mt-8 flex flex-wrap gap-6 justify-center">
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <div className="w-3 h-3 rounded-full bg-blue-500" /> Public Workshops
+                    <div className="w-3 h-3 rounded-full bg-blue-600" /> Public Workshops
                   </div>
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <div className="w-3 h-3 rounded-full bg-purple-500" /> School Tours
+                    <div className="w-3 h-3 rounded-full bg-purple-600" /> School Tours
                   </div>
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500" /> Corporate Events
+                    <div className="w-3 h-3 rounded-full bg-emerald-600" /> Corporate Events
                   </div>
                 </div>
               </CardContent>
