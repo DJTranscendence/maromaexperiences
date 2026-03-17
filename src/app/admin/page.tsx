@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -9,30 +10,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { 
-  Trash2, Edit, Save, Loader2, Check, X, Users, Info, 
-  Settings, Image as ImageIcon, Search, Shield, UserCheck, 
-  User, Edit2, Upload, FileText, Activity, AlertCircle, LogIn, Palette, Type, CalendarDays,
-  Bell, Building2, GraduationCap, Mail, Phone, ExternalLink, ClipboardList, Send, MessageSquare, Clock, MapPin, Navigation,
-  Calendar as CalendarIcon, Plus, Wand2, ChevronLeft, ChevronRight, Repeat, Wrench
+  Trash2, Edit, Save, Loader2, Check, X, Users, 
+  Settings, Image as ImageIcon, Search, Shield, 
+  Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
+  Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
-import { collection, serverTimestamp, doc, query, orderBy, Timestamp } from "firebase/firestore";
-import { Tour } from "@/lib/types";
+import { collection, serverTimestamp, doc, query, orderBy } from "firebase/firestore";
+import { Tour, TourType } from "@/lib/types";
 import { ImageLibrary } from "@/components/admin/ImageLibrary";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay, parseISO } from "date-fns";
 
@@ -95,7 +94,7 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- TAB STATE ---
-  const [activeTab, setActiveTab] = useState("bookings");
+  const [activeTab, setActiveTab] = useState("calendar");
 
   // --- AUTH GUARD ---
   const isWorkshopOwner = user?.email === "indispirit@gmail.com";
@@ -171,7 +170,7 @@ export default function AdminPage() {
     price: 500,
     capacity: 20,
     minGroupSize: 8,
-    type: "workshop" as Tour.type,
+    type: "workshop" as TourType,
     status: "live" as 'live' | 'coming-soon',
     imageUrls: [] as string[],
     scheduledDates: [] as string[]
@@ -182,7 +181,7 @@ export default function AdminPage() {
     day: "6", // Saturday
     interval: "2", // Every 2 weeks
     startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: format(addMonths(new Date(), 6), 'yyyy-MM-dd')
+    endDate: format(addMonths(new Date(), 12), 'yyyy-MM-dd')
   });
 
   const handleGenerateRecurring = () => {
@@ -374,7 +373,6 @@ export default function AdminPage() {
     setIsProcessing(true);
     const tourData: Partial<Tour> = {
       ...newTour,
-      shortDescription: newTour.description.substring(0, 100),
       pricePerPerson: newTour.price,
       durationHours: parseInt(newTour.duration) || 1,
       isActive: true,
@@ -385,7 +383,12 @@ export default function AdminPage() {
       updateDocumentNonBlocking(doc(firestore, "tours", editingId), tourData);
       toast({ title: "Changes Saved" });
     } else {
-      addDocumentNonBlocking(collection(firestore, "tours"), { ...tourData, tourOwnerId: user.uid, createdAt: serverTimestamp(), bookedSpaces: 0 });
+      addDocumentNonBlocking(collection(firestore, "tours"), { 
+        ...tourData, 
+        tourOwnerId: user.uid, 
+        createdAt: serverTimestamp(), 
+        bookedSpaces: 0 
+      });
       toast({ title: "Experience Published" });
     }
     setIsSuccess(true);
@@ -490,14 +493,14 @@ export default function AdminPage() {
             
             <div className="w-full overflow-x-auto no-scrollbar pb-4 -mb-4">
               <TabsList className="bg-white p-1 h-14 rounded-full shadow-lg border border-border/50 min-w-max flex">
+                <TabsTrigger value="calendar" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <CalendarIcon className="w-5 h-5" /> Schedule
+                </TabsTrigger>
                 <TabsTrigger value="bookings" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <CalendarDays className="w-5 h-5" /> Bookings
                 </TabsTrigger>
                 <TabsTrigger value="proposals" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <ClipboardList className="w-5 h-5" /> Requests
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                  <CalendarIcon className="w-5 h-5" /> Schedule
                 </TabsTrigger>
                 <TabsTrigger value="brand" className="rounded-full h-full px-4 sm:px-6 gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Palette className="w-5 h-5" /> Brand
@@ -558,17 +561,17 @@ export default function AdminPage() {
                               key={`${e.id}-${idx}`} 
                               onClick={() => handleCalendarEventClick(e)}
                               className={cn(
-                                "text-[9px] font-bold px-2 py-1.5 rounded-md border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center group/evt",
+                                "text-[10px] font-bold px-2 py-1.5 rounded-lg border truncate uppercase tracking-tighter cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all flex justify-between items-center group/evt",
                                 e.type === 'workshop' ? "bg-blue-50 text-blue-700 border-blue-100" :
                                 e.type === 'school' ? "bg-purple-50 text-purple-700 border-purple-100" :
                                 "bg-emerald-50 text-emerald-700 border-emerald-100"
                               )}
                             >
-                              <div className="flex items-center gap-1 min-w-0">
-                                {e.type === 'workshop' ? <Wrench className="w-2.5 h-2.5 shrink-0" /> : e.type === 'school' ? <GraduationCap className="w-2.5 h-2.5 shrink-0" /> : <Building2 className="w-2.5 h-2.5 shrink-0" />}
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {e.type === 'workshop' ? <Wrench className="w-3 h-3 shrink-0" /> : e.type === 'school' ? <GraduationCap className="w-3 h-3 shrink-0" /> : <Building2 className="w-3 h-3 shrink-0" />}
                                 <span className="truncate">{e.title}</span>
                               </div>
-                              <span className="shrink-0 opacity-60 ml-1">({e.count})</span>
+                              <span className="shrink-0 opacity-60 ml-1 font-mono">({e.count})</span>
                             </div>
                           ))}
                         </div>
@@ -734,7 +737,7 @@ export default function AdminPage() {
                         {selectedProposal.schoolName || selectedProposal.companyName}
                       </h2>
                       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-medium">
-                        <div className="flex items-center gap-2.5 opacity-80"><User className="w-4 h-4 text-accent" /> {selectedProposal.contactName}</div>
+                        <div className="flex items-center gap-2.5 opacity-80"><Users className="w-4 h-4 text-accent" /> {selectedProposal.contactName}</div>
                         <div className="flex items-center gap-2.5 opacity-80"><Mail className="w-4 h-4 text-accent" /> {selectedProposal.email}</div>
                       </div>
                     </div>
