@@ -189,7 +189,7 @@ export default function AdminPage() {
     const start = parseISO(recurrence.startDate);
     const end = parseISO(recurrence.endDate);
     
-    if (isNaN(start.getTime()) || iNaN(end.getTime()) || end < start) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
       toast({ variant: "destructive", title: "Invalid Range", description: "Please check your start and end dates." });
       return;
     }
@@ -245,7 +245,8 @@ export default function AdminPage() {
     
     tours?.forEach(t => {
       t.scheduledDates?.forEach(d => {
-        const count = bookingsByDate[`${t.id}_${d}`] || 0;
+        const key = `${t.id}_${d}`;
+        const count = bookingsByDate[key] || 0;
         events.push({ date: d, title: t.name, type: 'workshop', id: t.id, count });
       });
     });
