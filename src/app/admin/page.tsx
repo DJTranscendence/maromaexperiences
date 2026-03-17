@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, 
@@ -94,6 +95,9 @@ export default function AdminPage() {
 
   // --- TAB STATE ---
   const [activeTab, setActiveTab] = useState("calendar");
+
+  // --- SELECTION STATE (BULK DELETE) ---
+  const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
 
   // --- AUTH GUARD ---
   const isWorkshopOwner = user?.email === "indispirit@gmail.com";
@@ -197,7 +201,6 @@ export default function AdminPage() {
     const dates: string[] = [];
     let current = new Date(start);
     
-    // Nudge to first occurrence of that day
     while (getDay(current) !== dayIndex) {
       current = addDays(current, 1);
     }
@@ -231,6 +234,36 @@ export default function AdminPage() {
     return map;
   }, [bookings]);
 
+  // --- BULK DELETE LOGIC ---
+  const toggleBookingSelection = (id: string) => {
+    const newSet = new Set(selectedBookingIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedBookingIds(newSet);
+  };
+
+  const handleSelectAllBookings = () => {
+    if (!bookings) return;
+    if (selectedBookingIds.size === bookings.length) {
+      setSelectedBookingIds(new Set());
+    } else {
+      setSelectedBookingIds(new Set(bookings.map(b => b.id)));
+    }
+  };
+
+  const handleBulkDeleteBookings = () => {
+    if (!firestore || selectedBookingIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedBookingIds.size} bookings?`)) return;
+    
+    selectedBookingIds.forEach(id => {
+      deleteDocumentNonBlocking(doc(firestore, "bookings", id));
+    });
+    
+    const count = selectedBookingIds.size;
+    setSelectedBookingIds(new Set());
+    toast({ title: "Bulk Delete Complete", description: `Removed ${count} bookings successfully.` });
+  };
+
   // --- CALENDAR VIEW LOGIC ---
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
@@ -255,7 +288,6 @@ export default function AdminPage() {
     // 2. Draft / New Tour (Live Preview)
     if (newTour.name && newTour.scheduledDates.length > 0) {
       newTour.scheduledDates.forEach(d => {
-        // Only show draft if not already saved (or if editing this specific one)
         const isAlreadySaved = tours?.some(t => t.id === editingId && t.scheduledDates.includes(d));
         if (!isAlreadySaved) {
           events.push({ date: d, title: `[Draft] ${newTour.name}`, type: 'draft', id: editingId || 'draft-new', count: 0 });
@@ -380,7 +412,6 @@ export default function AdminPage() {
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : []),
       scheduledDates: tour.scheduledDates || []
     });
-    // Scroll to form
     const editor = document.getElementById('tour-editor-card');
     if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -617,12 +648,30 @@ export default function AdminPage() {
 
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b px-8 py-6">
-                <CardTitle className="font-headline text-2xl text-primary">Individual Bookings</CardTitle>
-                <p className="text-sm text-muted-foreground">Standard workshop and tour reservations.</p>
+              <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="font-headline text-2xl text-primary">Individual Bookings</CardTitle>
+                  <p className="text-sm text-muted-foreground">Standard workshop and tour reservations.</p>
+                </div>
+                {selectedBookingIds.size > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="rounded-full px-6 gap-2 font-bold animate-in zoom-in duration-300"
+                    onClick={handleBulkDeleteBookings}
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Selected ({selectedBookingIds.size})
+                  </Button>
+                )}
               </CardHeader>
               <Table>
                 <TableHeader><TableRow className="bg-muted/30">
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} 
+                      onCheckedChange={handleSelectAllBookings}
+                    />
+                  </TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Attendees</TableHead>
                   <TableHead>Total</TableHead>
@@ -632,9 +681,15 @@ export default function AdminPage() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {isBookingsLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
                   ) : bookings?.map(b => (
-                    <TableRow key={b.id}>
+                    <TableRow key={b.id} className={cn(selectedBookingIds.has(b.id) && "bg-accent/5")}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedBookingIds.has(b.id)} 
+                          onCheckedChange={() => toggleBookingSelection(b.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-bold text-primary">{b.tourName}</TableCell>
                       <TableCell>{b.numberOfAttendees} Person(s)</TableCell>
                       <TableCell className="font-medium">₹{b.totalPrice}</TableCell>
