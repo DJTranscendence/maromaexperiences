@@ -40,7 +40,8 @@ import {
   PlayCircle,
   Palette,
   History,
-  Calendar
+  Calendar,
+  SearchX
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
@@ -134,7 +135,7 @@ export default function SchoolsPage() {
   }, [firestore, user]);
   const { data: userData } = useDoc(userDocRef);
 
-  // 1. Fetch all active tours to find "The Maroma Tour" case-insensitively
+  // 1. Fetch all active tours
   const toursQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "tours"), where("isActive", "==", true));
@@ -142,12 +143,25 @@ export default function SchoolsPage() {
   const { data: tourDocs, isLoading: isTourLoading } = useCollection<Tour>(toursQuery);
   
   const tourData = useMemo(() => {
-    if (!tourDocs) return null;
-    // Perform robust case-insensitive matching to ensure newly created slots are picked up
-    return tourDocs.find(t => t.name.toLowerCase().trim() === "the maroma tour");
+    if (!tourDocs || tourDocs.length === 0) return null;
+    
+    // Tiered search for the master tour
+    // 1. Exact match
+    const exact = tourDocs.find(t => t.name.toLowerCase().trim() === "the maroma tour");
+    if (exact) return exact;
+
+    // 2. Lenient match containing "Maroma" and "Tour"
+    const lenient = tourDocs.find(t => {
+      const name = t.name.toLowerCase();
+      return name.includes("maroma") && name.includes("tour");
+    });
+    if (lenient) return lenient;
+
+    // 3. Any active tour with scheduled dates
+    return tourDocs.find(t => (t.scheduledDates?.length || 0) > 0) || null;
   }, [tourDocs]);
 
-  // 2. Fetch existing bookings and proposals to find "taken" slots
+  // 2. Fetch existing bookings and proposals
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "bookings");
@@ -160,19 +174,15 @@ export default function SchoolsPage() {
   }, [firestore]);
   const { data: allProposals, isLoading: isProposalsLoading } = useCollection<any>(proposalsQuery);
 
-  // 3. Calculate Vacant Slots (Strictly from the "The Maroma Tour" scheduledDates)
+  // 3. Calculate Vacant Slots
   const availableDates = useMemo(() => {
-    // Get master dates strictly from the campus tour object in Firestore
     const masterDates = tourData?.scheduledDates || [];
-    
     if (masterDates.length === 0) return [];
 
-    // Identify all dates that already have campus activity (any booking or any proposal)
     const takenInProposals = allProposals?.map(p => p.selectedDate).filter(Boolean) || [];
     const takenInBookings = allBookings?.map(b => b.tourDate).filter(Boolean) || [];
     const takenDatesSet = new Set([...takenInProposals, ...takenInBookings]);
     
-    // Return only those scheduled dates that are truly vacant
     return masterDates.filter(d => !takenDatesSet.has(d));
   }, [tourData, allProposals, allBookings]);
 
@@ -218,7 +228,7 @@ export default function SchoolsPage() {
         ...contactForm,
         type: 'School',
         selectedDate: selectedDate,
-        itinerary: [{ id: CAMPUS_TOUR_PROGRAM.id, name: CAMPUS_TOUR_PROGRAM.name, type: CAMPUS_TOUR_PROGRAM.type }],
+        itinerary: [{ id: tourData?.id || CAMPUS_TOUR_PROGRAM.id, name: tourData?.name || CAMPUS_TOUR_PROGRAM.name, type: tourData?.type || CAMPUS_TOUR_PROGRAM.type }],
         catering: "Standard Ethical Refreshments",
         status: "pending",
         createdAt: serverTimestamp(),
@@ -227,8 +237,8 @@ export default function SchoolsPage() {
 
       await sendEmailNotification({
         to: contactForm.email,
-        subject: `Booking Request: The Maroma Tour`,
-        textBody: `Hello ${contactForm.contactName},\n\nYour request for "The Maroma Tour" on ${selectedDate} has been received for "${contactForm.schoolName}".\n\nTiming: 10:30 AM - 12:00 PM\n\nWe will confirm your booking as soon as possible after reviewing our campus schedule.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
+        subject: `Booking Request: ${tourData?.name || "The Maroma Tour"}`,
+        textBody: `Hello ${contactForm.contactName},\n\nYour request for "${tourData?.name || "The Maroma Tour"}" on ${selectedDate} has been received for "${contactForm.schoolName}".\n\nTiming: 10:30 AM - 12:00 PM\n\nWe will confirm your booking as soon as possible after reviewing our campus schedule.\n\nWarm regards,\nThe Maroma Team\nhttps://maromaexperience.com`
       });
 
       toast({
@@ -371,6 +381,14 @@ export default function SchoolsPage() {
                     
                     {isLoadingData ? (
                       <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
+                    ) : !tourData ? (
+                      <div className="p-10 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] text-center space-y-4">
+                        <SearchX className="w-10 h-10 text-slate-400 mx-auto" />
+                        <div className="space-y-1">
+                          <p className="font-bold text-slate-900">Experience Schedule Not Found</p>
+                          <p className="text-sm text-slate-600">We couldn't find an active schedule for "The Maroma Tour". Please ensure it is published in the admin panel.</p>
+                        </div>
+                      </div>
                     ) : availableDates.length > 0 ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {availableDates.map(date => (
@@ -391,12 +409,12 @@ export default function SchoolsPage() {
                         <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
                         <div className="space-y-1">
                           <p className="font-bold text-rose-900">All Scheduled Slots are Taken</p>
-                          <p className="text-sm text-rose-700">Please contact our campus design team directly for bespoke school arrangements.</p>
+                          <p className="text-sm text-rose-700">All current dates for "{tourData.name}" are occupied. Please contact our team for bespoke arrangements.</p>
                         </div>
                       </div>
                     )}
                     
-                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates above represent truly vacant slots from the "The Maroma Tour" schedule where no other campus activity is currently registered.</p>
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">Available slots are strictly derived from the published "{tourData?.name || 'The Maroma Tour'}" schedule.</p>
                   </section>
 
                   <section className="space-y-6">
@@ -406,17 +424,17 @@ export default function SchoolsPage() {
                     </div>
                     <Card className="rounded-[2rem] border-none bg-accent/5 p-8 flex items-center gap-6">
                       <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 shadow-lg">
-                        <Image src={CAMPUS_TOUR_PROGRAM.imageUrl} alt={CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
+                        <Image src={tourData?.imageUrl || CAMPUS_TOUR_PROGRAM.imageUrl} alt={tourData?.name || CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
                       </div>
                       <div>
-                        <h4 className="text-xl font-headline font-bold text-primary mb-1">{CAMPUS_TOUR_PROGRAM.name}</h4>
+                        <h4 className="text-xl font-headline font-bold text-primary mb-1">{tourData?.name || CAMPUS_TOUR_PROGRAM.name}</h4>
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground uppercase tracking-widest font-bold">
-                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 90 Minutes</span>
+                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {tourData?.duration || '90 Minutes'}</span>
                           <span className="flex items-center gap-1.5 text-accent font-black">10:30AM — 12:00PM</span>
                           <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> 8-Step Programme</span>
                         </div>
-                        <p className="text-sm text-primary/70 mt-3 leading-relaxed">
-                          A comprehensive tour of our production ecosystem, including hands-on incense making and ethical refreshment service.
+                        <p className="text-sm text-primary/70 mt-3 leading-relaxed line-clamp-2">
+                          {tourData?.description || 'A comprehensive tour of our production ecosystem, including hands-on incense making and ethical refreshment service.'}
                         </p>
                       </div>
                     </Card>
@@ -430,11 +448,11 @@ export default function SchoolsPage() {
                     <div className="space-y-3">
                       <div className="flex items-start gap-3 p-3 bg-white rounded-xl shadow-sm border border-accent/20">
                         <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                          <Image src={CAMPUS_TOUR_PROGRAM.imageUrl} alt={CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
+                          <Image src={tourData?.imageUrl || CAMPUS_TOUR_PROGRAM.imageUrl} alt={tourData?.name || CAMPUS_TOUR_PROGRAM.name} fill className="object-cover" />
                         </div>
                         <div className="flex-grow min-w-0">
                           <div className="text-[8px] font-bold text-accent uppercase tracking-widest">Selected Program</div>
-                          <h5 className="text-xs font-bold text-primary truncate">{CAMPUS_TOUR_PROGRAM.name}</h5>
+                          <h5 className="text-xs font-bold text-primary truncate">{tourData?.name || CAMPUS_TOUR_PROGRAM.name}</h5>
                           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{selectedDate ? `Date: ${selectedDate}` : '90 Mins (10:30 AM — 12:00 PM)'}</span>
                         </div>
                       </div>
