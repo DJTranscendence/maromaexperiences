@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -34,7 +33,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
-import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay, parseISO } from "date-fns";
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay, parseISO, parse } from "date-fns";
 
 interface UserProfile {
   id: string;
@@ -192,8 +191,15 @@ export default function AdminPage() {
   const handleGenerateRecurring = () => {
     const dayIndex = parseInt(recurrence.day);
     const intervalWeeks = parseInt(recurrence.interval);
-    const start = parseISO(recurrence.startDate);
-    const end = parseISO(recurrence.endDate);
+    
+    // Parse manually to avoid UTC shift issues
+    const parseLocal = (dateStr: string) => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
+
+    const start = parseLocal(recurrence.startDate);
+    const end = parseLocal(recurrence.endDate);
     
     if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
       toast({ variant: "destructive", title: "Invalid Range", description: "Please check your start and end dates." });
@@ -203,13 +209,14 @@ export default function AdminPage() {
     const dates: string[] = [];
     let current = new Date(start);
     
-    while (getDay(current) !== dayIndex) {
-      current = addDays(current, 1);
+    // Move to first occurrence of the day
+    while (current.getDay() !== dayIndex) {
+      current.setDate(current.getDate() + 1);
     }
     
     while (current <= end) {
       dates.push(format(current, 'yyyy-MM-dd'));
-      current = addDays(current, 7 * intervalWeeks);
+      current.setDate(current.getDate() + (7 * intervalWeeks));
     }
     
     setNewTour(prev => ({
@@ -964,11 +971,21 @@ export default function AdminPage() {
                         <Separator className="bg-border/50" />
 
                         <div className="space-y-3">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase px-1">Selected Dates</Label>
-                          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 min-h-10">
+                          <div className="flex items-center justify-between px-1">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">Selected Dates</Label>
+                            {newTour.scheduledDates.length > 0 && (
+                              <button 
+                                onClick={() => setNewTour(prev => ({ ...prev, scheduledDates: [] }))}
+                                className="text-[9px] font-bold text-destructive uppercase hover:underline"
+                              >
+                                Clear All
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2 min-h-10 max-h-48 overflow-y-auto pr-1">
                             {newTour.scheduledDates.map(date => (
-                              <Badge key={date} className="bg-white text-primary border-border shrink-0 gap-1.5 px-3 py-1.5 shadow-sm rounded-lg">
-                                {format(parseISO(date), 'MMM d, yyyy')}
+                              <Badge key={date} className="bg-white text-primary border-border gap-1.5 px-3 py-1.5 shadow-sm rounded-lg">
+                                {format(parse(date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')}
                                 <X className="w-3 h-3 cursor-pointer text-slate-400 hover:text-destructive" onClick={() => setNewTour(prev => ({ ...prev, scheduledDates: prev.scheduledDates.filter(d => d !== date) }))} />
                               </Badge>
                             ))}
@@ -985,7 +1002,10 @@ export default function AdminPage() {
                               <div className="p-4 flex justify-center">
                                 <Calendar
                                   mode="multiple"
-                                  selected={newTour.scheduledDates.map(d => parseISO(d))}
+                                  selected={newTour.scheduledDates.map(d => {
+                                    const [y, m, day] = d.split('-').map(Number);
+                                    return new Date(y, m - 1, day);
+                                  })}
                                   onSelect={(dates) => {
                                     if (dates) {
                                       setNewTour(prev => ({
