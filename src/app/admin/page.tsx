@@ -428,7 +428,12 @@ export default function AdminPage() {
   };
 
   const handleSaveTour = () => {
-    if (!newTour.name || !firestore || !user) return;
+    if (!newTour.name) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Experience Name is required to publish." });
+      return;
+    }
+    if (!firestore || !user) return;
+    
     setIsProcessing(true);
     const tourData: Partial<Tour> = {
       ...newTour,
@@ -438,6 +443,7 @@ export default function AdminPage() {
       updatedAt: serverTimestamp(),
       imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`,
     };
+    
     if (editingId) {
       updateDocumentNonBlocking(doc(firestore, "tours", editingId), tourData);
       toast({ title: "Changes Saved" });
@@ -450,8 +456,13 @@ export default function AdminPage() {
       });
       toast({ title: "Experience Published" });
     }
+    
     setIsSuccess(true);
-    setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
+    setTimeout(() => { 
+      setIsSuccess(false); 
+      setIsProcessing(false); 
+      resetTourForm(); 
+    }, 2000);
   };
 
   // --- USERS ---
@@ -898,8 +909,8 @@ export default function AdminPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Name</Label>
-                      <Input placeholder="Experience Name" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" />
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Experience Name</Label>
+                      <Input placeholder="e.g., The Maroma Tour" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" required />
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">

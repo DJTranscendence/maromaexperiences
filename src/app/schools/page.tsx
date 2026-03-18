@@ -160,13 +160,14 @@ export default function SchoolsPage() {
     // Get master dates strictly from the campus tour object in Firestore
     const masterDates = tourData?.scheduledDates || [];
     
+    if (masterDates.length === 0) return [];
+
     // Identify all dates that already have campus activity (any booking or any proposal)
-    // This ensures schools only see slots where the campus is truly free
     const takenInProposals = allProposals?.map(p => p.selectedDate).filter(Boolean) || [];
     const takenInBookings = allBookings?.map(b => b.tourDate).filter(Boolean) || [];
     const takenDatesSet = new Set([...takenInProposals, ...takenInBookings]);
     
-    // Return only those scheduled dates that are truly vacant and defined in the master tour
+    // Return only those scheduled dates that are truly vacant
     return masterDates.filter(d => !takenDatesSet.has(d));
   }, [tourData, allProposals, allBookings]);
 
