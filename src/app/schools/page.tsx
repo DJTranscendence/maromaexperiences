@@ -133,19 +133,45 @@ export default function SchoolsPage() {
   }, [firestore, user]);
   const { data: userData } = useDoc(userDocRef);
 
+  // 1. Fetch the master campus tour record
   const tourQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "tours"), where("name", "==", "The Maroma Tour"), where("isActive", "==", true));
   }, [firestore]);
-  const { data: tourDocs } = useCollection<Tour>(tourQuery);
+  const { data: tourDocs, isLoading: isTourLoading } = useCollection<Tour>(tourQuery);
   const tourData = tourDocs?.[0];
 
+  // 2. Fetch existing bookings and proposals to find "taken" slots
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "bookings");
+  }, [firestore]);
+  const { data: allBookings, isLoading: isBookingsLoading } = useCollection<any>(bookingsQuery);
+
+  const proposalsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "proposals");
+  }, [firestore]);
+  const { data: allProposals, isLoading: isProposalsLoading } = useCollection<any>(proposalsQuery);
+
+  // 3. Calculate Vacant Slots (Master dates minus any date with a booking/proposal)
   const availableDates = useMemo(() => {
-    if (tourData?.scheduledDates && tourData.scheduledDates.length > 0) {
-      return tourData.scheduledDates;
+    // Get master dates from the campus tour object
+    const masterDates = tourData?.scheduledDates || [];
+    
+    // Default fallback list only if no tour object found in DB yet
+    if (masterDates.length === 0 && !tourData && !isTourLoading) {
+      return ["2025-04-14", "2025-04-21", "2025-04-28", "2025-05-05", "2025-05-12", "2025-05-19"];
     }
-    return ["2025-04-14", "2025-04-21", "2025-04-28", "2025-05-05", "2025-05-12", "2025-05-19"];
-  }, [tourData]);
+
+    // Identify all dates that already have campus activity
+    const takenInProposals = allProposals?.map(p => p.selectedDate).filter(Boolean) || [];
+    const takenInBookings = allBookings?.map(b => b.tourDate).filter(Boolean) || [];
+    const takenDatesSet = new Set([...takenInProposals, ...takenInBookings]);
+    
+    // Return only those scheduled dates that are truly vacant
+    return masterDates.filter(d => !takenDatesSet.has(d));
+  }, [tourData, allProposals, allBookings, isTourLoading]);
 
   useEffect(() => {
     if (userData && !isInitialized.current) {
@@ -215,12 +241,14 @@ export default function SchoolsPage() {
     }
   };
 
+  const isLoadingData = isTourLoading || isBookingsLoading || isProposalsLoading;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section - Optimized for perfect centering on all devices */}
+        {/* Hero Section */}
         <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden py-12">
           <Image
             src={SCHOOL_HERO_URL}
@@ -335,23 +363,37 @@ export default function SchoolsPage() {
                 <div className="flex-1 lg:flex-[2] p-4 lg:p-8 space-y-8 lg:space-y-12 pb-12 border-b lg:border-b-0 lg:border-r border-primary/5">
                   <section id="date-section">
                     <h3 className="text-lg lg:text-xl font-headline font-bold text-primary mb-4 lg:mb-6 flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-accent" /> Select Preferred Date
+                      <Calendar className="w-5 h-5 text-accent" /> Select Vacant Campus Slot
                     </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {availableDates.map(date => (
-                        <button 
-                          key={date} 
-                          onClick={() => setSelectedDate(date)}
-                          className={cn(
-                            "p-3 text-center rounded-xl border transition-all font-bold text-xs uppercase tracking-widest",
-                            selectedDate === date ? "bg-primary text-white border-primary shadow-lg scale-[1.02]" : "bg-white border-border hover:border-accent/50 text-primary"
-                          )}
-                        >
-                          {new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates subject to production cycle availability. All school tours generally run on Monday or Friday mornings (10:30 AM — 12:00 PM).</p>
+                    
+                    {isLoadingData ? (
+                      <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
+                    ) : availableDates.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {availableDates.map(date => (
+                          <button 
+                            key={date} 
+                            onClick={() => setSelectedDate(date)}
+                            className={cn(
+                              "p-3 text-center rounded-xl border transition-all font-bold text-xs uppercase tracking-widest",
+                              selectedDate === date ? "bg-primary text-white border-primary shadow-lg scale-[1.02]" : "bg-white border-border hover:border-accent/50 text-primary"
+                            )}
+                          >
+                            {new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-10 bg-rose-50 border-2 border-dashed border-rose-200 rounded-[2rem] text-center space-y-4">
+                        <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
+                        <div className="space-y-1">
+                          <p className="font-bold text-rose-900">All Scheduled Slots are Taken</p>
+                          <p className="text-sm text-rose-700">Please contact our campus design team directly for bespoke school arrangements.</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates above represent truly vacant slots where no other campus tours or workshops are scheduled. Mondays and Fridays are preferred.</p>
                   </section>
 
                   <section className="space-y-6">
