@@ -14,13 +14,14 @@ import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, 
   Settings, Image as ImageIcon, Search, Shield, 
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
-  Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -176,6 +177,7 @@ export default function AdminPage() {
     minGroupSize: 8,
     type: "workshop" as TourType,
     status: "live" as 'live' | 'coming-soon',
+    isActive: true,
     imageUrls: [] as string[],
     scheduledDates: [] as string[]
   });
@@ -400,6 +402,7 @@ export default function AdminPage() {
       minGroupSize: 8,
       type: "workshop",
       status: "live",
+      isActive: true,
       imageUrls: [],
       scheduledDates: []
     });
@@ -420,6 +423,7 @@ export default function AdminPage() {
       minGroupSize: tour.minGroupSize || 8,
       type: tour.type || "workshop",
       status: tour.status || "live",
+      isActive: tour.isActive ?? true,
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : []),
       scheduledDates: tour.scheduledDates || []
     });
@@ -439,7 +443,6 @@ export default function AdminPage() {
       ...newTour,
       pricePerPerson: newTour.price,
       durationHours: parseInt(newTour.duration) || 1,
-      isActive: true,
       updatedAt: serverTimestamp(),
       imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`,
     };
@@ -908,6 +911,20 @@ export default function AdminPage() {
                     )}
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                          {newTour.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                          Visibility Status
+                        </Label>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.isActive ? "Live on website" : "Hidden from website"}</p>
+                      </div>
+                      <Switch 
+                        checked={newTour.isActive} 
+                        onCheckedChange={v => setNewTour({...newTour, isActive: v})} 
+                      />
+                    </div>
+
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Experience Name</Label>
                       <Input placeholder="e.g., The Maroma Tour" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" required />
@@ -1062,6 +1079,7 @@ export default function AdminPage() {
                   <Table>
                     <TableHeader><TableRow className="bg-muted/30">
                       <TableHead>Experience</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Slots</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -1070,6 +1088,13 @@ export default function AdminPage() {
                       {tours?.map(t => (
                         <TableRow key={t.id}>
                           <TableCell className="font-bold">{t.name}</TableCell>
+                          <TableCell>
+                            {t.isActive ? (
+                              <Badge className="bg-green-100 text-green-700 border-none px-3 py-0.5 rounded-full text-[10px] font-black uppercase">Active</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground border-dashed px-3 py-0.5 rounded-full text-[10px] font-black uppercase">Inactive</Badge>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="font-mono text-[9px]">{t.scheduledDates?.length || 0} Dates</Badge>
                           </TableCell>
