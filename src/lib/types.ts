@@ -9,6 +9,7 @@ export interface Tour {
   location: string;
   duration: string;
   price: number;
+  childPrice?: number;
   type: TourType;
   capacity: number;
   bookedSpaces: number;

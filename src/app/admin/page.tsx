@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -171,6 +172,7 @@ export default function AdminPage() {
     audience: "",
     description: "",
     price: 500,
+    childPrice: 300,
     capacity: 20,
     minGroupSize: 8,
     type: "workshop" as TourType,
@@ -386,6 +388,7 @@ export default function AdminPage() {
       audience: "",
       description: "",
       price: 500,
+      childPrice: 300,
       capacity: 20,
       minGroupSize: 8,
       type: "workshop",
@@ -405,6 +408,7 @@ export default function AdminPage() {
       audience: tour.audience || "",
       description: tour.description || "",
       price: tour.price,
+      childPrice: tour.childPrice || 0,
       capacity: tour.capacity || 20,
       minGroupSize: tour.minGroupSize || 8,
       type: tour.type || "workshop",
@@ -891,13 +895,17 @@ export default function AdminPage() {
                       <Input placeholder="Experience Name" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Price (₹)</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Price (₹)</Label>
                         <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Capacity</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Child Price (₹)</Label>
+                        <Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, childPrice: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Capacity</Label>
                         <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-11" />
                       </div>
                     </div>
