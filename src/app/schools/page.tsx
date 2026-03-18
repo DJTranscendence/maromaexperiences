@@ -133,9 +133,10 @@ export default function SchoolsPage() {
   }, [firestore, user]);
   const { data: userData } = useDoc(userDocRef);
 
-  // 1. Fetch the master campus tour record
+  // 1. Fetch the master campus tour record strictly by name
   const tourQuery = useMemoFirebase(() => {
     if (!firestore) return null;
+    // We fetch any active tour named "The Maroma Tour" which is our designated master schedule
     return query(collection(firestore, "tours"), where("name", "==", "The Maroma Tour"), where("isActive", "==", true));
   }, [firestore]);
   const { data: tourDocs, isLoading: isTourLoading } = useCollection<Tour>(tourQuery);
@@ -154,33 +155,20 @@ export default function SchoolsPage() {
   }, [firestore]);
   const { data: allProposals, isLoading: isProposalsLoading } = useCollection<any>(proposalsQuery);
 
-  // 3. Calculate Vacant Slots (Master dates from tour object minus any date with campus activity)
+  // 3. Calculate Vacant Slots (Strictly from the "The Maroma Tour" scheduledDates)
   const availableDates = useMemo(() => {
-    // Get master dates from the campus tour object
-    let masterDates = tourData?.scheduledDates || [];
+    // Get master dates strictly from the campus tour object in Firestore
+    const masterDates = tourData?.scheduledDates || [];
     
-    // Default fallback list for 2026 Saturdays if no tour object found in DB yet
-    if (masterDates.length === 0 && !tourData && !isTourLoading) {
-      masterDates = [
-        "2026-03-28", // Sat
-        "2026-04-04", // Sat
-        "2026-04-11", // Sat
-        "2026-04-18", // Sat
-        "2026-04-25", // Sat
-        "2026-05-02", // Sat
-        "2026-05-09", // Sat
-        "2026-05-16"  // Sat
-      ];
-    }
-
     // Identify all dates that already have campus activity (any booking or any proposal)
+    // This ensures schools only see slots where the campus is truly free
     const takenInProposals = allProposals?.map(p => p.selectedDate).filter(Boolean) || [];
     const takenInBookings = allBookings?.map(b => b.tourDate).filter(Boolean) || [];
     const takenDatesSet = new Set([...takenInProposals, ...takenInBookings]);
     
-    // Return only those scheduled dates that are truly vacant
+    // Return only those scheduled dates that are truly vacant and defined in the master tour
     return masterDates.filter(d => !takenDatesSet.has(d));
-  }, [tourData, allProposals, allBookings, isTourLoading]);
+  }, [tourData, allProposals, allBookings]);
 
   useEffect(() => {
     if (userData && !isInitialized.current) {
@@ -402,7 +390,7 @@ export default function SchoolsPage() {
                       </div>
                     )}
                     
-                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates above represent truly vacant slots where no other campus tours or workshops are scheduled. Saturdays are currently preferred.</p>
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates above represent truly vacant slots from the "The Maroma Tour" schedule where no other campus activity is currently registered.</p>
                   </section>
 
                   <section className="space-y-6">
