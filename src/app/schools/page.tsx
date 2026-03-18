@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -133,14 +134,18 @@ export default function SchoolsPage() {
   }, [firestore, user]);
   const { data: userData } = useDoc(userDocRef);
 
-  // 1. Fetch the master campus tour record strictly by name
-  const tourQuery = useMemoFirebase(() => {
+  // 1. Fetch all active tours to find "The Maroma Tour" case-insensitively
+  const toursQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // We fetch any active tour named "The Maroma Tour" which is our designated master schedule
-    return query(collection(firestore, "tours"), where("name", "==", "The Maroma Tour"), where("isActive", "==", true));
+    return query(collection(firestore, "tours"), where("isActive", "==", true));
   }, [firestore]);
-  const { data: tourDocs, isLoading: isTourLoading } = useCollection<Tour>(tourQuery);
-  const tourData = tourDocs?.[0];
+  const { data: tourDocs, isLoading: isTourLoading } = useCollection<Tour>(toursQuery);
+  
+  const tourData = useMemo(() => {
+    if (!tourDocs) return null;
+    // Perform robust case-insensitive matching to ensure newly created slots are picked up
+    return tourDocs.find(t => t.name.toLowerCase().trim() === "the maroma tour");
+  }, [tourDocs]);
 
   // 2. Fetch existing bookings and proposals to find "taken" slots
   const bookingsQuery = useMemoFirebase(() => {
