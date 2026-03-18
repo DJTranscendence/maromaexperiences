@@ -154,17 +154,26 @@ export default function SchoolsPage() {
   }, [firestore]);
   const { data: allProposals, isLoading: isProposalsLoading } = useCollection<any>(proposalsQuery);
 
-  // 3. Calculate Vacant Slots (Master dates minus any date with a booking/proposal)
+  // 3. Calculate Vacant Slots (Master dates from tour object minus any date with campus activity)
   const availableDates = useMemo(() => {
     // Get master dates from the campus tour object
-    const masterDates = tourData?.scheduledDates || [];
+    let masterDates = tourData?.scheduledDates || [];
     
-    // Default fallback list only if no tour object found in DB yet
+    // Default fallback list for 2026 Saturdays if no tour object found in DB yet
     if (masterDates.length === 0 && !tourData && !isTourLoading) {
-      return ["2025-04-14", "2025-04-21", "2025-04-28", "2025-05-05", "2025-05-12", "2025-05-19"];
+      masterDates = [
+        "2026-03-28", // Sat
+        "2026-04-04", // Sat
+        "2026-04-11", // Sat
+        "2026-04-18", // Sat
+        "2026-04-25", // Sat
+        "2026-05-02", // Sat
+        "2026-05-09", // Sat
+        "2026-05-16"  // Sat
+      ];
     }
 
-    // Identify all dates that already have campus activity
+    // Identify all dates that already have campus activity (any booking or any proposal)
     const takenInProposals = allProposals?.map(p => p.selectedDate).filter(Boolean) || [];
     const takenInBookings = allBookings?.map(b => b.tourDate).filter(Boolean) || [];
     const takenDatesSet = new Set([...takenInProposals, ...takenInBookings]);
@@ -393,7 +402,7 @@ export default function SchoolsPage() {
                       </div>
                     )}
                     
-                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates above represent truly vacant slots where no other campus tours or workshops are scheduled. Mondays and Fridays are preferred.</p>
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">Dates above represent truly vacant slots where no other campus tours or workshops are scheduled. Saturdays are currently preferred.</p>
                   </section>
 
                   <section className="space-y-6">
@@ -508,7 +517,7 @@ export default function SchoolsPage() {
                 <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Selection Status</span>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-bold text-primary font-headline">
-                    {selectedDate ? `Reserved for ${selectedDate}` : "Select a date to request booking"}
+                    {selectedDate ? `Reserved for ${new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : "Select a date to request booking"}
                   </span>
                   {selectedDate && <CheckCircle2 className="w-4 h-4 text-green-600" />}
                 </div>
