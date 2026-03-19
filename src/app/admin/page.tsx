@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -34,6 +33,16 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, getDay, parseISO, parse } from "date-fns";
 
@@ -94,6 +103,19 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
+
+  // Confirmation States
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | null;
+    id: string | null;
+    title: string | null;
+  }>({
+    isOpen: false,
+    type: null,
+    id: null,
+    title: null
+  });
 
   const isWorkshopOwner = user?.email === "indispirit@gmail.com";
   
@@ -164,18 +186,39 @@ export default function AdminPage() {
     setInviteName("");
   };
 
-  const handleDeleteFacilitator = (f: FacilitatorRole) => {
-    if (!firestore) return;
-    const name = f.name || f.email;
-    const confirmed = window.confirm(`Are you sure you want to permanently delete the facilitator record for ${name}? This will revoke their access to campus briefing alerts.`);
-    if (confirmed) {
-      const facilitatorRef = doc(firestore, "roles_facilitator", f.id);
-      deleteDocumentNonBlocking(facilitatorRef);
-      toast({ 
-        title: "Facilitator Deleted", 
-        description: `${name} has been removed from the directory.` 
-      });
+  const openDeleteFacilitator = (f: FacilitatorRole) => {
+    setDeleteConfirm({
+      isOpen: true,
+      type: 'facilitator',
+      id: f.id,
+      title: f.name || f.email
+    });
+  };
+
+  const executeDelete = () => {
+    if (!firestore || !deleteConfirm.type || (!deleteConfirm.id && deleteConfirm.type !== 'bulk-booking')) return;
+
+    switch (deleteConfirm.type) {
+      case 'facilitator':
+        deleteDocumentNonBlocking(doc(firestore, "roles_facilitator", deleteConfirm.id!));
+        toast({ title: "Facilitator Removed", description: `${deleteConfirm.title} has been removed from the directory.` });
+        break;
+      case 'tour':
+        deleteDocumentNonBlocking(doc(firestore, "tours", deleteConfirm.id!));
+        toast({ title: "Experience Deleted", description: `${deleteConfirm.title} removed from catalog.` });
+        break;
+      case 'booking':
+        deleteDocumentNonBlocking(doc(firestore, "bookings", deleteConfirm.id!));
+        toast({ title: "Booking Removed" });
+        break;
+      case 'bulk-booking':
+        selectedBookingIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "bookings", id)));
+        setSelectedBookingIds(new Set());
+        toast({ title: "Bulk Delete Complete", description: "Selected bookings have been removed." });
+        break;
     }
+
+    setDeleteConfirm({ isOpen: false, type: null, id: null, title: null });
   };
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalRecord | null>(null);
@@ -713,7 +756,7 @@ export default function AdminPage() {
                                 onClick={(e) => { 
                                   e.preventDefault();
                                   e.stopPropagation(); 
-                                  handleDeleteFacilitator(f); 
+                                  openDeleteFacilitator(f); 
                                 }}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -822,13 +865,10 @@ export default function AdminPage() {
                           </TableCell>
                           <TableCell>{t.isActive ? <Badge className="bg-green-100 text-green-700">Active</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
                           <TableCell className="text-right">
-                            <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
-                            <Button size="icon" variant="ghost" onClick={() => {
-                              if (confirm(`Permanently delete ${t.name}?`)) {
-                                deleteDocumentNonBlocking(doc(firestore, "tours", t.id));
-                                toast({ title: "Experience Deleted", description: `${t.name} removed from catalog.` });
-                              }
-                            }}><Trash2 className="w-4 h-4" /></Button>
+                            <div className="flex justify-end gap-1">
+                              <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
+                              <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'tour', id: t.id, title: t.name })}><Trash2 className="w-4 h-4" /></Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -847,13 +887,7 @@ export default function AdminPage() {
                   <p className="text-sm text-muted-foreground">Standard workshop reservations.</p>
                 </div>
                 {selectedBookingIds.size > 0 && (
-                  <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => {
-                    if (confirm(`Delete ${selectedBookingIds.size} bookings?`)) {
-                      selectedBookingIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "bookings", id)));
-                      setSelectedBookingIds(new Set());
-                      toast({ title: "Bulk Delete Complete", description: "Selected bookings have been removed." });
-                    }
-                  }}>
+                  <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => setDeleteConfirm({ isOpen: true, type: 'bulk-booking', id: null, title: `${selectedBookingIds.size} bookings` })}>
                     <Trash2 className="w-4 h-4" /> Delete Selected ({selectedBookingIds.size})
                   </Button>
                 )}
@@ -883,12 +917,7 @@ export default function AdminPage() {
                       <TableCell><Badge className="bg-green-100 text-green-700">{b.bookingStatus}</Badge></TableCell>
                       <TableCell className="text-xs">{b.tourDate}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="icon" variant="ghost" onClick={() => {
-                          if (confirm("Delete this booking?")) {
-                            deleteDocumentNonBlocking(doc(firestore, "bookings", b.id));
-                            toast({ title: "Booking Removed" });
-                          }
-                        }}><Trash2 className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `booking for ${b.tourName}` })}><Trash2 className="w-4 h-4" /></Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -954,6 +983,27 @@ export default function AdminPage() {
 
         </Tabs>
       </main>
+
+      {/* Confirmation Dialogs */}
+      <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
+        <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-headline text-primary">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This action cannot be undone. You are about to permanently remove <strong>{deleteConfirm.title}</strong> from the campus records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeDelete} 
+              className="bg-destructive hover:bg-destructive/90 text-white rounded-full font-bold"
+            >
+              Permanently Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={!!selectedProposal} onOpenChange={open => !open && setSelectedProposal(null)}>
         <DialogContent className="w-[95vw] sm:max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
