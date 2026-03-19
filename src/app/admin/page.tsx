@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
@@ -104,7 +104,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
 
-  // Confirmation States - Replacing native window.confirm() for sandbox compatibility
+  // Confirmation States
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | null;
@@ -1006,7 +1006,7 @@ export default function AdminPage() {
         </Tabs>
       </main>
 
-      {/* Confirmation Dialogs - Non-blocking ShadCN replacement for window.confirm() for sandbox compliance */}
+      {/* Confirmation Dialogs */}
       <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
         <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl">
           <AlertDialogHeader>
