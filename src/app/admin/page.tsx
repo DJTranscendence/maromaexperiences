@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
-import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -79,14 +78,6 @@ interface ProposalRecord {
   hotel?: string;
 }
 
-interface MediaItem {
-  id: string;
-  url: string;
-  type: 'image' | 'video';
-  altText?: string;
-  uploadedAt: any;
-}
-
 interface FacilitatorRole {
   id: string;
   email: string;
@@ -95,13 +86,10 @@ interface FacilitatorRole {
   activatedAt: any;
 }
 
-const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2";
-
 export default function AdminPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
@@ -591,7 +579,7 @@ export default function AdminPage() {
                               </div>
                               {e.facilitatorEmail && (
                                 <button 
-                                  onClick={(ev) => { ev.stopPropagation(); handleNotifyFacilitator(e.facilitatorEmail, e); }}
+                                  onClick={(ev) => { ev.stopPropagation(); handleNotifyFacilitator(e.facilitatorEmail!, e); }}
                                   className="mt-1 bg-white/20 hover:bg-white/40 text-white rounded px-1 py-0.5 flex items-center gap-1 text-[7px]"
                                 >
                                   <Bell className="w-2 h-2" /> Send Reminder
@@ -709,7 +697,8 @@ export default function AdminPage() {
                                 className="rounded-full text-muted-foreground hover:text-destructive"
                                 onClick={() => {
                                   if(confirm(`Revoke facilitator access for ${f.name || f.email}?`)) {
-                                    deleteDocumentNonBlocking(doc(firestore!, "roles_facilitator", f.id));
+                                    deleteDocumentNonBlocking(doc(firestore, "roles_facilitator", f.id));
+                                    toast({ title: "Facilitator Removed", description: `${f.name || f.email} has been deleted from the directory.` });
                                   }
                                 }}
                               >
@@ -820,7 +809,12 @@ export default function AdminPage() {
                           <TableCell>{t.isActive ? <Badge className="bg-green-100 text-green-700">Active</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
                           <TableCell className="text-right">
                             <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
-                            <Button size="icon" variant="ghost" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "tours", t.id))}><Trash2 className="w-4 h-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => {
+                              if (confirm(`Permanently delete ${t.name}?`)) {
+                                deleteDocumentNonBlocking(doc(firestore, "tours", t.id));
+                                toast({ title: "Experience Deleted", description: `${t.name} removed from catalog.` });
+                              }
+                            }}><Trash2 className="w-4 h-4" /></Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -841,9 +835,9 @@ export default function AdminPage() {
                 {selectedBookingIds.size > 0 && (
                   <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => {
                     if (confirm(`Delete ${selectedBookingIds.size} bookings?`)) {
-                      selectedBookingIds.forEach(id => deleteDocumentNonBlocking(doc(firestore!, "bookings", id)));
+                      selectedBookingIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "bookings", id)));
                       setSelectedBookingIds(new Set());
-                      toast({ title: "Bulk Delete Complete" });
+                      toast({ title: "Bulk Delete Complete", description: "Selected bookings have been removed." });
                     }
                   }}>
                     <Trash2 className="w-4 h-4" /> Delete Selected ({selectedBookingIds.size})
@@ -875,7 +869,12 @@ export default function AdminPage() {
                       <TableCell><Badge className="bg-green-100 text-green-700">{b.bookingStatus}</Badge></TableCell>
                       <TableCell className="text-xs">{b.tourDate}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="icon" variant="ghost" onClick={() => deleteDocumentNonBlocking(doc(firestore!, "bookings", b.id))}><Trash2 className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => {
+                          if (confirm("Delete this booking?")) {
+                            deleteDocumentNonBlocking(doc(firestore, "bookings", b.id));
+                            toast({ title: "Booking Removed" });
+                          }
+                        }}><Trash2 className="w-4 h-4" /></Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -920,9 +919,14 @@ export default function AdminPage() {
                       <TableCell>{adminIds.has(u.id) ? <Badge className="bg-primary text-white">Admin</Badge> : <Badge variant="outline">Guest</Badge>}</TableCell>
                       <TableCell className="text-right pr-6">
                         <Button size="sm" variant="outline" onClick={() => {
-                          const ref = doc(firestore!, "roles_admin", u.id);
-                          if (adminIds.has(u.id)) deleteDocumentNonBlocking(ref);
-                          else setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
+                          const ref = doc(firestore, "roles_admin", u.id);
+                          if (adminIds.has(u.id)) {
+                            deleteDocumentNonBlocking(ref);
+                            toast({ title: "Admin Rights Revoked", description: `${u.email} is no longer an administrator.` });
+                          } else {
+                            setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
+                            toast({ title: "Admin Assigned", description: `${u.email} now has full dashboard access.` });
+                          }
                         }}>
                           <Shield className="w-3.5 h-3.5 mr-2" /> {adminIds.has(u.id) ? "Revoke Admin" : "Make Admin"}
                         </Button>
