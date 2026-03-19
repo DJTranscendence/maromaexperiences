@@ -172,7 +172,7 @@ export default function AdminPage() {
     audience: "",
     description: "",
     price: 500,
-    childPrice: 300,
+    childPrice: 0,
     capacity: 20,
     minGroupSize: 8,
     type: "workshop" as TourType,
@@ -181,6 +181,23 @@ export default function AdminPage() {
     imageUrls: [] as string[],
     scheduledDates: [] as string[]
   });
+
+  // AUTO-SCROLL TO SAVE BUTTON ON SETTINGS CHANGE
+  useEffect(() => {
+    // Only scroll if we have an active editor session
+    if (editingId || newTour.name || newTour.scheduledDates.length > 0) {
+      const element = document.getElementById('save-publish-button');
+      if (element) {
+        // We skip scrolling if the user is actively typing in a text field to avoid a jumpy UX
+        const activeEl = document.activeElement;
+        const isTyping = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
+        
+        if (!isTyping) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+  }, [newTour]);
 
   // --- RECURRENCE BUILDER ---
   const [recurrence, setRecurrence] = useState({
@@ -397,7 +414,7 @@ export default function AdminPage() {
       audience: "",
       description: "",
       price: 500,
-      childPrice: 300,
+      childPrice: 0,
       capacity: 20,
       minGroupSize: 8,
       type: "workshop",
@@ -1058,6 +1075,7 @@ export default function AdminPage() {
                     </div>
 
                     <Button 
+                      id="save-publish-button"
                       className={cn("w-full rounded-full h-12 font-bold shadow-lg transition-all duration-500", isSuccess ? "bg-green-600" : "bg-primary")}
                       onClick={handleSaveTour}
                       disabled={isProcessing || isSuccess}
