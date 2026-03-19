@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -54,6 +53,7 @@ interface UserProfile {
   lastName?: string;
   email: string;
   accountType?: string;
+  isSignedUp?: boolean;
 }
 
 interface BookingRecord {
@@ -246,73 +246,6 @@ export default function AdminPage() {
     setDeleteConfirm({ isOpen: false, type: null, id: null, title: null });
   };
 
-  const [selectedProposal, setSelectedProposal] = useState<ProposalRecord | null>(null);
-  const [isEmailing, setIsEmailing] = useState(false);
-  const [emailDraft, setEmailDraft] = useState({ subject: "", body: "" });
-
-  const handleOpenProposal = (p: ProposalRecord) => {
-    setSelectedProposal(p);
-    if (p.type === 'School') {
-      setEmailDraft({
-        subject: `Booking Confirmed: ${p.schoolName} - Maroma Tour`,
-        body: `Hello ${p.contactName},\n\nWe are delighted to confirm your school tour for "${p.schoolName}" on ${p.selectedDate || "[Date]"}.\n\nSchedule: 10:30 AM — 12:00 PM\nGroup Size: ${p.studentCount} Students, ${p.adultCount} Adults\n\nWe look forward to hosting your students at the Maroma Campus!\n\nBest regards,\nThe Maroma Team`
-      });
-    } else {
-      setEmailDraft({
-        subject: `Proposal Confirmed: ${p.companyName} - Maroma Experience`,
-        body: `Hello ${p.contactName},\n\nWe have reviewed your request for "${p.companyName}" and are ready to proceed with your custom Maroma experience.\n\nPackage: ${p.packageName || "Custom Itinerary"}\nCatering: ${p.catering || "Standard"}\n\nOur team will be in touch shortly with the formal contract and invoice details.\n\nWarm regards,\nThe Maroma Team`
-      });
-    }
-  };
-
-  const handleSendConfirmation = async () => {
-    if (!selectedProposal) return;
-    setIsEmailing(true);
-    try {
-      await sendEmailNotification({
-        to: selectedProposal.email,
-        subject: emailDraft.subject,
-        textBody: emailDraft.body
-      });
-      if (firestore) {
-        updateDocumentNonBlocking(doc(firestore, "proposals", selectedProposal.id), {
-          status: "approved",
-          updatedAt: serverTimestamp()
-        });
-      }
-      toast({ title: "Confirmation Sent", description: `Email delivered to ${selectedProposal.email}.` });
-      setIsEmailing(false);
-      setSelectedProposal(null);
-    } catch (err) {
-      toast({ variant: "destructive", title: "Delivery Failed", description: "Could not send the confirmation email." });
-      setIsEmailing(false);
-    }
-  };
-
-  const handleNotifyFacilitator = async (targetEmail: string, eventDetails: any) => {
-    if (!targetEmail || targetEmail === 'none') {
-      toast({ variant: "destructive", title: "Assignment Required", description: "Please assign a facilitator to this specific event first." });
-      return;
-    }
-
-    const facilitator = facilitators?.find(f => f.email === targetEmail);
-    const greetingName = facilitator?.name || "Facilitator";
-    
-    setIsEmailing(true);
-    try {
-      await sendEmailNotification({
-        to: targetEmail,
-        subject: `Event Reminder & Briefing: ${eventDetails.title}`,
-        textBody: `Hello ${greetingName},\n\nThis is a briefing for your upcoming event at the Maroma Campus.\n\nExperience: ${eventDetails.title}\nDate: ${eventDetails.date}\nConfirmed Guests: ${eventDetails.count}\n\nPlease review your preparation list and ensure the venue is ready for arrival.\n\nWarm regards,\nMaroma Administration`
-      });
-      toast({ title: "Facilitator Notified", description: `Briefing sent to ${targetEmail}.` });
-    } catch (err) {
-      toast({ variant: "destructive", title: "Notification Failed", description: "Could not reach the facilitator." });
-    } finally {
-      setIsEmailing(false);
-    }
-  };
-
   const toursQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, "tours");
@@ -341,19 +274,6 @@ export default function AdminPage() {
     facilitatorEmail: "",
     facilitatorAssignments: {} as Record<string, string>
   });
-
-  useEffect(() => {
-    if (editingId || newTour.name || newTour.scheduledDates.length > 0) {
-      const element = document.getElementById('save-publish-button');
-      if (element) {
-        const activeEl = document.activeElement;
-        const isTyping = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
-        if (!isTyping) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }
-    }
-  }, [newTour, editingId]);
 
   const [recurrence, setRecurrence] = useState({
     day: "6",
@@ -385,7 +305,6 @@ export default function AdminPage() {
       current.setDate(current.getDate() + (7 * intervalWeeks));
     }
     
-    // Apply default facilitator to newly generated dates if provided
     const newAssignments = { ...newTour.facilitatorAssignments };
     dates.forEach(d => {
       if (!newAssignments[d] && newTour.facilitatorEmail) {
@@ -446,20 +365,10 @@ export default function AdminPage() {
       t.scheduledDates?.forEach(d => {
         const key = `${t.id}_${d}`;
         const count = bookingsByDate[key] || 0;
-        // Use granular assignment first, then fall back to tour default
         const facilitator = t.facilitatorAssignments?.[d] || t.facilitatorEmail;
         events.push({ date: d, title: t.name, type: 'workshop', id: t.id, count, facilitatorEmail: facilitator });
       });
     });
-    if (newTour.name && newTour.scheduledDates.length > 0) {
-      newTour.scheduledDates.forEach(d => {
-        const isAlreadySaved = tours?.some(t => t.id === editingId && t.scheduledDates.includes(d));
-        if (!isAlreadySaved) {
-          const facilitator = newTour.facilitatorAssignments[d] || newTour.facilitatorEmail;
-          events.push({ date: d, title: `[Draft] ${newTour.name}`, type: 'draft', id: editingId || 'draft-new', count: 0, facilitatorEmail: facilitator });
-        }
-      });
-    }
     proposals?.forEach(p => {
       if (p.selectedDate) {
         let count = 0;
@@ -478,28 +387,52 @@ export default function AdminPage() {
       }
     });
     return events;
-  }, [tours, proposals, bookingsByDate, newTour, editingId]);
+  }, [tours, proposals, bookingsByDate]);
 
   const daysInMonth = useMemo(() => {
     return eachDayOfInterval({ start: startOfMonth(calendarMonth), end: endOfMonth(calendarMonth) });
   }, [calendarMonth]);
 
-  const handleCalendarEventClick = (e: any) => {
-    if (e.type === 'workshop' || e.type === 'draft') {
-      const tour = tours?.find(t => t.id === e.id);
-      if (tour) {
-        handleEditTour(tour);
-        setActiveTab("admin");
-      } else if (e.id === 'draft-new') {
-        setActiveTab("admin");
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore || !user || !isAdmin) return null;
+    return collection(firestore, "users");
+  }, [firestore, user, isAdmin]);
+  const adminsQuery = useMemoFirebase(() => {
+    if (!firestore || !user || !isAdmin) return null;
+    return collection(firestore, "roles_admin");
+  }, [firestore, user, isAdmin]);
+  
+  const { data: users, isLoading: isUsersLoading } = useCollection<UserProfile>(usersQuery);
+  const { data: admins } = useCollection(adminsQuery);
+  const adminIds = new Set(admins?.map(a => a.id) || []);
+
+  const combinedUsers = useMemo(() => {
+    if (!users) return [];
+    const list = [...users].map(u => ({ ...u, isSignedUp: true }));
+    
+    facilitators?.forEach(f => {
+      const exists = list.some(u => u.email.toLowerCase() === f.email.toLowerCase());
+      if (!exists) {
+        list.push({
+          id: f.id,
+          firstName: f.name || "Facilitator",
+          lastName: "(Pending Signup)",
+          email: f.email,
+          isSignedUp: false
+        } as any);
       }
-    } else {
-      const proposal = proposals?.find(p => p.id === e.id);
-      if (proposal) {
-        handleOpenProposal(proposal);
-        setActiveTab("proposals");
-      }
-    }
+    });
+    
+    return list;
+  }, [users, facilitators]);
+
+  const handleSelectAllGuests = () => {
+    const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
+    const guestIds = combinedUsers
+      ?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id) && !facilitatorEmailsSet.has(u.email.toLowerCase()))
+      .map(u => u.id) || [];
+    setSelectedUserIds(new Set(guestIds));
+    toast({ title: "Guests Selected", description: `${guestIds.length} guest profiles have been marked for action.` });
   };
 
   const handleEditTour = (tour: Tour) => {
@@ -527,29 +460,6 @@ export default function AdminPage() {
     if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const resetTourForm = () => {
-    setEditingId(null);
-    setNewTour({
-      name: "",
-      highlights: [],
-      location: "Maroma Campus",
-      duration: "60 minutes",
-      audience: "",
-      description: "",
-      price: 500,
-      childPrice: 0,
-      capacity: 20,
-      minGroupSize: 8,
-      type: "workshop",
-      status: "live",
-      isActive: true,
-      imageUrls: [],
-      scheduledDates: [],
-      facilitatorEmail: "",
-      facilitatorAssignments: {}
-    });
-  };
-
   const handleSaveTour = () => {
     if (!newTour.name) {
       toast({ variant: "destructive", title: "Missing Information", description: "Experience Name is required." });
@@ -575,29 +485,7 @@ export default function AdminPage() {
       toast({ title: "Experience Published" });
     }
     setIsSuccess(true);
-    setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
-  };
-
-  const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !user || !isAdmin) return null;
-    return collection(firestore, "users");
-  }, [firestore, user, isAdmin]);
-  const adminsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || !isAdmin) return null;
-    return collection(firestore, "roles_admin");
-  }, [firestore, user, isAdmin]);
-  
-  const { data: users, isLoading: isUsersLoading } = useCollection<UserProfile>(usersQuery);
-  const { data: admins } = useCollection(adminsQuery);
-  const adminIds = new Set(admins?.map(a => a.id) || []);
-
-  const handleSelectAllGuests = () => {
-    const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
-    const guestIds = users
-      ?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id) && !facilitatorEmailsSet.has(u.email.toLowerCase()))
-      .map(u => u.id) || [];
-    setSelectedUserIds(new Set(guestIds));
-    toast({ title: "Guests Selected", description: `${guestIds.length} guest profiles have been marked for action.` });
+    setTimeout(() => { setIsSuccess(false); setIsProcessing(false); }, 2000);
   };
 
   if (isUserLoading || isAdminDocLoading) {
@@ -696,7 +584,6 @@ export default function AdminPage() {
                                 e.type === 'corporate' ? "bg-emerald-600 text-white border-emerald-700" :
                                 "bg-slate-100 text-slate-500 border-dashed"
                               )}
-                              onClick={() => handleCalendarEventClick(e)}
                             >
                               <div className="flex justify-between items-center gap-1">
                                 <span className="truncate">{e.title}</span>
@@ -705,12 +592,6 @@ export default function AdminPage() {
                               {e.facilitatorEmail && e.facilitatorEmail !== 'none' && (
                                 <div className="flex items-center justify-between gap-1 mt-1">
                                   <span className="text-[7px] opacity-70 truncate">By {facilitators?.find(f => f.email === e.facilitatorEmail)?.name || e.facilitatorEmail}</span>
-                                  <button 
-                                    onClick={(ev) => { ev.stopPropagation(); handleNotifyFacilitator(e.facilitatorEmail!, e); }}
-                                    className="bg-white/20 hover:bg-white/40 text-white rounded px-1 py-0.5 flex items-center gap-1 text-[7px] shrink-0"
-                                  >
-                                    <Bell className="w-2 h-2" />
-                                  </button>
                                 </div>
                               )}
                             </div>
@@ -780,7 +661,6 @@ export default function AdminPage() {
                         </Button>
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground text-center font-bold uppercase">This member will appear in Experience assignments.</p>
                   </CardContent>
                 </Card>
               </div>
@@ -811,38 +691,121 @@ export default function AdminPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="rounded-full text-muted-foreground hover:text-accent"
-                                onClick={() => handleEditFacilitator(f)}
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="rounded-full text-muted-foreground hover:text-destructive"
-                                onClick={(e) => { 
-                                  e.preventDefault();
-                                  e.stopPropagation(); 
-                                  openDeleteFacilitator(f); 
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <Button size="icon" variant="ghost" className="rounded-full" onClick={() => handleEditFacilitator(f)}><Edit3 className="w-4 h-4" /></Button>
+                              <Button size="icon" variant="ghost" className="rounded-full text-destructive" onClick={() => openDeleteFacilitator(f)}><Trash2 className="w-4 h-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
-                      {(!facilitators || facilitators.length === 0) && (
-                        <TableRow><TableCell colSpan={3} className="text-center py-12 text-muted-foreground">No facilitators registered yet.</TableCell></TableRow>
-                      )}
                     </TableBody>
                   </Table>
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="users" className="m-0 focus-visible:ring-0">
+            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b flex flex-col md:flex-row md:items-center justify-between p-6 gap-4">
+                <div className="flex items-center gap-4">
+                  <CardTitle className="font-headline text-2xl">User Directory</CardTitle>
+                  <Badge variant="outline" className="font-mono text-xs">{combinedUsers.length} Profiles</Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button variant="outline" size="sm" className="rounded-full px-6 gap-2 font-bold border-accent text-accent" onClick={handleSelectAllGuests}><CheckSquare className="w-4 h-4" /> Select All Guests</Button>
+                  {selectedUserIds.size > 0 && (
+                    <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => setDeleteConfirm({ isOpen: true, type: 'bulk-user', id: null, title: `${selectedUserIds.size} guest profiles` })}><Trash2 className="w-4 h-4" /> Delete Selected ({selectedUserIds.size})</Button>
+                  )}
+                </div>
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/5">
+                    <TableHead className="w-12 pl-6">
+                      <Checkbox 
+                        checked={combinedUsers.length > 0 && selectedUserIds.size === combinedUsers.filter(u => {
+                          const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
+                          return u.email !== "indispirit@gmail.com" && !adminIds.has(u.id) && !isFacilitator;
+                        }).length} 
+                        onCheckedChange={() => {
+                          const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
+                          const allNonProtectedIds = combinedUsers?.filter(u => 
+                            u.email !== "indispirit@gmail.com" && 
+                            !adminIds.has(u.id) && 
+                            !facilitatorEmailsSet.has(u.email.toLowerCase())
+                          ).map(u => u.id) || [];
+                          if(selectedUserIds.size === allNonProtectedIds.length) setSelectedUserIds(new Set());
+                          else setSelectedUserIds(new Set(allNonProtectedIds));
+                        }} 
+                      />
+                    </TableHead>
+                    <TableHead>Profile</TableHead>
+                    <TableHead>Permissions</TableHead>
+                    <TableHead className="text-right pr-8">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {combinedUsers.map(u => {
+                    const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
+                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id) || isFacilitator;
+                    return (
+                      <TableRow key={u.id} className={cn(isProtected && "bg-slate-50/50")}>
+                        <TableCell className="pl-6">
+                          {isProtected ? (
+                            <div className="w-4 h-4 flex items-center justify-center text-muted-foreground/40"><Lock className="w-3 h-3" /></div>
+                          ) : (
+                            <Checkbox checked={selectedUserIds.has(u.id)} onCheckedChange={() => {
+                              const next = new Set(selectedUserIds);
+                              if(next.has(u.id)) next.delete(u.id); else next.add(u.id);
+                              setSelectedUserIds(next);
+                            }} />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold flex items-center gap-2">
+                              {u.firstName} {u.lastName}
+                              {isProtected && <Lock className="w-3 h-3 text-accent" />}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{u.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {adminIds.has(u.id) && <Badge className="bg-primary text-white">Admin</Badge>}
+                            {isFacilitator && <Badge className="bg-accent text-white">Facilitator</Badge>}
+                            {!isProtected && <Badge variant="outline">Guest</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right pr-6">
+                          {u.isSignedUp ? (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              disabled={u.email === "indispirit@gmail.com"}
+                              onClick={() => {
+                                const ref = doc(firestore, "roles_admin", u.id);
+                                if (adminIds.has(u.id)) {
+                                  deleteDocumentNonBlocking(ref);
+                                  toast({ title: "Admin Rights Revoked" });
+                                } else {
+                                  setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
+                                  toast({ title: "Admin Assigned" });
+                                }
+                              }}
+                            >
+                              <Shield className="w-3.5 h-3.5 mr-2" /> {adminIds.has(u.id) ? "Revoke Admin" : "Make Admin"}
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3">Team Access Active</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Card>
           </TabsContent>
 
           <TabsContent value="admin" className="m-0 focus-visible:ring-0 space-y-12">
@@ -885,7 +848,7 @@ export default function AdminPage() {
                 <Card id="tour-editor-card" className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="font-headline text-2xl text-primary">{editingId ? "Edit Experience" : "New Experience"}</CardTitle>
-                    {editingId && <Button variant="ghost" size="icon" onClick={resetTourForm} className="rounded-full"><X className="w-4 h-4" /></Button>}
+                    {editingId && <Button variant="ghost" size="icon" onClick={() => setEditingId(null)} className="rounded-full"><X className="w-4 h-4" /></Button>}
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 gap-3">
@@ -894,58 +857,34 @@ export default function AdminPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} Visibility</Label>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.isActive ? "Live on website" : "Hidden"}</p>
                         </div>
-                        <Switch 
-                          checked={newTour.isActive} 
-                          onCheckedChange={v => setNewTour({...newTour, isActive: v})} 
-                          className="data-[state=checked]:bg-green-600"
-                        />
+                        <Switch checked={newTour.isActive} onCheckedChange={v => setNewTour({...newTour, isActive: v})} className="data-[state=checked]:bg-green-600" />
                       </div>
-
                       <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
                         <div className="space-y-0.5">
                           <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.status === 'live' ? <CheckCircle2 className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />} Launch Status</Label>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.status === 'live' ? "Live" : "Coming Soon"}</p>
                         </div>
-                        <Switch 
-                          checked={newTour.status === 'live'} 
-                          onCheckedChange={v => setNewTour({...newTour, status: v ? 'live' : 'coming-soon'})} 
-                          className="data-[state=checked]:bg-green-600"
-                        />
+                        <Switch checked={newTour.status === 'live'} onCheckedChange={v => setNewTour({...newTour, status: v ? 'live' : 'coming-soon'})} className="data-[state=checked]:bg-green-600" />
                       </div>
                     </div>
-
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Experience Name</Label>
                       <Input placeholder="e.g., The Maroma Tour" value={newTour.name} onChange={e => setNewTour({...newTour, name: e.target.value})} className="rounded-xl h-11" required />
                     </div>
-
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                        <UserCheck className="w-3 h-3" /> Default Facilitator
-                      </Label>
-                      <Select 
-                        value={newTour.facilitatorEmail} 
-                        onValueChange={v => setNewTour({...newTour, facilitatorEmail: v})}
-                      >
-                        <SelectTrigger className="h-11 rounded-xl bg-slate-50">
-                          <SelectValue placeholder="Select Facilitator" />
-                        </SelectTrigger>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2"><UserCheck className="w-3 h-3" /> Default Facilitator</Label>
+                      <Select value={newTour.facilitatorEmail} onValueChange={v => setNewTour({...newTour, facilitatorEmail: v})}>
+                        <SelectTrigger className="h-11 rounded-xl bg-slate-50"><SelectValue placeholder="Select Facilitator" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Unassigned</SelectItem>
-                          {facilitators?.map(f => (
-                            <SelectItem key={f.id} value={f.email}>{f.name || f.email}</SelectItem>
-                          ))}
+                          {facilitators?.map(f => <SelectItem key={f.id} value={f.email}>{f.name || f.email}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <p className="text-[9px] text-muted-foreground uppercase font-bold px-1">Applies to all newly generated dates.</p>
                     </div>
-
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Price (₹)</Label><Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Child Price</Label><Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, childPrice: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label><Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                     </div>
-
                     <div className="space-y-4 pt-4 border-t border-border/50">
                       <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Frequency Engine</Label>
                       <div className="p-5 bg-muted/20 rounded-2xl border border-border/50 space-y-6">
@@ -956,8 +895,7 @@ export default function AdminPage() {
                         <Button className="w-full bg-primary/10 text-primary hover:bg-primary/20 rounded-xl font-bold text-[10px] uppercase gap-2" onClick={handleGenerateRecurring}><Repeat className="w-3.5 h-3.5" /> Generate Slots</Button>
                       </div>
                     </div>
-
-                    <Button id="save-publish-button" className={cn("w-full rounded-full h-12 font-bold shadow-lg transition-all", isSuccess ? "bg-green-600" : "bg-primary")} onClick={handleSaveTour} disabled={isProcessing || isSuccess}>
+                    <Button className={cn("w-full rounded-full h-12 font-bold shadow-lg", isSuccess ? "bg-green-600" : "bg-primary")} onClick={handleSaveTour} disabled={isProcessing || isSuccess}>
                       {isProcessing ? <Loader2 className="animate-spin" /> : isSuccess ? <Check className="w-4 h-4" /> : <Save className="mr-2 h-4 w-4" />}
                       {editingId ? "Save Changes" : "Publish Experience"}
                     </Button>
@@ -970,47 +908,31 @@ export default function AdminPage() {
                   <Label className="text-xl font-headline font-bold text-primary mb-6 block">Schedule & Staffing</Label>
                   <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
                     <Table>
-                      <TableHeader><TableRow className="bg-muted/30">
-                        <TableHead>Event Date</TableHead>
-                        <TableHead>Assigned Facilitator</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow></TableHeader>
+                      <TableHeader><TableRow className="bg-muted/30"><TableHead>Event Date</TableHead><TableHead>Assigned Facilitator</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {newTour.scheduledDates.length > 0 ? (
                           newTour.scheduledDates.map(date => (
                             <TableRow key={date}>
                               <TableCell className="font-bold">{format(parseISO(date), 'EEEE, MMM d, yyyy')}</TableCell>
                               <TableCell>
-                                <Select 
-                                  value={newTour.facilitatorAssignments[date] || 'none'} 
-                                  onValueChange={(v) => handleUpdateDateFacilitator(date, v)}
-                                >
-                                  <SelectTrigger className="h-9 text-xs rounded-lg w-48">
-                                    <SelectValue placeholder="Choose facilitator" />
-                                  </SelectTrigger>
+                                <Select value={newTour.facilitatorAssignments[date] || 'none'} onValueChange={(v) => handleUpdateDateFacilitator(date, v)}>
+                                  <SelectTrigger className="h-9 text-xs rounded-lg w-48"><SelectValue placeholder="Choose facilitator" /></SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="none">No Assignment</SelectItem>
-                                    {facilitators?.map(f => (
-                                      <SelectItem key={f.id} value={f.email}>{f.name || f.email}</SelectItem>
-                                    ))}
+                                    {facilitators?.map(f => <SelectItem key={f.id} value={f.email}>{f.name || f.email}</SelectItem>)}
                                   </SelectContent>
                                 </Select>
                               </TableCell>
-                              <TableCell className="text-right">
-                                <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => handleRemoveDate(date)}>
-                                  <Trash className="w-4 h-4" />
-                                </Button>
-                              </TableCell>
+                              <TableCell className="text-right"><Button size="icon" variant="ghost" onClick={() => handleRemoveDate(date)}><Trash className="w-4 h-4" /></Button></TableCell>
                             </TableRow>
                           ))
                         ) : (
-                          <TableRow><TableCell colSpan={3} className="text-center py-12 text-muted-foreground italic">Use the Frequency Engine to generate event slots.</TableCell></TableRow>
+                          <TableRow><TableCell colSpan={3} className="text-center py-12 text-muted-foreground">Use the Frequency Engine to generate event slots.</TableCell></TableRow>
                         )}
                       </TableBody>
                     </Table>
                   </Card>
                 </section>
-
                 <section>
                   <Label className="text-xl font-headline font-bold text-primary mb-4 block">Visual Assets</Label>
                   <ImageLibrary selectedUrls={newTour.imageUrls} onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} />
@@ -1018,198 +940,6 @@ export default function AdminPage() {
               </div>
             </div>
           </TabsContent>
-
-          <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
-            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="font-headline text-2xl text-primary">Individual Bookings</CardTitle>
-                  <p className="text-sm text-muted-foreground">Standard workshop reservations.</p>
-                </div>
-                {selectedBookingIds.size > 0 && (
-                  <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => setDeleteConfirm({ isOpen: true, type: 'bulk-booking', id: null, title: `${selectedBookingIds.size} bookings` })}>
-                    <Trash2 className="w-4 h-4" /> Delete Selected ({selectedBookingIds.size})
-                  </Button>
-                )}
-              </CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/30">
-                  <TableHead className="w-12"><Checkbox checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} onCheckedChange={() => {
-                    if(selectedBookingIds.size === bookings?.length) setSelectedBookingIds(new Set());
-                    else setSelectedBookingIds(new Set(bookings?.map(b => b.id)));
-                  }} /></TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Attendees</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {bookings?.map(b => (
-                    <TableRow key={b.id}>
-                      <TableCell><Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => {
-                        const next = new Set(selectedBookingIds);
-                        if(next.has(b.id)) next.delete(b.id); else next.add(b.id);
-                        setSelectedBookingIds(next);
-                      }} /></TableCell>
-                      <TableCell className="font-bold">{b.tourName}</TableCell>
-                      <TableCell>{b.numberOfAttendees}</TableCell>
-                      <TableCell><Badge className="bg-green-100 text-green-700">{b.bookingStatus}</Badge></TableCell>
-                      <TableCell className="text-xs">{b.tourDate}</TableCell>
-                      <TableCell className="text-right">
-                        <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `booking for ${b.tourName}` })}><Trash2 className="w-4 h-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="proposals" className="m-0 focus-visible:ring-0">
-            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b px-8 py-6"><CardTitle className="font-headline text-2xl text-primary">Group & Corporate Requests</CardTitle></CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/30"><TableHead>Organization</TableHead><TableHead>Contact</TableHead><TableHead>Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {proposals?.map(p => (
-                    <TableRow key={p.id} className="cursor-pointer hover:bg-muted/10" onClick={() => handleOpenProposal(p)}>
-                      <TableCell className="font-bold">{p.schoolName || p.companyName}</TableCell>
-                      <TableCell className="text-xs">{p.contactName}</TableCell>
-                      <TableCell className="text-xs font-medium">{p.selectedDate || "Flexible"}</TableCell>
-                      <TableCell><Badge className={p.status === 'approved' ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}>{p.status}</Badge></TableCell>
-                      <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                        <Button size="icon" variant="ghost" onClick={() => handleOpenProposal(p)}><ExternalLink className="w-4 h-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="users" className="m-0 focus-visible:ring-0">
-            <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b flex flex-col md:flex-row md:items-center justify-between p-6 gap-4">
-                <CardTitle className="font-headline text-2xl">User Directory</CardTitle>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-full px-6 gap-2 font-bold border-accent text-accent hover:bg-accent hover:text-white transition-all"
-                    onClick={handleSelectAllGuests}
-                  >
-                    <CheckSquare className="w-4 h-4" /> Select All Guests
-                  </Button>
-                  
-                  {selectedUserIds.size > 0 && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="rounded-full px-6 gap-2 font-bold shadow-lg shadow-destructive/20 animate-in fade-in slide-in-from-right-2" 
-                      onClick={() => setDeleteConfirm({ 
-                        isOpen: true, 
-                        type: 'bulk-user', 
-                        id: null, 
-                        title: `${selectedUserIds.size} selected guest profiles` 
-                      })}
-                    >
-                      <Trash2 className="w-4 h-4" /> Delete Selected ({selectedUserIds.size})
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/5">
-                    <TableHead className="w-12 pl-6">
-                      <Checkbox 
-                        checked={users && users.length > 0 && selectedUserIds.size === users.filter(u => {
-                          const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
-                          return u.email !== "indispirit@gmail.com" && !adminIds.has(u.id) && !isFacilitator;
-                        }).length} 
-                        onCheckedChange={() => {
-                          const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
-                          const allNonAdminIds = users?.filter(u => 
-                            u.email !== "indispirit@gmail.com" && 
-                            !adminIds.has(u.id) && 
-                            !facilitatorEmailsSet.has(u.email.toLowerCase())
-                          ).map(u => u.id) || [];
-                          if(selectedUserIds.size === allNonAdminIds.length) setSelectedUserIds(new Set());
-                          else setSelectedUserIds(new Set(allNonAdminIds));
-                        }} 
-                      />
-                    </TableHead>
-                    <TableHead>Profile</TableHead>
-                    <TableHead>Permissions</TableHead>
-                    <TableHead className="text-right pr-8">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users?.map(u => {
-                    const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
-                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id) || isFacilitator;
-                    return (
-                      <TableRow key={u.id} className={cn(isProtected && "bg-slate-50/50")}>
-                        <TableCell className="pl-6">
-                          {isProtected ? (
-                            <div className="w-4 h-4 flex items-center justify-center text-muted-foreground/40">
-                              <Lock className="w-3 h-3" />
-                            </div>
-                          ) : (
-                            <Checkbox 
-                              checked={selectedUserIds.has(u.id)} 
-                              onCheckedChange={() => {
-                                const next = new Set(selectedUserIds);
-                                if(next.has(u.id)) next.delete(u.id); else next.add(u.id);
-                                setSelectedUserIds(next);
-                              }} 
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold flex items-center gap-2">
-                              {u.firstName} {u.lastName}
-                              {isProtected && <Lock className="w-3 h-3 text-accent" />}
-                            </span>
-                            <span className="text-xs text-muted-foreground">{u.email}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1.5 flex-wrap">
-                            {adminIds.has(u.id) && <Badge className="bg-primary text-white">Admin</Badge>}
-                            {isFacilitator && <Badge className="bg-accent text-white">Facilitator</Badge>}
-                            {!adminIds.has(u.id) && !isFacilitator && <Badge variant="outline">Guest</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right pr-6">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            disabled={u.email === "indispirit@gmail.com"}
-                            onClick={() => {
-                              const ref = doc(firestore, "roles_admin", u.id);
-                              if (adminIds.has(u.id)) {
-                                deleteDocumentNonBlocking(ref);
-                                toast({ title: "Admin Rights Revoked", description: `${u.email} is no longer an administrator.` });
-                              } else {
-                                setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
-                                toast({ title: "Admin Assigned", description: `${u.email} now has full dashboard access.` });
-                              }
-                            }}
-                          >
-                            <Shield className="w-3.5 h-3.5 mr-2" /> {adminIds.has(u.id) ? "Revoke Admin" : "Make Admin"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-
         </Tabs>
       </main>
 
@@ -1217,68 +947,18 @@ export default function AdminPage() {
       <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
         <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl bg-white p-10">
           <AlertDialogHeader>
-            <div className="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center mb-6">
-              <AlertCircle className="w-8 h-8 text-rose-600" />
-            </div>
+            <div className="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center mb-6"><AlertCircle className="w-8 h-8 text-rose-600" /></div>
             <AlertDialogTitle className="text-3xl font-headline font-bold text-primary">Confirm Targeted Deletion</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground text-lg leading-relaxed">
+            <AlertDialogDescription className="text-muted-foreground text-lg">
               This action is irreversible. You are about to permanently purge <strong>{deleteConfirm.title}</strong> from the campus database.
-              <br/><br/>
-              <span className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                <Shield className="w-3 h-3" /> Master safety: All protected team members will be preserved.
-              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-4 mt-10">
-            <AlertDialogCancel className="rounded-full h-12 px-8 border-slate-200">Cancel Action</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={executeDelete} 
-              className="bg-destructive hover:bg-destructive/90 text-white rounded-full h-12 px-10 font-bold shadow-lg shadow-destructive/20"
-            >
-              Permanently Purge
-            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full h-12 px-8 border-slate-200">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeDelete} className="bg-destructive hover:bg-destructive/90 text-white rounded-full h-12 px-10 font-bold">Permanently Purge</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={!!selectedProposal} onOpenChange={open => !open && setSelectedProposal(null)}>
-        <DialogContent className="w-[95vw] sm:max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          {selectedProposal && (
-            <div className="flex flex-col h-[85vh]">
-              <div className="bg-primary p-10 text-white shrink-0">
-                <h2 className="text-3xl font-headline font-bold mb-4">{selectedProposal.schoolName || selectedProposal.companyName}</h2>
-                <div className="flex gap-8 text-sm opacity-80">
-                  <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {selectedProposal.contactName}</span>
-                  <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {selectedProposal.email}</span>
-                </div>
-              </div>
-              <div className="flex-grow overflow-y-auto p-10 bg-slate-50 space-y-8">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
-                    <Label className="text-[10px] font-bold uppercase text-slate-400">Requested Date</Label>
-                    <p className="text-lg font-bold text-primary">{selectedProposal.selectedDate || 'Flexible'}</p>
-                  </div>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
-                    <Label className="text-[10px] font-bold uppercase text-slate-400">Group Size</Label>
-                    <p className="text-lg font-bold text-primary">{selectedProposal.participants || selectedProposal.studentCount} Pax</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-sm font-bold uppercase text-slate-500">Draft Confirmation Email</Label>
-                  <Input value={emailDraft.subject} onChange={e => setEmailDraft({...emailDraft, subject: e.target.value})} className="rounded-xl font-bold" />
-                  <Textarea value={emailDraft.body} onChange={e => setEmailDraft({...emailDraft, body: e.target.value})} className="min-h-[200px] rounded-2xl" />
-                </div>
-              </div>
-              <div className="p-8 border-t bg-white flex justify-between">
-                <Button variant="ghost" onClick={() => setSelectedProposal(null)}>Cancel</Button>
-                <Button className="bg-accent rounded-full px-10 h-14 font-bold gap-3" onClick={handleSendConfirmation} disabled={isEmailing}>
-                  {isEmailing ? <Loader2 className="animate-spin" /> : <Send className="w-5 h-5" />} Send Confirmation
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Footer />
     </div>
