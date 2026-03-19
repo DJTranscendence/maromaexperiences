@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -104,11 +103,12 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   // Confirmation States
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
-    type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | null;
+    type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | 'bulk-user' | null;
     id: string | null;
     title: string | null;
   }>({
@@ -222,6 +222,16 @@ export default function AdminPage() {
         selectedBookingIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "bookings", id)));
         setSelectedBookingIds(new Set());
         toast({ title: "Bulk Delete Complete", description: "Selected bookings have been removed." });
+        break;
+      case 'bulk-user':
+        selectedUserIds.forEach(id => {
+          deleteDocumentNonBlocking(doc(firestore, "users", id));
+          if (adminIds.has(id)) {
+            deleteDocumentNonBlocking(doc(firestore, "roles_admin", id));
+          }
+        });
+        setSelectedUserIds(new Set());
+        toast({ title: "Bulk Delete Complete", description: "Selected users and associated roles have been removed." });
         break;
     }
 
@@ -1065,13 +1075,58 @@ export default function AdminPage() {
             <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b flex flex-row items-center justify-between p-6">
                 <CardTitle className="font-headline text-2xl">User Directory</CardTitle>
+                {selectedUserIds.size > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="rounded-full px-6 gap-2 font-bold" 
+                    onClick={() => setDeleteConfirm({ 
+                      isOpen: true, 
+                      type: 'bulk-user', 
+                      id: null, 
+                      title: `${selectedUserIds.size} user profiles` 
+                    })}
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Selected ({selectedUserIds.size})
+                  </Button>
+                )}
               </CardHeader>
               <Table>
-                <TableHeader><TableRow className="bg-muted/5"><TableHead className="pl-6">Profile</TableHead><TableHead>Permissions</TableHead><TableHead className="text-right pr-8">Actions</TableHead></TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow className="bg-muted/5">
+                    <TableHead className="w-12 pl-6">
+                      <Checkbox 
+                        checked={users && users.length > 0 && selectedUserIds.size === users.length} 
+                        onCheckedChange={() => {
+                          if(selectedUserIds.size === users?.length) setSelectedUserIds(new Set());
+                          else setSelectedUserIds(new Set(users?.map(u => u.id)));
+                        }} 
+                      />
+                    </TableHead>
+                    <TableHead>Profile</TableHead>
+                    <TableHead>Permissions</TableHead>
+                    <TableHead className="text-right pr-8">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                   {users?.map(u => (
                     <TableRow key={u.id}>
-                      <TableCell className="pl-6"><div className="flex flex-col"><span className="font-bold">{u.firstName} {u.lastName}</span><span className="text-xs text-muted-foreground">{u.email}</span></div></TableCell>
+                      <TableCell className="pl-6">
+                        <Checkbox 
+                          checked={selectedUserIds.has(u.id)} 
+                          onCheckedChange={() => {
+                            const next = new Set(selectedUserIds);
+                            if(next.has(u.id)) next.delete(u.id); else next.add(u.id);
+                            setSelectedUserIds(next);
+                          }} 
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-bold">{u.firstName} {u.lastName}</span>
+                          <span className="text-xs text-muted-foreground">{u.email}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>{adminIds.has(u.id) ? <Badge className="bg-primary text-white">Admin</Badge> : <Badge variant="outline">Guest</Badge>}</TableCell>
                       <TableCell className="text-right pr-6">
                         <Button size="sm" variant="outline" onClick={() => {
