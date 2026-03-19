@@ -22,7 +22,7 @@ import {
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
   UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles, UserX, Trash, Lock,
-  CheckSquare
+  CheckSquare, Filter, RefreshCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -106,11 +106,12 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [selectedProposalIds, setSelectedProposalIds] = useState<Set<string>>(new Set());
 
   // Confirmation States
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
-    type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | 'bulk-user' | null;
+    type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | 'bulk-user' | 'proposal' | 'bulk-proposal' | null;
     id: string | null;
     title: string | null;
   }>({
@@ -129,6 +130,7 @@ export default function AdminPage() {
   const { data: adminDoc, isLoading: isAdminDocLoading } = useDoc(adminRef);
   const isAdmin = isWorkshopOwner || !!adminDoc;
 
+  // Facilitators
   const facilitatorsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, "roles_facilitator");
@@ -225,6 +227,17 @@ export default function AdminPage() {
         setSelectedBookingIds(new Set());
         toast({ title: "Bulk Delete Complete", description: "Selected bookings have been removed." });
         break;
+      case 'proposal':
+        if (deleteConfirm.id) {
+          deleteDocumentNonBlocking(doc(firestore, "proposals", deleteConfirm.id));
+          toast({ title: "Proposal Purged" });
+        }
+        break;
+      case 'bulk-proposal':
+        selectedProposalIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "proposals", id)));
+        setSelectedProposalIds(new Set());
+        toast({ title: "Proposals Purged" });
+        break;
       case 'bulk-user':
         const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
         selectedUserIds.forEach(id => {
@@ -246,6 +259,7 @@ export default function AdminPage() {
     setDeleteConfirm({ isOpen: false, type: null, id: null, title: null });
   };
 
+  // Tours
   const toursQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, "tours");
@@ -337,6 +351,7 @@ export default function AdminPage() {
     });
   };
 
+  // Bookings
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
@@ -352,12 +367,14 @@ export default function AdminPage() {
     return map;
   }, [bookings]);
 
+  // Proposals
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
   }, [firestore, isAdmin]);
   const { data: proposals, isLoading: isProposalsLoading } = useCollection<ProposalRecord>(proposalsQuery);
 
+  // Calendar
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const calendarEvents = useMemo(() => {
     const events: { date: string, title: string, type: 'workshop' | 'school' | 'corporate' | 'draft', id: string, count: number, facilitatorEmail?: string }[] = [];
@@ -393,6 +410,7 @@ export default function AdminPage() {
     return eachDayOfInterval({ start: startOfMonth(calendarMonth), end: endOfMonth(calendarMonth) });
   }, [calendarMonth]);
 
+  // Users
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || !isAdmin) return null;
     return collection(firestore, "users");
@@ -602,6 +620,186 @@ export default function AdminPage() {
                   })}
                 </div>
               </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
+            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b flex flex-col md:flex-row md:items-center justify-between p-8 gap-4">
+                <div>
+                  <CardTitle className="font-headline text-2xl">Campus Bookings</CardTitle>
+                  <p className="text-muted-foreground text-sm mt-1">Manage individual and group workshop registrations.</p>
+                </div>
+                {selectedBookingIds.size > 0 && (
+                  <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => setDeleteConfirm({ isOpen: true, type: 'bulk-booking', id: null, title: `${selectedBookingIds.size} bookings` })}>
+                    <Trash2 className="w-4 h-4" /> Delete Selected ({selectedBookingIds.size})
+                  </Button>
+                )}
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/5">
+                    <TableHead className="w-12 pl-8">
+                      <Checkbox 
+                        checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} 
+                        onCheckedChange={() => {
+                          if (selectedBookingIds.size === bookings?.length) setSelectedBookingIds(new Set());
+                          else setSelectedBookingIds(new Set(bookings?.map(b => b.id)));
+                        }} 
+                      />
+                    </TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Attendees</TableHead>
+                    <TableHead>Total (₹)</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right pr-8">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isBookingsLoading ? (
+                    <TableRow><TableCell colSpan={7} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                  ) : bookings && bookings.length > 0 ? (
+                    bookings.map(b => (
+                      <TableRow key={b.id} className="group hover:bg-muted/5">
+                        <TableCell className="pl-8">
+                          <Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => {
+                            const next = new Set(selectedBookingIds);
+                            if(next.has(b.id)) next.delete(b.id); else next.add(b.id);
+                            setSelectedBookingIds(next);
+                          }} />
+                        </TableCell>
+                        <TableCell className="font-bold text-primary">{b.tourName}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
+                        <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
+                        <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
+                        <TableCell>
+                          <Select 
+                            value={b.bookingStatus} 
+                            onValueChange={(v) => {
+                              if(firestore) updateDocumentNonBlocking(doc(firestore, "bookings", b.id), { bookingStatus: v });
+                              toast({ title: "Status Updated", description: `Booking for ${b.tourName} is now ${v}.` });
+                            }}
+                          >
+                            <SelectTrigger className={cn("h-8 text-[10px] uppercase font-bold px-3 rounded-full border-none w-28", b.bookingStatus === 'confirmed' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right pr-8">
+                          <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `Booking for ${b.tourName}` })}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={7} className="text-center py-20 text-muted-foreground">No bookings found in the database.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="proposals" className="m-0 focus-visible:ring-0">
+            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b flex flex-col md:flex-row md:items-center justify-between p-8 gap-4">
+                <div>
+                  <CardTitle className="font-headline text-2xl">Experience Inquiries</CardTitle>
+                  <p className="text-muted-foreground text-sm mt-1">Review and manage corporate and school workshop requests.</p>
+                </div>
+                {selectedProposalIds.size > 0 && (
+                  <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2 font-bold" onClick={() => setDeleteConfirm({ isOpen: true, type: 'bulk-proposal', id: null, title: `${selectedProposalIds.size} inquiries` })}>
+                    <Trash2 className="w-4 h-4" /> Delete Selected ({selectedProposalIds.size})
+                  </Button>
+                )}
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/5">
+                    <TableHead className="w-12 pl-8">
+                      <Checkbox 
+                        checked={proposals && proposals.length > 0 && selectedProposalIds.size === proposals.length} 
+                        onCheckedChange={() => {
+                          if (selectedProposalIds.size === proposals?.length) setSelectedProposalIds(new Set());
+                          else setSelectedProposalIds(new Set(proposals?.map(p => p.id)));
+                        }} 
+                      />
+                    </TableHead>
+                    <TableHead>Organization / Contact</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Proposed Date</TableHead>
+                    <TableHead>Itinerary</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right pr-8">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isProposalsLoading ? (
+                    <TableRow><TableCell colSpan={7} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                  ) : proposals && proposals.length > 0 ? (
+                    proposals.map(p => (
+                      <TableRow key={p.id} className="group hover:bg-muted/5">
+                        <TableCell className="pl-8">
+                          <Checkbox checked={selectedProposalIds.has(p.id)} onCheckedChange={() => {
+                            const next = new Set(selectedProposalIds);
+                            if(next.has(p.id)) next.delete(p.id); else next.add(p.id);
+                            setSelectedProposalIds(next);
+                          }} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-primary">{p.companyName || p.schoolName || 'Individual Group'}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{p.contactName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest px-3">
+                            {p.type || 'Corporate'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-slate-600">{p.selectedDate || 'Flexible'}</TableCell>
+                        <TableCell>
+                          <div className="text-[10px] text-muted-foreground max-w-[150px] truncate">
+                            {p.itinerary?.map(i => i.name).join(', ') || 'Custom'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={p.status} 
+                            onValueChange={(v) => {
+                              if(firestore) updateDocumentNonBlocking(doc(firestore, "proposals", p.id), { status: v });
+                              toast({ title: "Inquiry Updated", description: `Status set to ${v}.` });
+                            }}
+                          >
+                            <SelectTrigger className={cn("h-8 text-[10px] uppercase font-bold px-3 rounded-full border-none w-28", p.status === 'sent' ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700")}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Reviewing</SelectItem>
+                              <SelectItem value="sent">Proposal Sent</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="cancelled">Declined</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right pr-8">
+                          <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => setDeleteConfirm({ isOpen: true, type: 'proposal', id: p.id, title: `Inquiry from ${p.contactName}` })}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={7} className="text-center py-20 text-muted-foreground">No active inquiries found.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </Card>
           </TabsContent>
 
