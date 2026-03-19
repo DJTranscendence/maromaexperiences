@@ -22,7 +22,7 @@ import {
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
   UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles, UserX, Trash, Lock,
-  CheckSquare, Filter, RefreshCcw
+  CheckSquare, Filter, RefreshCcw, Database
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -367,6 +367,13 @@ export default function AdminPage() {
     });
     return map;
   }, [bookings]);
+
+  const totalBookingsForActiveTour = useMemo(() => {
+    if (!editingId || !bookings) return 0;
+    return bookings
+      .filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed')
+      .reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0);
+  }, [editingId, bookings]);
 
   // Proposals
   const proposalsQuery = useMemoFirebase(() => {
@@ -1084,19 +1091,52 @@ export default function AdminPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Price (₹)</Label><Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label><Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Booked</Label>
-                        <div className="flex gap-1">
-                          <Input type="number" value={newTour.bookedSpaces} onChange={e => setNewTour({...newTour, bookedSpaces: parseInt(e.target.value) || 0})} className="rounded-xl" />
-                          <Button variant="outline" size="icon" className="rounded-xl shrink-0 h-10 w-10" onClick={() => setNewTour({...newTour, bookedSpaces: 0})} title="Reset counter to 0">
-                            <RefreshCcw className="w-3.5 h-3.5" />
-                          </Button>
+                    
+                    <div className="space-y-6 pt-4 border-t border-border/50">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Rate (₹)</Label>
+                          <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label>
+                          <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-12" />
                         </div>
                       </div>
+
+                      <div className="space-y-3 p-4 bg-muted/10 rounded-2xl border border-border/50">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-bold uppercase text-primary flex items-center gap-1.5">
+                            <Activity className="w-3 h-3" /> Badge Count (Manual)
+                          </Label>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[9px] font-bold uppercase text-accent hover:bg-accent/5 gap-1"
+                            onClick={() => setNewTour({...newTour, bookedSpaces: 0})}
+                          >
+                            <RefreshCcw className="w-2.5 h-2.5" /> Reset
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Input 
+                            type="number" 
+                            value={newTour.bookedSpaces} 
+                            onChange={e => setNewTour({...newTour, bookedSpaces: parseInt(e.target.value) || 0})} 
+                            className="rounded-xl h-12 text-lg font-bold bg-white" 
+                          />
+                        </div>
+                        {editingId && (
+                          <div className="flex items-center gap-2 mt-2 px-1">
+                            <Database className="w-3 h-3 text-slate-400" />
+                            <span className="text-[10px] font-medium text-slate-500">
+                              System Live Sync: <strong className="text-primary">{totalBookingsForActiveTour} Confirmed Seats</strong>
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
+
                     <div className="space-y-4 pt-4 border-t border-border/50">
                       <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Frequency Engine</Label>
                       <div className="p-5 bg-muted/20 rounded-2xl border border-border/50 space-y-6">
