@@ -21,7 +21,7 @@ import {
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
-  UserCheck, UserPlus, Bell, User, Edit3
+  UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -104,7 +104,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
 
-  // Confirmation States - Replacing native window.confirm()
+  // Confirmation States - Replacing native window.confirm() for sandbox compatibility
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | null;
@@ -790,12 +790,22 @@ export default function AdminPage() {
                     {editingId && <Button variant="ghost" size="icon" onClick={resetTourForm} className="rounded-full"><X className="w-4 h-4" /></Button>}
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
-                      <div className="space-y-0.5">
-                        <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} Visibility</Label>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.isActive ? "Live on website" : "Hidden"}</p>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
+                        <div className="space-y-0.5">
+                          <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} Visibility</Label>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.isActive ? "Live on website" : "Hidden"}</p>
+                        </div>
+                        <Switch checked={newTour.isActive} onCheckedChange={v => setNewTour({...newTour, isActive: v})} />
                       </div>
-                      <Switch checked={newTour.isActive} onCheckedChange={v => setNewTour({...newTour, isActive: v})} />
+
+                      <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
+                        <div className="space-y-0.5">
+                          <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.status === 'live' ? <CheckCircle2 className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />} Launch Status</Label>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.status === 'live' ? "Live" : "Coming Soon"}</p>
+                        </div>
+                        <Switch checked={newTour.status === 'live'} onCheckedChange={v => setNewTour({...newTour, status: v ? 'live' : 'coming-soon'})} />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -869,7 +879,12 @@ export default function AdminPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {facilitators?.find(f => f.email === t.facilitatorEmail)?.name || t.facilitatorEmail || 'Unassigned'}
                           </TableCell>
-                          <TableCell>{t.isActive ? <Badge className="bg-green-100 text-green-700">Active</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {t.isActive ? <Badge className="bg-green-100 text-green-700">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}
+                              {t.status === 'live' ? <Badge className="bg-blue-100 text-blue-700">Live</Badge> : <Badge className="bg-orange-100 text-orange-700">Soon</Badge>}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                               <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
@@ -990,7 +1005,7 @@ export default function AdminPage() {
         </Tabs>
       </main>
 
-      {/* Confirmation Dialogs - Non-blocking ShadCN replacement for window.confirm() */}
+      {/* Confirmation Dialogs - Non-blocking ShadCN replacement for window.confirm() for sandbox compliance */}
       <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
         <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl">
           <AlertDialogHeader>
