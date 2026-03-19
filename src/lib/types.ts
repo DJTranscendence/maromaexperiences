@@ -19,6 +19,7 @@ export interface Tour {
   isActive?: boolean;
   status?: 'live' | 'coming-soon';
   tourOwnerId?: string;
+  facilitatorEmail?: string;
   createdAt?: any;
   updatedAt?: any;
 }
