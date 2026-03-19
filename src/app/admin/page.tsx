@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -104,13 +103,9 @@ export default function AdminPage() {
   const { user, isUserLoading } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- TAB STATE ---
   const [activeTab, setActiveTab] = useState("calendar");
-
-  // --- SELECTION STATE (BULK DELETE) ---
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
 
-  // --- AUTH GUARD ---
   const isWorkshopOwner = user?.email === "indispirit@gmail.com";
   
   const adminRef = useMemoFirebase(() => {
@@ -120,7 +115,6 @@ export default function AdminPage() {
   const { data: adminDoc, isLoading: isAdminDocLoading } = useDoc(adminRef);
   const isAdmin = isWorkshopOwner || !!adminDoc;
 
-  // --- FACILITATOR STATE ---
   const facilitatorsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, "roles_facilitator");
@@ -130,7 +124,7 @@ export default function AdminPage() {
   const [inviteName, setInviteName] = useState("");
   const [editingFacilitatorId, setEditingFacilitatorId] = useState<string | null>(null);
 
-  const handleSaveFacilitator = () => {
+  const handleSaveFacilitator = async () => {
     if (!inviteEmail || !inviteName || !firestore) {
       toast({ variant: "destructive", title: "Missing Information", description: "Name and Email are required." });
       return;
@@ -152,7 +146,14 @@ export default function AdminPage() {
         activatedAt: serverTimestamp(),
         status: 'active'
       });
-      toast({ title: "Facilitator Added", description: `${cleanName} has been granted campus access.` });
+
+      await sendEmailNotification({
+        to: cleanEmail,
+        subject: "Welcome to Maroma Experiences: Team Access Granted",
+        textBody: `Hello ${cleanName},\n\nYou have been onboarded as a facilitator for Maroma Experiences. You will now receive automated updates for any bookings assigned to your name.\n\nWe are excited to have you leading our campus workshops and tours!\n\nBest regards,\nMaroma Administration\nhttps://maromaexperience.com`
+      });
+
+      toast({ title: "Facilitator Added", description: `${cleanName} has been onboarded and notified.` });
     }
     
     setInviteEmail("");
@@ -174,7 +175,6 @@ export default function AdminPage() {
     setInviteName("");
   };
 
-  // --- PROPOSAL DETAIL MODAL ---
   const [selectedProposal, setSelectedProposal] = useState<ProposalRecord | null>(null);
   const [isEmailing, setIsEmailing] = useState(false);
   const [emailDraft, setEmailDraft] = useState({ subject: "", body: "" });
@@ -231,8 +231,8 @@ export default function AdminPage() {
     try {
       await sendEmailNotification({
         to: targetEmail,
-        subject: `Upcoming Event Assignment: ${eventDetails.title}`,
-        textBody: `Hello ${greetingName},\n\nYou have an upcoming event scheduled at the Maroma Campus.\n\nExperience: ${eventDetails.title}\nDate: ${eventDetails.date}\nExpected Guests: ${eventDetails.count}\n\nPlease review the logistics and ensure all materials are prepared.\n\nWarm regards,\nMaroma Administration`
+        subject: `Event Reminder & Briefing: ${eventDetails.title}`,
+        textBody: `Hello ${greetingName},\n\nThis is a briefing for your upcoming event at the Maroma Campus.\n\nExperience: ${eventDetails.title}\nDate: ${eventDetails.date}\nConfirmed Guests: ${eventDetails.count}\n\nPlease review your preparation list and ensure the venue is ready for arrival.\n\nWarm regards,\nMaroma Administration`
       });
       toast({ title: "Facilitator Notified", description: `Briefing sent to ${targetEmail}.` });
     } catch (err) {
@@ -242,7 +242,6 @@ export default function AdminPage() {
     }
   };
 
-  // --- TOUR STATE & QUERIES ---
   const toursQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, "tours");
@@ -271,7 +270,6 @@ export default function AdminPage() {
     facilitatorEmail: ""
   });
 
-  // AUTO-SCROLL TO SAVE BUTTON ON SETTINGS CHANGE
   useEffect(() => {
     if (editingId || newTour.name || newTour.scheduledDates.length > 0) {
       const element = document.getElementById('save-publish-button');
@@ -285,10 +283,9 @@ export default function AdminPage() {
     }
   }, [newTour, editingId]);
 
-  // --- RECURRENCE BUILDER ---
   const [recurrence, setRecurrence] = useState({
-    day: "6", // Saturday
-    interval: "2", // Every 2 weeks
+    day: "6",
+    interval: "2",
     startDate: format(new Date(), 'yyyy-MM-dd'),
     endDate: format(addMonths(new Date(), 12), 'yyyy-MM-dd')
   });
@@ -322,7 +319,6 @@ export default function AdminPage() {
     toast({ title: "Recurrence Set", description: `Generated ${dates.length} occurrences.` });
   };
 
-  // --- INDIVIDUAL BOOKINGS (FOR AGGREGATION) ---
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
@@ -338,7 +334,6 @@ export default function AdminPage() {
     return map;
   }, [bookings]);
 
-  // --- CALENDAR VIEW LOGIC ---
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "proposals"), orderBy("createdAt", "desc"));
@@ -460,8 +455,6 @@ export default function AdminPage() {
     setIsProcessing(true);
     const tourData: Partial<Tour> = {
       ...newTour,
-      pricePerPerson: newTour.price,
-      durationHours: parseInt(newTour.duration) || 1,
       updatedAt: serverTimestamp(),
       imageUrl: newTour.imageUrls[0] || `https://picsum.photos/seed/${Math.random()}/1200/800`,
     };
@@ -481,7 +474,6 @@ export default function AdminPage() {
     setTimeout(() => { setIsSuccess(false); setIsProcessing(false); resetTourForm(); }, 2000);
   };
 
-  // --- USERS & ROLES ---
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !user || !isAdmin) return null;
     return collection(firestore, "users");
@@ -602,7 +594,7 @@ export default function AdminPage() {
                                   onClick={(ev) => { ev.stopPropagation(); handleNotifyFacilitator(e.facilitatorEmail, e); }}
                                   className="mt-1 bg-white/20 hover:bg-white/40 text-white rounded px-1 py-0.5 flex items-center gap-1 text-[7px]"
                                 >
-                                  <Bell className="w-2 h-2" /> Notify Facilitator
+                                  <Bell className="w-2 h-2" /> Send Reminder
                                 </button>
                               )}
                             </div>
@@ -839,7 +831,6 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* ... Rest of tabs ... */}
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center justify-between">

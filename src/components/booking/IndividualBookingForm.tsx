@@ -38,7 +38,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
   const isInitialized = useRef(false);
 
-  // Fetch user profile data for auto-fill
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, "users", user.uid);
@@ -46,7 +45,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
   const { data: userData } = useDoc(userDocRef);
 
-  // Populate form when user profile is loaded, but only once to avoid infinite loops
   useEffect(() => {
     if (userData && !isInitialized.current) {
       setFormData({
@@ -57,7 +55,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       });
       isInitialized.current = true;
     } else if (user && !userData && !isInitialized.current) {
-      // Fallback to auth provider info if Firestore profile isn't fully loaded yet
       setFormData(prev => ({
         ...prev,
         email: user.email || prev.email,
@@ -74,13 +71,11 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     if (!firestore) return;
 
     try {
-      // 1. Update the booked spaces in Firestore (Non-blocking)
       const tourRef = doc(firestore, "tours", tour.id);
       updateDocumentNonBlocking(tourRef, {
         bookedSpaces: increment(guests)
       });
 
-      // 2. Create a real booking record in the bookings collection
       const bookingsRef = collection(firestore, "bookings");
       addDocumentNonBlocking(bookingsRef, {
         userId: user?.uid || "guest",
@@ -101,11 +96,9 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       const fullPhone = `${formData.countryCode} ${formData.phone}`;
       const bookingId = Math.random().toString(36).substring(7).toUpperCase();
 
-      // 3. Define Fallback Message
       let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${guests} Person(s) on ${tour.scheduledDates?.[0] || "TBA"}.\n\nLocation: ${tour.location || "Maroma Campus"}\nBooking Reference: ${bookingId}\n\nWe look forward to seeing you there!\n\nWarm regards,\nThe Maroma Team`;
 
       try {
-        // 4. Attempt to generate personalized AI notification
         const notification = await generateBookingNotification({
           eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
           recipientType: 'booker',
@@ -134,15 +127,18 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
       setAiResponse(emailBody);
 
-      // 5. Send Email Confirmation (Reliability Step)
-      const emailResult = await sendEmailNotification({
+      await sendEmailNotification({
         to: formData.email,
         subject: `Booking Confirmed: ${tour.name}`,
         textBody: emailBody
       });
 
-      if (!emailResult.success) {
-        console.error("Email delivery reported error:", emailResult.error);
+      if (tour.facilitatorEmail) {
+        await sendEmailNotification({
+          to: tour.facilitatorEmail,
+          subject: `New Booking Update: ${tour.name}`,
+          textBody: `Hello,\n\nA new booking has been confirmed for your experience "${tour.name}".\n\nDate: ${tour.scheduledDates?.[0] || "TBA"}\nNew Guests: ${guests}\nTotal Booked: ${(tour.bookedSpaces || 0) + guests}\n\nBooked By: ${formData.name}\n\nPlease ensure materials are updated for the increased group size.\n\nWarm regards,\nMaroma System`
+        });
       }
 
       toast({
