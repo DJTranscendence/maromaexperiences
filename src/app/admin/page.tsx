@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
@@ -781,7 +781,41 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="admin" className="m-0 focus-visible:ring-0">
+          <TabsContent value="admin" className="m-0 focus-visible:ring-0 space-y-12">
+            <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Experience Catalog</CardTitle></CardHeader>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/30">
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Facilitator</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {tours?.map(t => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-bold">{t.name}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {facilitators?.find(f => f.email === t.facilitatorEmail)?.name || t.facilitatorEmail || 'Unassigned'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {t.isActive ? <Badge className="bg-green-100 text-green-700">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}
+                          {t.status === 'live' ? <Badge className="bg-blue-100 text-blue-700">Live</Badge> : <Badge className="bg-orange-100 text-orange-700">Soon</Badge>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'tour', id: t.id, title: t.name })}><Trash2 className="w-4 h-4" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
                 <Card id="tour-editor-card" className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
@@ -835,7 +869,7 @@ export default function AdminPage() {
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Price (₹)</Label><Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Child Price</Label><Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, childPrice: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Child Price</Label><Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label><Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                     </div>
 
@@ -863,39 +897,6 @@ export default function AdminPage() {
                   <Label className="text-xl font-headline font-bold text-primary mb-4 block">Visual Assets</Label>
                   <ImageLibrary selectedUrls={newTour.imageUrls} onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} />
                 </section>
-                <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
-                  <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Experience Catalog</CardTitle></CardHeader>
-                  <Table>
-                    <TableHeader><TableRow className="bg-muted/30">
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Facilitator</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow></TableHeader>
-                    <TableBody>
-                      {tours?.map(t => (
-                        <TableRow key={t.id}>
-                          <TableCell className="font-bold">{t.name}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {facilitators?.find(f => f.email === t.facilitatorEmail)?.name || t.facilitatorEmail || 'Unassigned'}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1.5 flex-wrap">
-                              {t.isActive ? <Badge className="bg-green-100 text-green-700">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}
-                              {t.status === 'live' ? <Badge className="bg-blue-100 text-blue-700">Live</Badge> : <Badge className="bg-orange-100 text-orange-700">Soon</Badge>}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
-                              <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'tour', id: t.id, title: t.name })}><Trash2 className="w-4 h-4" /></Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
               </div>
             </div>
           </TabsContent>
