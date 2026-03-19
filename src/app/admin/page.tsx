@@ -166,7 +166,8 @@ export default function AdminPage() {
 
   const handleDeleteFacilitator = (f: FacilitatorRole) => {
     if (!firestore) return;
-    if (confirm(`Are you sure you want to revoke access for ${f.name || f.email}?`)) {
+    const confirmed = window.confirm(`Are you sure you want to permanently revoke access for ${f.name || f.email}?`);
+    if (confirmed) {
       const facilitatorRef = doc(firestore, "roles_facilitator", f.id);
       deleteDocumentNonBlocking(facilitatorRef);
       toast({ 
@@ -708,7 +709,7 @@ export default function AdminPage() {
                                 size="icon" 
                                 variant="ghost" 
                                 className="rounded-full text-muted-foreground hover:text-destructive"
-                                onClick={() => handleDeleteFacilitator(f)}
+                                onClick={(e) => { e.stopPropagation(); handleDeleteFacilitator(f); }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>

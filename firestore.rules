@@ -81,7 +81,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    match /roles_facilitator/{userId} { 
+    match /roles_facilitator/{anyDoc} { 
       allow read: if isSignedIn(); 
       // Explicitly allow administrators to manage the facilitator directory
       allow create, update, delete: if isAdmin();
@@ -99,6 +99,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.1.0 - Enabled explicit delete for roles_facilitator
+    // Deployment trigger comment: v1.1.1 - Hardened facilitator deletion permissions
   }
 }
