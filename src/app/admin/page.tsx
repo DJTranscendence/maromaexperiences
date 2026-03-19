@@ -830,7 +830,11 @@ export default function AdminPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} Visibility</Label>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.isActive ? "Live on website" : "Hidden"}</p>
                         </div>
-                        <Switch checked={newTour.isActive} onCheckedChange={v => setNewTour({...newTour, isActive: v})} />
+                        <Switch 
+                          checked={newTour.isActive} 
+                          onCheckedChange={v => setNewTour({...newTour, isActive: v})} 
+                          className="data-[state=checked]:bg-green-600"
+                        />
                       </div>
 
                       <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border/50">
@@ -838,7 +842,11 @@ export default function AdminPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">{newTour.status === 'live' ? <CheckCircle2 className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />} Launch Status</Label>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold">{newTour.status === 'live' ? "Live" : "Coming Soon"}</p>
                         </div>
-                        <Switch checked={newTour.status === 'live'} onCheckedChange={v => setNewTour({...newTour, status: v ? 'live' : 'coming-soon'})} />
+                        <Switch 
+                          checked={newTour.status === 'live'} 
+                          onCheckedChange={v => setNewTour({...newTour, status: v ? 'live' : 'coming-soon'})} 
+                          className="data-[state=checked]:bg-green-600"
+                        />
                       </div>
                     </div>
 
