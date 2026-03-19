@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -21,7 +22,8 @@ import {
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
-  UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles, UserX, Trash
+  UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles, UserX, Trash, Lock,
+  CheckSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -225,13 +227,19 @@ export default function AdminPage() {
         break;
       case 'bulk-user':
         selectedUserIds.forEach(id => {
-          deleteDocumentNonBlocking(doc(firestore, "users", id));
-          if (adminIds.has(id)) {
-            deleteDocumentNonBlocking(doc(firestore, "roles_admin", id));
+          // Safety check: skip protected users in actual deletion loop
+          const profile = users?.find(u => u.id === id);
+          const isProtected = profile?.email === "indispirit@gmail.com" || adminIds.has(id);
+          
+          if (!isProtected) {
+            deleteDocumentNonBlocking(doc(firestore, "users", id));
+            if (adminIds.has(id)) {
+              deleteDocumentNonBlocking(doc(firestore, "roles_admin", id));
+            }
           }
         });
         setSelectedUserIds(new Set());
-        toast({ title: "Bulk Delete Complete", description: "Selected users and associated roles have been removed." });
+        toast({ title: "Bulk Delete Complete", description: "Targeted guest profiles have been removed. Protected members were preserved." });
         break;
     }
 
@@ -582,6 +590,14 @@ export default function AdminPage() {
   const { data: users, isLoading: isUsersLoading } = useCollection<UserProfile>(usersQuery);
   const { data: admins } = useCollection(adminsQuery);
   const adminIds = new Set(admins?.map(a => a.id) || []);
+
+  const handleSelectAllGuests = () => {
+    const guestIds = users
+      ?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id))
+      .map(u => u.id) || [];
+    setSelectedUserIds(new Set(guestIds));
+    toast({ title: "Guests Selected", description: `${guestIds.length} guest profiles have been marked for action.` });
+  };
 
   if (isUserLoading || isAdminDocLoading) {
     return (
@@ -1073,33 +1089,45 @@ export default function AdminPage() {
 
           <TabsContent value="users" className="m-0 focus-visible:ring-0">
             <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b flex flex-row items-center justify-between p-6">
+              <CardHeader className="bg-white border-b flex flex-col md:flex-row md:items-center justify-between p-6 gap-4">
                 <CardTitle className="font-headline text-2xl">User Directory</CardTitle>
-                {selectedUserIds.size > 0 && (
+                <div className="flex flex-wrap items-center gap-3">
                   <Button 
-                    variant="destructive" 
+                    variant="outline" 
                     size="sm" 
-                    className="rounded-full px-6 gap-2 font-bold" 
-                    onClick={() => setDeleteConfirm({ 
-                      isOpen: true, 
-                      type: 'bulk-user', 
-                      id: null, 
-                      title: `${selectedUserIds.size} user profiles` 
-                    })}
+                    className="rounded-full px-6 gap-2 font-bold border-accent text-accent hover:bg-accent hover:text-white transition-all"
+                    onClick={handleSelectAllGuests}
                   >
-                    <Trash2 className="w-4 h-4" /> Delete Selected ({selectedUserIds.size})
+                    <CheckSquare className="w-4 h-4" /> Select All Guests
                   </Button>
-                )}
+                  
+                  {selectedUserIds.size > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      className="rounded-full px-6 gap-2 font-bold shadow-lg shadow-destructive/20 animate-in fade-in slide-in-from-right-2" 
+                      onClick={() => setDeleteConfirm({ 
+                        isOpen: true, 
+                        type: 'bulk-user', 
+                        id: null, 
+                        title: `${selectedUserIds.size} selected guest profiles` 
+                      })}
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete Selected ({selectedUserIds.size})
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/5">
                     <TableHead className="w-12 pl-6">
                       <Checkbox 
-                        checked={users && users.length > 0 && selectedUserIds.size === users.length} 
+                        checked={users && users.length > 0 && selectedUserIds.size === users.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id)).length} 
                         onCheckedChange={() => {
-                          if(selectedUserIds.size === users?.length) setSelectedUserIds(new Set());
-                          else setSelectedUserIds(new Set(users?.map(u => u.id)));
+                          const allNonAdminIds = users?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id)).map(u => u.id) || [];
+                          if(selectedUserIds.size === allNonAdminIds.length) setSelectedUserIds(new Set());
+                          else setSelectedUserIds(new Set(allNonAdminIds));
                         }} 
                       />
                     </TableHead>
@@ -1109,41 +1137,58 @@ export default function AdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users?.map(u => (
-                    <TableRow key={u.id}>
-                      <TableCell className="pl-6">
-                        <Checkbox 
-                          checked={selectedUserIds.has(u.id)} 
-                          onCheckedChange={() => {
-                            const next = new Set(selectedUserIds);
-                            if(next.has(u.id)) next.delete(u.id); else next.add(u.id);
-                            setSelectedUserIds(next);
-                          }} 
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-bold">{u.firstName} {u.lastName}</span>
-                          <span className="text-xs text-muted-foreground">{u.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{adminIds.has(u.id) ? <Badge className="bg-primary text-white">Admin</Badge> : <Badge variant="outline">Guest</Badge>}</TableCell>
-                      <TableCell className="text-right pr-6">
-                        <Button size="sm" variant="outline" onClick={() => {
-                          const ref = doc(firestore, "roles_admin", u.id);
-                          if (adminIds.has(u.id)) {
-                            deleteDocumentNonBlocking(ref);
-                            toast({ title: "Admin Rights Revoked", description: `${u.email} is no longer an administrator.` });
-                          } else {
-                            setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
-                            toast({ title: "Admin Assigned", description: `${u.email} now has full dashboard access.` });
-                          }
-                        }}>
-                          <Shield className="w-3.5 h-3.5 mr-2" /> {adminIds.has(u.id) ? "Revoke Admin" : "Make Admin"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {users?.map(u => {
+                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id);
+                    return (
+                      <TableRow key={u.id} className={cn(isProtected && "bg-slate-50/50")}>
+                        <TableCell className="pl-6">
+                          {isProtected ? (
+                            <div className="w-4 h-4 flex items-center justify-center text-muted-foreground/40">
+                              <Lock className="w-3 h-3" />
+                            </div>
+                          ) : (
+                            <Checkbox 
+                              checked={selectedUserIds.has(u.id)} 
+                              onCheckedChange={() => {
+                                const next = new Set(selectedUserIds);
+                                if(next.has(u.id)) next.delete(u.id); else next.add(u.id);
+                                setSelectedUserIds(next);
+                              }} 
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold flex items-center gap-2">
+                              {u.firstName} {u.lastName}
+                              {isProtected && <Lock className="w-3 h-3 text-accent" />}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{u.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{adminIds.has(u.id) ? <Badge className="bg-primary text-white">Admin</Badge> : <Badge variant="outline">Guest</Badge>}</TableCell>
+                        <TableCell className="text-right pr-6">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            disabled={u.email === "indispirit@gmail.com"}
+                            onClick={() => {
+                              const ref = doc(firestore, "roles_admin", u.id);
+                              if (adminIds.has(u.id)) {
+                                deleteDocumentNonBlocking(ref);
+                                toast({ title: "Admin Rights Revoked", description: `${u.email} is no longer an administrator.` });
+                              } else {
+                                setDocumentNonBlocking(ref, { email: u.email, role: 'admin', activatedAt: serverTimestamp() }, { merge: true });
+                                toast({ title: "Admin Assigned", description: `${u.email} now has full dashboard access.` });
+                              }
+                            }}
+                          >
+                            <Shield className="w-3.5 h-3.5 mr-2" /> {adminIds.has(u.id) ? "Revoke Admin" : "Make Admin"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </Card>
@@ -1154,20 +1199,27 @@ export default function AdminPage() {
 
       {/* Confirmation Dialogs */}
       <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
-        <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl">
+        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl bg-white p-10">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-headline text-primary">Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
-              This action cannot be undone. You are about to permanently remove <strong>{deleteConfirm.title}</strong> from the campus records.
+            <div className="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center mb-6">
+              <AlertCircle className="w-8 h-8 text-rose-600" />
+            </div>
+            <AlertDialogTitle className="text-3xl font-headline font-bold text-primary">Confirm Targeted Deletion</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground text-lg leading-relaxed">
+              This action is irreversible. You are about to permanently purge <strong>{deleteConfirm.title}</strong> from the campus database.
+              <br/><br/>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                <Shield className="w-3 h-3" /> Master safety: All protected admins will be preserved.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-4 mt-10">
+            <AlertDialogCancel className="rounded-full h-12 px-8 border-slate-200">Cancel Action</AlertDialogCancel>
             <AlertDialogAction 
               onClick={executeDelete} 
-              className="bg-destructive hover:bg-destructive/90 text-white rounded-full font-bold"
+              className="bg-destructive hover:bg-destructive/90 text-white rounded-full h-12 px-10 font-bold shadow-lg shadow-destructive/20"
             >
-              Permanently Delete
+              Permanently Purge
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
