@@ -280,6 +280,7 @@ export default function AdminPage() {
     childPrice: 0,
     capacity: 20,
     minGroupSize: 8,
+    bookedSpaces: 0,
     type: "workshop" as TourType,
     status: "live" as 'live' | 'coming-soon',
     isActive: true,
@@ -466,6 +467,7 @@ export default function AdminPage() {
       childPrice: tour.childPrice || 0,
       capacity: tour.capacity || 20,
       minGroupSize: tour.minGroupSize || 8,
+      bookedSpaces: tour.bookedSpaces || 0,
       type: tour.type || "workshop",
       status: tour.status || "live",
       isActive: tour.isActive ?? true,
@@ -497,8 +499,7 @@ export default function AdminPage() {
       addDocumentNonBlocking(collection(firestore, "tours"), { 
         ...tourData, 
         tourOwnerId: user.uid, 
-        createdAt: serverTimestamp(), 
-        bookedSpaces: 0 
+        createdAt: serverTimestamp()
       });
       toast({ title: "Experience Published" });
     }
@@ -1013,6 +1014,7 @@ export default function AdminPage() {
                 <TableHeader><TableRow className="bg-muted/30">
                   <TableHead>Experience</TableHead>
                   <TableHead>Primary Lead</TableHead>
+                  <TableHead>Booked</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow></TableHeader>
@@ -1022,6 +1024,9 @@ export default function AdminPage() {
                       <TableCell className="font-bold">{t.name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {facilitators?.find(f => f.email === t.facilitatorEmail)?.name || t.facilitatorEmail || 'Unassigned'}
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-primary">
+                        {t.bookedSpaces || 0} / {t.capacity}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1.5 flex-wrap">
@@ -1082,6 +1087,15 @@ export default function AdminPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Price (₹)</Label><Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label><Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Booked</Label>
+                        <div className="flex gap-1">
+                          <Input type="number" value={newTour.bookedSpaces} onChange={e => setNewTour({...newTour, bookedSpaces: parseInt(e.target.value) || 0})} className="rounded-xl" />
+                          <Button variant="outline" size="icon" className="rounded-xl shrink-0 h-10 w-10" onClick={() => setNewTour({...newTour, bookedSpaces: 0})} title="Reset counter to 0">
+                            <RefreshCcw className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                     <div className="space-y-4 pt-4 border-t border-border/50">
                       <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Frequency Engine</Label>
