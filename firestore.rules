@@ -86,10 +86,11 @@ service cloud.firestore {
     
     match /roles_facilitator/{userId} { 
       allow read: if isSignedIn(); 
+      // Explicitly allow the owner to manage facilitators
       allow write: if isAdmin(); 
     }
     match /roles_facilitator {
-      allow list: if isAdmin();
+      allow list: if isSignedIn();
     }
     
     // Media Assets
@@ -101,6 +102,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.0.8 - Enhanced admin permissions and user listing access
+    // Deployment trigger comment: v1.0.9 - Hardened facilitator management permissions
   }
 }

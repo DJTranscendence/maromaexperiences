@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -161,6 +162,18 @@ export default function AdminPage() {
     setEditingFacilitatorId(null);
     setInviteEmail("");
     setInviteName("");
+  };
+
+  const handleDeleteFacilitator = (f: FacilitatorRole) => {
+    if (!firestore) return;
+    if (confirm(`Are you sure you want to revoke access for ${f.name || f.email}?`)) {
+      const facilitatorRef = doc(firestore, "roles_facilitator", f.id);
+      deleteDocumentNonBlocking(facilitatorRef);
+      toast({ 
+        title: "Facilitator Removed", 
+        description: `${f.name || f.email} has been deleted from the directory.` 
+      });
+    }
   };
 
   const [selectedProposal, setSelectedProposal] = useState<ProposalRecord | null>(null);
@@ -695,12 +708,7 @@ export default function AdminPage() {
                                 size="icon" 
                                 variant="ghost" 
                                 className="rounded-full text-muted-foreground hover:text-destructive"
-                                onClick={() => {
-                                  if(confirm(`Revoke facilitator access for ${f.name || f.email}?`)) {
-                                    deleteDocumentNonBlocking(doc(firestore, "roles_facilitator", f.id));
-                                    toast({ title: "Facilitator Removed", description: `${f.name || f.email} has been deleted from the directory.` });
-                                  }
-                                }}
+                                onClick={() => handleDeleteFacilitator(f)}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
