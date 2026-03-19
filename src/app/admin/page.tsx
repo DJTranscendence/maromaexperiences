@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -21,7 +22,7 @@ import {
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
-  UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles
+  UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles, UserX, Trash
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -271,8 +272,8 @@ export default function AdminPage() {
   };
 
   const handleNotifyFacilitator = async (targetEmail: string, eventDetails: any) => {
-    if (!targetEmail) {
-      toast({ variant: "destructive", title: "Assignment Required", description: "Please assign a facilitator to this experience first." });
+    if (!targetEmail || targetEmail === 'none') {
+      toast({ variant: "destructive", title: "Assignment Required", description: "Please assign a facilitator to this specific event first." });
       return;
     }
 
@@ -319,7 +320,8 @@ export default function AdminPage() {
     isActive: true,
     imageUrls: [] as string[],
     scheduledDates: [] as string[],
-    facilitatorEmail: ""
+    facilitatorEmail: "",
+    facilitatorAssignments: {} as Record<string, string>
   });
 
   useEffect(() => {
@@ -364,11 +366,38 @@ export default function AdminPage() {
       dates.push(format(current, 'yyyy-MM-dd'));
       current.setDate(current.getDate() + (7 * intervalWeeks));
     }
+    
+    // Apply default facilitator to newly generated dates if provided
+    const newAssignments = { ...newTour.facilitatorAssignments };
+    dates.forEach(d => {
+      if (!newAssignments[d] && newTour.facilitatorEmail) {
+        newAssignments[d] = newTour.facilitatorEmail;
+      }
+    });
+
     setNewTour(prev => ({
       ...prev,
-      scheduledDates: Array.from(new Set([...prev.scheduledDates, ...dates])).sort()
+      scheduledDates: Array.from(new Set([...prev.scheduledDates, ...dates])).sort(),
+      facilitatorAssignments: newAssignments
     }));
     toast({ title: "Recurrence Set", description: `Generated ${dates.length} occurrences.` });
+  };
+
+  const handleRemoveDate = (date: string) => {
+    const nextDates = newTour.scheduledDates.filter(d => d !== date);
+    const nextAssignments = { ...newTour.facilitatorAssignments };
+    delete nextAssignments[date];
+    setNewTour({ ...newTour, scheduledDates: nextDates, facilitatorAssignments: nextAssignments });
+  };
+
+  const handleUpdateDateFacilitator = (date: string, email: string) => {
+    setNewTour({
+      ...newTour,
+      facilitatorAssignments: {
+        ...newTour.facilitatorAssignments,
+        [date]: email
+      }
+    });
   };
 
   const bookingsQuery = useMemoFirebase(() => {
@@ -399,14 +428,17 @@ export default function AdminPage() {
       t.scheduledDates?.forEach(d => {
         const key = `${t.id}_${d}`;
         const count = bookingsByDate[key] || 0;
-        events.push({ date: d, title: t.name, type: 'workshop', id: t.id, count, facilitatorEmail: t.facilitatorEmail });
+        // Use granular assignment first, then fall back to tour default
+        const facilitator = t.facilitatorAssignments?.[d] || t.facilitatorEmail;
+        events.push({ date: d, title: t.name, type: 'workshop', id: t.id, count, facilitatorEmail: facilitator });
       });
     });
     if (newTour.name && newTour.scheduledDates.length > 0) {
       newTour.scheduledDates.forEach(d => {
         const isAlreadySaved = tours?.some(t => t.id === editingId && t.scheduledDates.includes(d));
         if (!isAlreadySaved) {
-          events.push({ date: d, title: `[Draft] ${newTour.name}`, type: 'draft', id: editingId || 'draft-new', count: 0 });
+          const facilitator = newTour.facilitatorAssignments[d] || newTour.facilitatorEmail;
+          events.push({ date: d, title: `[Draft] ${newTour.name}`, type: 'draft', id: editingId || 'draft-new', count: 0, facilitatorEmail: facilitator });
         }
       });
     }
@@ -470,7 +502,8 @@ export default function AdminPage() {
       isActive: tour.isActive ?? true,
       imageUrls: tour.imageUrls || (tour.imageUrl ? [tour.imageUrl] : []),
       scheduledDates: tour.scheduledDates || [],
-      facilitatorEmail: tour.facilitatorEmail || ""
+      facilitatorEmail: tour.facilitatorEmail || "",
+      facilitatorAssignments: tour.facilitatorAssignments || {}
     });
     const editor = document.getElementById('tour-editor-card');
     if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -494,7 +527,8 @@ export default function AdminPage() {
       isActive: true,
       imageUrls: [],
       scheduledDates: [],
-      facilitatorEmail: ""
+      facilitatorEmail: "",
+      facilitatorAssignments: {}
     });
   };
 
@@ -641,13 +675,16 @@ export default function AdminPage() {
                                 <span className="truncate">{e.title}</span>
                                 <span className="shrink-0 opacity-80">({e.count})</span>
                               </div>
-                              {e.facilitatorEmail && (
-                                <button 
-                                  onClick={(ev) => { ev.stopPropagation(); handleNotifyFacilitator(e.facilitatorEmail!, e); }}
-                                  className="mt-1 bg-white/20 hover:bg-white/40 text-white rounded px-1 py-0.5 flex items-center gap-1 text-[7px]"
-                                >
-                                  <Bell className="w-2 h-2" /> Send Reminder
-                                </button>
+                              {e.facilitatorEmail && e.facilitatorEmail !== 'none' && (
+                                <div className="flex items-center justify-between gap-1 mt-1">
+                                  <span className="text-[7px] opacity-70 truncate">By {facilitators?.find(f => f.email === e.facilitatorEmail)?.name || e.facilitatorEmail}</span>
+                                  <button 
+                                    onClick={(ev) => { ev.stopPropagation(); handleNotifyFacilitator(e.facilitatorEmail!, e); }}
+                                    className="bg-white/20 hover:bg-white/40 text-white rounded px-1 py-0.5 flex items-center gap-1 text-[7px] shrink-0"
+                                  >
+                                    <Bell className="w-2 h-2" />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           ))}
@@ -787,7 +824,7 @@ export default function AdminPage() {
               <Table>
                 <TableHeader><TableRow className="bg-muted/30">
                   <TableHead>Experience</TableHead>
-                  <TableHead>Facilitator</TableHead>
+                  <TableHead>Primary Lead</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow></TableHeader>
@@ -857,7 +894,7 @@ export default function AdminPage() {
 
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                        <UserCheck className="w-3 h-3" /> Assigned Facilitator
+                        <UserCheck className="w-3 h-3" /> Default Facilitator
                       </Label>
                       <Select 
                         value={newTour.facilitatorEmail} 
@@ -873,11 +910,12 @@ export default function AdminPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-[9px] text-muted-foreground uppercase font-bold px-1">Applies to all newly generated dates.</p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Price (₹)</Label><Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Child Price</Label><Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Child Price</Label><Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, childPrice: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label><Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl" /></div>
                     </div>
 
@@ -901,6 +939,51 @@ export default function AdminPage() {
               </div>
 
               <div className="lg:col-span-2 space-y-12">
+                <section>
+                  <Label className="text-xl font-headline font-bold text-primary mb-6 block">Schedule & Staffing</Label>
+                  <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white">
+                    <Table>
+                      <TableHeader><TableRow className="bg-muted/30">
+                        <TableHead>Event Date</TableHead>
+                        <TableHead>Assigned Facilitator</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow></TableHeader>
+                      <TableBody>
+                        {newTour.scheduledDates.length > 0 ? (
+                          newTour.scheduledDates.map(date => (
+                            <TableRow key={date}>
+                              <TableCell className="font-bold">{format(parseISO(date), 'EEEE, MMM d, yyyy')}</TableCell>
+                              <TableCell>
+                                <Select 
+                                  value={newTour.facilitatorAssignments[date] || 'none'} 
+                                  onValueChange={(v) => handleUpdateDateFacilitator(date, v)}
+                                >
+                                  <SelectTrigger className="h-9 text-xs rounded-lg w-48">
+                                    <SelectValue placeholder="Choose facilitator" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">No Assignment</SelectItem>
+                                    {facilitators?.map(f => (
+                                      <SelectItem key={f.id} value={f.email}>{f.name || f.email}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => handleRemoveDate(date)}>
+                                  <Trash className="w-4 h-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow><TableCell colSpan={3} className="text-center py-12 text-muted-foreground italic">Use the Frequency Engine to generate event slots.</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </Card>
+                </section>
+
                 <section>
                   <Label className="text-xl font-headline font-bold text-primary mb-4 block">Visual Assets</Label>
                   <ImageLibrary selectedUrls={newTour.imageUrls} onSelect={(urls) => setNewTour(prev => ({ ...prev, imageUrls: urls }))} />

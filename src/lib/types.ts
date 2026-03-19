@@ -16,6 +16,8 @@ export interface Tour {
   imageUrl: string;
   minGroupSize: number;
   scheduledDates: string[];
+  /** Map of date strings (YYYY-MM-DD) to facilitator emails */
+  facilitatorAssignments?: Record<string, string>;
   isActive?: boolean;
   status?: 'live' | 'coming-soon';
   tourOwnerId?: string;
