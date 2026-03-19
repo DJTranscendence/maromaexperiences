@@ -23,7 +23,7 @@ import {
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
-  UserCheck, UserPlus, Bell
+  UserCheck, UserPlus, Bell, User
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -127,18 +127,25 @@ export default function AdminPage() {
   }, [firestore, isAdmin]);
   const { data: facilitators } = useCollection<FacilitatorRole>(facilitatorsQuery);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
 
   const handleAddFacilitator = () => {
-    if (!inviteEmail || !firestore) return;
+    if (!inviteEmail || !inviteName || !firestore) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Name and Email are required to onboard a facilitator." });
+      return;
+    }
     const cleanEmail = inviteEmail.toLowerCase().trim();
-    // Use email as a key-friendly string or just add document
+    const cleanName = inviteName.trim();
+    
     addDocumentNonBlocking(collection(firestore, "roles_facilitator"), {
       email: cleanEmail,
+      name: cleanName,
       activatedAt: serverTimestamp(),
       status: 'active'
     });
     setInviteEmail("");
-    toast({ title: "Facilitator Added", description: `${cleanEmail} now has facilitator access.` });
+    setInviteName("");
+    toast({ title: "Facilitator Added", description: `${cleanName} has been granted campus access.` });
   };
 
   // --- PROPOSAL DETAIL MODAL ---
@@ -190,13 +197,16 @@ export default function AdminPage() {
       toast({ variant: "destructive", title: "Assignment Required", description: "Please assign a facilitator to this experience first." });
       return;
     }
+
+    const facilitator = facilitators?.find(f => f.email === targetEmail);
+    const greetingName = facilitator?.name || "Facilitator";
     
     setIsEmailing(true);
     try {
       await sendEmailNotification({
         to: targetEmail,
         subject: `Upcoming Event Assignment: ${eventDetails.title}`,
-        textBody: `Hello Facilitator,\n\nYou have an upcoming event scheduled at the Maroma Campus.\n\nExperience: ${eventDetails.title}\nDate: ${eventDetails.date}\nExpected Guests: ${eventDetails.count}\n\nPlease review the logistics and ensure all materials are prepared.\n\nWarm regards,\nMaroma Administration`
+        textBody: `Hello ${greetingName},\n\nYou have an upcoming event scheduled at the Maroma Campus.\n\nExperience: ${eventDetails.title}\nDate: ${eventDetails.date}\nExpected Guests: ${eventDetails.count}\n\nPlease review the logistics and ensure all materials are prepared.\n\nWarm regards,\nMaroma Administration`
       });
       toast({ title: "Facilitator Notified", description: `Briefing sent to ${targetEmail}.` });
     } catch (err) {
@@ -266,7 +276,7 @@ export default function AdminPage() {
     };
     const start = parseLocal(recurrence.startDate);
     const end = parseLocal(recurrence.endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+    if (isNaN(start.getTime()) || iNaN(end.getTime()) || end < start) {
       toast({ variant: "destructive", title: "Invalid Range", description: "Please check your start and end dates." });
       return;
     }
@@ -586,19 +596,36 @@ export default function AdminPage() {
                 <Card className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
                   <CardHeader><CardTitle className="font-headline text-2xl text-primary">Onboard Facilitator</CardTitle></CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                      <Input 
-                        placeholder="facilitator@maroma.com" 
-                        value={inviteEmail} 
-                        onChange={e => setInviteEmail(e.target.value)} 
-                        className="rounded-xl h-12" 
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="e.g. John Doe" 
+                            value={inviteName} 
+                            onChange={e => setInviteName(e.target.value)} 
+                            className="pl-10 rounded-xl h-12" 
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="facilitator@maroma.com" 
+                            value={inviteEmail} 
+                            onChange={e => setInviteEmail(e.target.value)} 
+                            className="pl-10 rounded-xl h-12" 
+                          />
+                        </div>
+                      </div>
                     </div>
                     <Button 
                       className="w-full rounded-full h-12 font-bold bg-accent hover:bg-accent/90 gap-2"
                       onClick={handleAddFacilitator}
-                      disabled={!inviteEmail}
+                      disabled={!inviteEmail || !inviteName}
                     >
                       <UserPlus className="w-4 h-4" /> Grant Facilitator Access
                     </Button>
@@ -615,14 +642,19 @@ export default function AdminPage() {
                   </CardHeader>
                   <Table>
                     <TableHeader><TableRow className="bg-muted/30">
-                      <TableHead>Email Address</TableHead>
+                      <TableHead>Facilitator</TableHead>
                       <TableHead>Added On</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow></TableHeader>
                     <TableBody>
                       {facilitators?.map(f => (
                         <TableRow key={f.id}>
-                          <TableCell className="font-bold text-primary">{f.email}</TableCell>
+                          <TableCell className="font-bold text-primary">
+                            <div className="flex flex-col">
+                              <span>{f.name || 'Anonymous'}</span>
+                              <span className="text-[10px] text-muted-foreground font-normal">{f.email}</span>
+                            </div>
+                          </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {f.activatedAt ? format(f.activatedAt.toDate(), 'MMM d, yyyy') : 'Recently'}
                           </TableCell>
@@ -632,7 +664,7 @@ export default function AdminPage() {
                               variant="ghost" 
                               className="rounded-full text-muted-foreground hover:text-destructive"
                               onClick={() => {
-                                if(confirm(`Revoke facilitator access for ${f.email}?`)) {
+                                if(confirm(`Revoke facilitator access for ${f.name || f.email}?`)) {
                                   deleteDocumentNonBlocking(doc(firestore!, "roles_facilitator", f.id));
                                 }
                               }}
@@ -688,7 +720,7 @@ export default function AdminPage() {
                         <SelectContent>
                           <SelectItem value="none">Unassigned</SelectItem>
                           {facilitators?.map(f => (
-                            <SelectItem key={f.id} value={f.email}>{f.email}</SelectItem>
+                            <SelectItem key={f.id} value={f.email}>{f.name || f.email}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -737,7 +769,9 @@ export default function AdminPage() {
                       {tours?.map(t => (
                         <TableRow key={t.id}>
                           <TableCell className="font-bold">{t.name}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{t.facilitatorEmail || 'Unassigned'}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {facilitators?.find(f => f.email === t.facilitatorEmail)?.name || t.facilitatorEmail || 'Unassigned'}
+                          </TableCell>
                           <TableCell>{t.isActive ? <Badge className="bg-green-100 text-green-700">Active</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
                           <TableCell className="text-right">
                             <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
@@ -752,7 +786,7 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* ... Rest of existing tabs (Bookings, Proposals, Users, Brand, Media) ... */}
+          {/* ... Rest of tabs ... */}
           <TabsContent value="bookings" className="m-0 focus-visible:ring-0">
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center justify-between">
