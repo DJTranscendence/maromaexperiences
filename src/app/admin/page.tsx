@@ -226,10 +226,10 @@ export default function AdminPage() {
         toast({ title: "Bulk Delete Complete", description: "Selected bookings have been removed." });
         break;
       case 'bulk-user':
+        const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
         selectedUserIds.forEach(id => {
-          // Safety check: skip protected users in actual deletion loop
           const profile = users?.find(u => u.id === id);
-          const isProtected = profile?.email === "indispirit@gmail.com" || adminIds.has(id);
+          const isProtected = profile?.email === "indispirit@gmail.com" || adminIds.has(id) || (profile && facilitatorEmailsSet.has(profile.email.toLowerCase()));
           
           if (!isProtected) {
             deleteDocumentNonBlocking(doc(firestore, "users", id));
@@ -239,7 +239,7 @@ export default function AdminPage() {
           }
         });
         setSelectedUserIds(new Set());
-        toast({ title: "Bulk Delete Complete", description: "Targeted guest profiles have been removed. Protected members were preserved." });
+        toast({ title: "Bulk Delete Complete", description: "Targeted guest profiles have been removed. Team members were preserved." });
         break;
     }
 
@@ -592,8 +592,9 @@ export default function AdminPage() {
   const adminIds = new Set(admins?.map(a => a.id) || []);
 
   const handleSelectAllGuests = () => {
+    const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
     const guestIds = users
-      ?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id))
+      ?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id) && !facilitatorEmailsSet.has(u.email.toLowerCase()))
       .map(u => u.id) || [];
     setSelectedUserIds(new Set(guestIds));
     toast({ title: "Guests Selected", description: `${guestIds.length} guest profiles have been marked for action.` });
@@ -1123,9 +1124,17 @@ export default function AdminPage() {
                   <TableRow className="bg-muted/5">
                     <TableHead className="w-12 pl-6">
                       <Checkbox 
-                        checked={users && users.length > 0 && selectedUserIds.size === users.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id)).length} 
+                        checked={users && users.length > 0 && selectedUserIds.size === users.filter(u => {
+                          const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
+                          return u.email !== "indispirit@gmail.com" && !adminIds.has(u.id) && !isFacilitator;
+                        }).length} 
                         onCheckedChange={() => {
-                          const allNonAdminIds = users?.filter(u => u.email !== "indispirit@gmail.com" && !adminIds.has(u.id)).map(u => u.id) || [];
+                          const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
+                          const allNonAdminIds = users?.filter(u => 
+                            u.email !== "indispirit@gmail.com" && 
+                            !adminIds.has(u.id) && 
+                            !facilitatorEmailsSet.has(u.email.toLowerCase())
+                          ).map(u => u.id) || [];
                           if(selectedUserIds.size === allNonAdminIds.length) setSelectedUserIds(new Set());
                           else setSelectedUserIds(new Set(allNonAdminIds));
                         }} 
@@ -1138,7 +1147,8 @@ export default function AdminPage() {
                 </TableHeader>
                 <TableBody>
                   {users?.map(u => {
-                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id);
+                    const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
+                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id) || isFacilitator;
                     return (
                       <TableRow key={u.id} className={cn(isProtected && "bg-slate-50/50")}>
                         <TableCell className="pl-6">
@@ -1166,7 +1176,13 @@ export default function AdminPage() {
                             <span className="text-xs text-muted-foreground">{u.email}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{adminIds.has(u.id) ? <Badge className="bg-primary text-white">Admin</Badge> : <Badge variant="outline">Guest</Badge>}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {adminIds.has(u.id) && <Badge className="bg-primary text-white">Admin</Badge>}
+                            {isFacilitator && <Badge className="bg-accent text-white">Facilitator</Badge>}
+                            {!adminIds.has(u.id) && !isFacilitator && <Badge variant="outline">Guest</Badge>}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right pr-6">
                           <Button 
                             size="sm" 
@@ -1209,7 +1225,7 @@ export default function AdminPage() {
               This action is irreversible. You are about to permanently purge <strong>{deleteConfirm.title}</strong> from the campus database.
               <br/><br/>
               <span className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                <Shield className="w-3 h-3" /> Master safety: All protected admins will be preserved.
+                <Shield className="w-3 h-3" /> Master safety: All protected team members will be preserved.
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
