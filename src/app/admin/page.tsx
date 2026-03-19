@@ -23,7 +23,7 @@ import {
   Upload, FileText, Activity, AlertCircle, Palette, Type, CalendarDays,
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
-  UserCheck, UserPlus, Bell, User
+  UserCheck, UserPlus, Bell, User, Edit3
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -128,24 +128,50 @@ export default function AdminPage() {
   const { data: facilitators } = useCollection<FacilitatorRole>(facilitatorsQuery);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [editingFacilitatorId, setEditingFacilitatorId] = useState<string | null>(null);
 
-  const handleAddFacilitator = () => {
+  const handleSaveFacilitator = () => {
     if (!inviteEmail || !inviteName || !firestore) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Name and Email are required to onboard a facilitator." });
+      toast({ variant: "destructive", title: "Missing Information", description: "Name and Email are required." });
       return;
     }
     const cleanEmail = inviteEmail.toLowerCase().trim();
     const cleanName = inviteName.trim();
     
-    addDocumentNonBlocking(collection(firestore, "roles_facilitator"), {
-      email: cleanEmail,
-      name: cleanName,
-      activatedAt: serverTimestamp(),
-      status: 'active'
-    });
+    if (editingFacilitatorId) {
+      updateDocumentNonBlocking(doc(firestore, "roles_facilitator", editingFacilitatorId), {
+        email: cleanEmail,
+        name: cleanName,
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Facilitator Updated", description: `${cleanName}'s details have been saved.` });
+    } else {
+      addDocumentNonBlocking(collection(firestore, "roles_facilitator"), {
+        email: cleanEmail,
+        name: cleanName,
+        activatedAt: serverTimestamp(),
+        status: 'active'
+      });
+      toast({ title: "Facilitator Added", description: `${cleanName} has been granted campus access.` });
+    }
+    
     setInviteEmail("");
     setInviteName("");
-    toast({ title: "Facilitator Added", description: `${cleanName} has been granted campus access.` });
+    setEditingFacilitatorId(null);
+  };
+
+  const handleEditFacilitator = (f: FacilitatorRole) => {
+    setEditingFacilitatorId(f.id);
+    setInviteEmail(f.email);
+    setInviteName(f.name || "");
+    const element = document.getElementById('facilitator-onboarding-card');
+    if (element) element.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const cancelFacilitatorEdit = () => {
+    setEditingFacilitatorId(null);
+    setInviteEmail("");
+    setInviteName("");
   };
 
   // --- PROPOSAL DETAIL MODAL ---
@@ -257,7 +283,7 @@ export default function AdminPage() {
         }
       }
     }
-  }, [newTour]);
+  }, [newTour, editingId]);
 
   // --- RECURRENCE BUILDER ---
   const [recurrence, setRecurrence] = useState({
@@ -276,7 +302,7 @@ export default function AdminPage() {
     };
     const start = parseLocal(recurrence.startDate);
     const end = parseLocal(recurrence.endDate);
-    if (isNaN(start.getTime()) || iNaN(end.getTime()) || end < start) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
       toast({ variant: "destructive", title: "Invalid Range", description: "Please check your start and end dates." });
       return;
     }
@@ -593,8 +619,17 @@ export default function AdminPage() {
           <TabsContent value="facilitators" className="m-0 focus-visible:ring-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
-                <Card className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
-                  <CardHeader><CardTitle className="font-headline text-2xl text-primary">Onboard Facilitator</CardTitle></CardHeader>
+                <Card id="facilitator-onboarding-card" className="rounded-3xl border-none shadow-xl bg-white sticky top-24">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="font-headline text-2xl text-primary">
+                      {editingFacilitatorId ? "Edit Facilitator" : "Onboard Facilitator"}
+                    </CardTitle>
+                    {editingFacilitatorId && (
+                      <Button variant="ghost" size="icon" onClick={cancelFacilitatorEdit} className="rounded-full">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -622,14 +657,22 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </div>
-                    <Button 
-                      className="w-full rounded-full h-12 font-bold bg-accent hover:bg-accent/90 gap-2"
-                      onClick={handleAddFacilitator}
-                      disabled={!inviteEmail || !inviteName}
-                    >
-                      <UserPlus className="w-4 h-4" /> Grant Facilitator Access
-                    </Button>
-                    <p className="text-[10px] text-muted-foreground text-center font-bold uppercase">This email will appear in Experience assignments.</p>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        className="w-full rounded-full h-12 font-bold bg-accent hover:bg-accent/90 gap-2"
+                        onClick={handleSaveFacilitator}
+                        disabled={!inviteEmail || !inviteName}
+                      >
+                        {editingFacilitatorId ? <Save className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                        {editingFacilitatorId ? "Update Facilitator" : "Grant Facilitator Access"}
+                      </Button>
+                      {editingFacilitatorId && (
+                        <Button variant="outline" className="w-full rounded-full h-12 font-bold" onClick={cancelFacilitatorEdit}>
+                          Cancel Edit
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center font-bold uppercase">This member will appear in Experience assignments.</p>
                   </CardContent>
                 </Card>
               </div>
@@ -648,7 +691,7 @@ export default function AdminPage() {
                     </TableRow></TableHeader>
                     <TableBody>
                       {facilitators?.map(f => (
-                        <TableRow key={f.id}>
+                        <TableRow key={f.id} className="group hover:bg-muted/5">
                           <TableCell className="font-bold text-primary">
                             <div className="flex flex-col">
                               <span>{f.name || 'Anonymous'}</span>
@@ -659,18 +702,28 @@ export default function AdminPage() {
                             {f.activatedAt ? format(f.activatedAt.toDate(), 'MMM d, yyyy') : 'Recently'}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="rounded-full text-muted-foreground hover:text-destructive"
-                              onClick={() => {
-                                if(confirm(`Revoke facilitator access for ${f.name || f.email}?`)) {
-                                  deleteDocumentNonBlocking(doc(firestore!, "roles_facilitator", f.id));
-                                }
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex justify-end gap-1">
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="rounded-full text-muted-foreground hover:text-accent"
+                                onClick={() => handleEditFacilitator(f)}
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="rounded-full text-muted-foreground hover:text-destructive"
+                                onClick={() => {
+                                  if(confirm(`Revoke facilitator access for ${f.name || f.email}?`)) {
+                                    deleteDocumentNonBlocking(doc(firestore!, "roles_facilitator", f.id));
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
