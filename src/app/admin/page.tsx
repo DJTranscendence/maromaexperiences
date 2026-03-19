@@ -104,7 +104,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
 
-  // Confirmation States
+  // Confirmation States - Replacing native window.confirm()
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     type: 'facilitator' | 'tour' | 'booking' | 'bulk-booking' | null;
@@ -196,20 +196,26 @@ export default function AdminPage() {
   };
 
   const executeDelete = () => {
-    if (!firestore || !deleteConfirm.type || (!deleteConfirm.id && deleteConfirm.type !== 'bulk-booking')) return;
+    if (!firestore || !deleteConfirm.type) return;
 
     switch (deleteConfirm.type) {
       case 'facilitator':
-        deleteDocumentNonBlocking(doc(firestore, "roles_facilitator", deleteConfirm.id!));
-        toast({ title: "Facilitator Removed", description: `${deleteConfirm.title} has been removed from the directory.` });
+        if (deleteConfirm.id) {
+          deleteDocumentNonBlocking(doc(firestore, "roles_facilitator", deleteConfirm.id));
+          toast({ title: "Facilitator Removed", description: `${deleteConfirm.title} has been removed from the directory.` });
+        }
         break;
       case 'tour':
-        deleteDocumentNonBlocking(doc(firestore, "tours", deleteConfirm.id!));
-        toast({ title: "Experience Deleted", description: `${deleteConfirm.title} removed from catalog.` });
+        if (deleteConfirm.id) {
+          deleteDocumentNonBlocking(doc(firestore, "tours", deleteConfirm.id));
+          toast({ title: "Experience Deleted", description: `${deleteConfirm.title} removed from catalog.` });
+        }
         break;
       case 'booking':
-        deleteDocumentNonBlocking(doc(firestore, "bookings", deleteConfirm.id!));
-        toast({ title: "Booking Removed" });
+        if (deleteConfirm.id) {
+          deleteDocumentNonBlocking(doc(firestore, "bookings", deleteConfirm.id));
+          toast({ title: "Booking Removed" });
+        }
         break;
       case 'bulk-booking':
         selectedBookingIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "bookings", id)));
@@ -984,7 +990,7 @@ export default function AdminPage() {
         </Tabs>
       </main>
 
-      {/* Confirmation Dialogs */}
+      {/* Confirmation Dialogs - Non-blocking ShadCN replacement for window.confirm() */}
       <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}>
         <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl">
           <AlertDialogHeader>

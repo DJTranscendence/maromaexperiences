@@ -99,6 +99,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.1.2 - Hardened permissions for owner-based facilitator deletion
+    // Deployment trigger comment: v1.1.3 - Hardened permissions for facilitator management
   }
 }
