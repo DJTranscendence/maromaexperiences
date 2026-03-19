@@ -166,13 +166,14 @@ export default function AdminPage() {
 
   const handleDeleteFacilitator = (f: FacilitatorRole) => {
     if (!firestore) return;
-    const confirmed = window.confirm(`Are you sure you want to permanently revoke access for ${f.name || f.email}?`);
+    const name = f.name || f.email;
+    const confirmed = window.confirm(`Are you sure you want to permanently delete the facilitator record for ${name}? This will revoke their access to campus briefing alerts.`);
     if (confirmed) {
       const facilitatorRef = doc(firestore, "roles_facilitator", f.id);
       deleteDocumentNonBlocking(facilitatorRef);
       toast({ 
-        title: "Facilitator Removed", 
-        description: `${f.name || f.email} has been deleted from the directory.` 
+        title: "Facilitator Deleted", 
+        description: `${name} has been removed from the directory.` 
       });
     }
   };
@@ -709,7 +710,11 @@ export default function AdminPage() {
                                 size="icon" 
                                 variant="ghost" 
                                 className="rounded-full text-muted-foreground hover:text-destructive"
-                                onClick={(e) => { e.stopPropagation(); handleDeleteFacilitator(f); }}
+                                onClick={(e) => { 
+                                  e.preventDefault();
+                                  e.stopPropagation(); 
+                                  handleDeleteFacilitator(f); 
+                                }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
