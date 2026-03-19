@@ -8,8 +8,8 @@ service cloud.firestore {
     // Admin check with specific email override for the workshop owner
     function isAdmin() { 
       return request.auth != null && (
-        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
-        request.auth.token.email == "indispirit@gmail.com"
+        request.auth.token.email == "indispirit@gmail.com" ||
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))
       ); 
     }
 
@@ -78,16 +78,13 @@ service cloud.firestore {
     // Role Management
     match /roles_admin/{userId} { 
       allow read: if isSignedIn(); 
-      allow write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-    }
-    match /roles_admin {
-      allow list: if isAdmin();
+      allow write: if isAdmin();
     }
     
     match /roles_facilitator/{userId} { 
       allow read: if isSignedIn(); 
-      // Explicitly allow the owner to manage facilitators
-      allow write: if isAdmin(); 
+      // Explicitly allow administrators to manage the facilitator directory
+      allow create, update, delete: if isAdmin();
     }
     match /roles_facilitator {
       allow list: if isSignedIn();
@@ -102,6 +99,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.0.9 - Hardened facilitator management permissions
+    // Deployment trigger comment: v1.1.0 - Enabled explicit delete for roles_facilitator
   }
 }
