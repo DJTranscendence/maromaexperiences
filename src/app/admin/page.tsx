@@ -22,7 +22,7 @@ import {
   Building2, GraduationCap, Mail, ExternalLink, ClipboardList, Send, Clock, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Wrench, Plus, Eye, EyeOff,
   UserCheck, UserPlus, Bell, User, Edit3, CheckCircle2, Sparkles, UserX, Trash, Lock,
-  CheckSquare, Filter, RefreshCcw, Database
+  CheckSquare, Filter, RefreshCcw, Database, Baby
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -62,6 +62,8 @@ interface BookingRecord {
   tourName: string;
   tourDate: string;
   numberOfAttendees: number;
+  adultCount?: number;
+  childCount?: number;
   totalPrice: number;
   bookingStatus: string;
   bookedAt: any;
@@ -277,7 +279,7 @@ export default function AdminPage() {
     audience: "",
     description: "",
     price: 500,
-    childPrice: 0,
+    childPrice: 300,
     capacity: 20,
     minGroupSize: 8,
     bookedSpaces: 0,
@@ -471,7 +473,7 @@ export default function AdminPage() {
       audience: tour.audience || "",
       description: tour.description || "",
       price: tour.price,
-      childPrice: tour.childPrice || 0,
+      childPrice: tour.childPrice ?? 300,
       capacity: tour.capacity || 20,
       minGroupSize: tour.minGroupSize || 8,
       bookedSpaces: tour.bookedSpaces || 0,
@@ -679,7 +681,16 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell className="font-bold text-primary">{b.tourName}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
-                        <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
+                        <TableCell className="text-sm font-medium">
+                          <div className="flex flex-col">
+                            <span>{b.numberOfAttendees} Person(s)</span>
+                            {(b.adultCount || b.childCount) && (
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold">
+                                {b.adultCount || 0} Adult / {b.childCount || 0} Child
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
                         <TableCell>
                           <Select 
@@ -1095,12 +1106,22 @@ export default function AdminPage() {
                     <div className="space-y-6 pt-4 border-t border-border/50">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Rate (₹)</Label>
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Adult Rate (₹)</Label>
                           <Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl h-12" />
                         </div>
                         <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-primary flex items-center gap-1"><Baby className="w-3 h-3" /> Child Rate (₹)</Label>
+                          <Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, childPrice: parseInt(e.target.value) || 0})} className="rounded-xl h-12" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase text-muted-foreground">Capacity</Label>
                           <Input type="number" value={newTour.capacity} onChange={e => setNewTour({...newTour, capacity: parseInt(e.target.value) || 0})} className="rounded-xl h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Min Group</Label>
+                          <Input type="number" value={newTour.minGroupSize} onChange={e => setNewTour({...newTour, minGroupSize: parseInt(e.target.value) || 0})} className="rounded-xl h-12" />
                         </div>
                       </div>
 

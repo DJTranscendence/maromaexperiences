@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2 } from "lucide-react";
+import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2, Baby } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -24,7 +24,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const firestore = useFirestore();
   const { user } = useUser();
   
-  const [guests, setGuests] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +64,10 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     }
   }, [userData, user]);
 
+  const totalGuests = adults + children;
+  const childPrice = tour.childPrice ?? 300;
+  const totalPrice = (adults * tour.price) + (children * childPrice);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -73,7 +78,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     try {
       const tourRef = doc(firestore, "tours", tour.id);
       updateDocumentNonBlocking(tourRef, {
-        bookedSpaces: increment(guests)
+        bookedSpaces: increment(totalGuests)
       });
 
       const bookingsRef = collection(firestore, "bookings");
@@ -84,19 +89,21 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         tourDate: tour.scheduledDates?.[0] || "TBA",
         location: tour.location || "Maroma Campus",
         bookingType: 'Individual',
-        numberOfAttendees: guests,
-        totalPrice: guests * tour.price,
+        numberOfAttendees: totalGuests,
+        adultCount: adults,
+        childCount: children,
+        totalPrice: totalPrice,
         bookingStatus: 'confirmed',
         bookedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         specialInstructions: ""
       });
 
-      const isMinGroupReached = (tour.bookedSpaces + guests) >= tour.minGroupSize;
+      const isMinGroupReached = (tour.bookedSpaces + totalGuests) >= tour.minGroupSize;
       const fullPhone = `${formData.countryCode} ${formData.phone}`;
       const bookingId = Math.random().toString(36).substring(7).toUpperCase();
 
-      let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${guests} Person(s) on ${tour.scheduledDates?.[0] || "TBA"}.\n\nLocation: ${tour.location || "Maroma Campus"}\nBooking Reference: ${bookingId}\n\nWe look forward to seeing you there!\n\nWarm regards,\nThe Maroma Team`;
+      let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${totalGuests} Person(s) (${adults} Adult, ${children} Child) on ${tour.scheduledDates?.[0] || "TBA"}.\n\nLocation: ${tour.location || "Maroma Campus"}\nBooking Reference: ${bookingId}\n\nWe look forward to seeing you there!\n\nWarm regards,\nThe Maroma Team`;
 
       try {
         const notification = await generateBookingNotification({
@@ -107,12 +114,12 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             tourName: tour.name,
             tourDate: tour.scheduledDates?.[0] || "TBA",
             tourTime: "10:00 AM",
-            numberOfGuests: guests,
+            numberOfGuests: totalGuests,
             bookedBy: formData.name,
             bookerEmail: formData.email,
             bookerPhone: fullPhone
           },
-          currentBookedSpaces: (tour.bookedSpaces || 0) + guests,
+          currentBookedSpaces: (tour.bookedSpaces || 0) + totalGuests,
           minGroupSize: tour.minGroupSize,
           bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
           supportEmailAddress: "booking@maromaexperience.com"
@@ -137,15 +144,15 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         await sendEmailNotification({
           to: tour.facilitatorEmail,
           subject: `New Booking Update: ${tour.name}`,
-          textBody: `Hello,\n\nA new booking has been confirmed for your experience "${tour.name}".\n\nDate: ${tour.scheduledDates?.[0] || "TBA"}\nNew Guests: ${guests}\nTotal Booked: ${(tour.bookedSpaces || 0) + guests}\n\nBooked By: ${formData.name}\n\nPlease ensure materials are updated for the increased group size.\n\nWarm regards,\nMaroma System`
+          textBody: `Hello,\n\nA new booking has been confirmed for your experience "${tour.name}".\n\nDate: ${tour.scheduledDates?.[0] || "TBA"}\nTotal Guests: ${totalGuests} (${adults} A / ${children} C)\nTotal Booked: ${(tour.bookedSpaces || 0) + totalGuests}\n\nBooked By: ${formData.name}\n\nWarm regards,\nMaroma System`
         });
       }
 
       toast({
         title: "Booking Successful!",
         description: isMinGroupReached 
-          ? `Min group reached! This experience is guaranteed to run. Check your email for details.` 
-          : `Your reservation has been confirmed. A confirmation email has been sent to ${formData.email}.`,
+          ? `Min group reached! This experience is guaranteed to run.` 
+          : `Your reservation has been confirmed. A confirmation email has been sent.`,
       });
 
     } catch (err: any) {
@@ -160,7 +167,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     }
   };
 
-  const total = guests * tour.price;
+  const remainingCapacity = tour.capacity - (tour.bookedSpaces || 0);
 
   return (
     <>
@@ -226,21 +233,44 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
               </div>
             </div>
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="guests">Number of Person(s)</Label>
-            <div className="flex items-center gap-4">
-              <Input 
-                id="guests" 
-                type="number" 
-                min="1" 
-                max={tour.capacity - (tour.bookedSpaces || 0)} 
-                value={guests}
-                onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-                className="rounded-xl h-12"
-                required 
-              />
-              <div className="text-sm text-muted-foreground whitespace-nowrap font-medium">
-                ₹{tour.price} / Person
+          <div className="space-y-4 md:col-span-2">
+            <div className="space-y-2">
+              <Label htmlFor="adults">Number of Adults</Label>
+              <div className="flex items-center gap-4">
+                <Input 
+                  id="adults" 
+                  type="number" 
+                  min="0" 
+                  max={remainingCapacity - children} 
+                  value={adults}
+                  onChange={(e) => setAdults(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="rounded-xl h-12"
+                  required 
+                />
+                <div className="text-sm text-muted-foreground whitespace-nowrap font-medium">
+                  ₹{tour.price} / Adult
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="children" className="flex items-center gap-1.5"><Baby className="w-3.5 h-3.5 text-accent" /> Number of Children</Label>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-accent">Under 14 as of Jan 1 2026</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <Input 
+                  id="children" 
+                  type="number" 
+                  min="0" 
+                  max={remainingCapacity - adults} 
+                  value={children}
+                  onChange={(e) => setChildren(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="rounded-xl h-12"
+                  required 
+                />
+                <div className="text-sm text-muted-foreground whitespace-nowrap font-medium">
+                  ₹{childPrice} / Child
+                </div>
               </div>
             </div>
           </div>
@@ -252,13 +282,13 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Total to pay</div>
-            <div className="text-2xl font-bold font-headline text-primary">₹{total}</div>
+            <div className="text-2xl font-bold font-headline text-primary">₹{totalPrice}</div>
           </div>
         </div>
 
         <Button 
           type="submit" 
-          disabled={loading}
+          disabled={loading || totalGuests === 0}
           className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95 font-bold"
         >
           {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Complete Booking"}

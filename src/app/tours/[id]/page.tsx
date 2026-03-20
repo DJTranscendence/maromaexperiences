@@ -28,7 +28,8 @@ import {
   Trees,
   Users2,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Baby
 } from "lucide-react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -289,10 +290,14 @@ export default function TourDetailsPage() {
                   </div>
                 ) : (
                   <div className="space-y-8">
-                    <div className="flex justify-between items-end">
+                    <div className="space-y-2">
                       <div className="text-4xl font-headline font-bold text-primary flex items-baseline gap-1">
                         ₹{tour.price}
-                        <span className="text-sm font-normal text-muted-foreground">/ Person</span>
+                        <span className="text-sm font-normal text-muted-foreground">/ Adult</span>
+                      </div>
+                      <div className="text-2xl font-headline font-bold text-accent flex items-baseline gap-1">
+                        ₹{tour.childPrice ?? 300}
+                        <span className="text-xs font-normal text-muted-foreground">/ Child (Under 14)</span>
                       </div>
                     </div>
                     
