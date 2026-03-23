@@ -302,13 +302,6 @@ export default function TourDetailsPage() {
                     </div>
                     
                     <div className="space-y-6">
-                      <div className="p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center gap-3">
-                        <Calendar className="w-5 h-5 text-accent" />
-                        <div>
-                          <div className="text-[10px] font-bold text-accent uppercase tracking-wider">Upcoming Date</div>
-                          <div className="text-sm font-bold text-primary">{tour.scheduledDates?.[0] || 'TBA'}</div>
-                        </div>
-                      </div>
                       <IndividualBookingForm tour={tour} />
                     </div>
 

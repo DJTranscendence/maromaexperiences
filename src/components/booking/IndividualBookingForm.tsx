@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2, Baby } from "lucide-react";
+import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2, Baby, Calendar } from "lucide-react";
 import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, increment, collection, serverTimestamp } from "firebase/firestore";
 import { sendEmailNotification } from "@/app/actions/notifications";
+import { format, parseISO } from "date-fns";
 
 interface IndividualBookingFormProps {
   tour: Tour;
@@ -24,6 +25,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const firestore = useFirestore();
   const { user } = useUser();
   
+  const [selectedDate, setSelectedDate] = useState("");
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,12 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   }, [firestore, user]);
 
   const { data: userData } = useDoc(userDocRef);
+
+  useEffect(() => {
+    if (tour?.scheduledDates?.length > 0 && !selectedDate) {
+      setSelectedDate(tour.scheduledDates[0]);
+    }
+  }, [tour, selectedDate]);
 
   useEffect(() => {
     if (userData && !isInitialized.current) {
@@ -87,7 +95,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         userId: user?.uid || "guest",
         tourId: tour.id,
         tourName: tour.name,
-        tourDate: tour.scheduledDates?.[0] || "TBA",
+        tourDate: selectedDate || "TBA",
         location: tour.location || "Maroma Campus",
         bookingType: 'Individual',
         numberOfAttendees: totalGuests,
@@ -104,7 +112,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       const fullPhone = `${formData.countryCode} ${formData.phone}`;
       const bookingId = Math.random().toString(36).substring(7).toUpperCase();
 
-      let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${totalGuests} Person(s) (${adults} Adult, ${children} Child) on ${tour.scheduledDates?.[0] || "TBA"}.\n\nLocation: ${tour.location || "Maroma Campus"}\nBooking Reference: ${bookingId}\n\nWe look forward to seeing you there!\n\nWarm regards,\nThe Maroma Team`;
+      let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${totalGuests} Person(s) (${adults} Adult, ${children} Child) on ${selectedDate || "TBA"}.\n\nLocation: ${tour.location || "Maroma Campus"}\nBooking Reference: ${bookingId}\n\nWe look forward to seeing you there!\n\nWarm regards,\nThe Maroma Team`;
 
       try {
         const notification = await generateBookingNotification({
@@ -113,7 +121,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           bookingDetails: {
             bookingId: bookingId,
             tourName: tour.name,
-            tourDate: tour.scheduledDates?.[0] || "TBA",
+            tourDate: selectedDate || "TBA",
             tourTime: "10:00 AM",
             numberOfGuests: totalGuests,
             bookedBy: formData.name,
@@ -145,7 +153,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         await sendEmailNotification({
           to: tour.facilitatorEmail,
           subject: `New Booking Update: ${tour.name}`,
-          textBody: `Hello,\n\nA new booking has been confirmed for your experience "${tour.name}".\n\nDate: ${tour.scheduledDates?.[0] || "TBA"}\nTotal Guests: ${totalGuests} (${adults} A / ${children} C)\nTotal Booked: ${(tour.bookedSpaces || 0) + totalGuests}\n\nBooked By: ${formData.name}\n\nWarm regards,\nMaroma System`
+          textBody: `Hello,\n\nA new booking has been confirmed for your experience "${tour.name}".\n\nDate: ${selectedDate || "TBA"}\nTotal Guests: ${totalGuests} (${adults} A / ${children} C)\nTotal Booked: ${(tour.bookedSpaces || 0) + totalGuests}\n\nBooked By: ${formData.name}\n\nWarm regards,\nMaroma System`
         });
       }
 
@@ -178,7 +186,31 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div className="space-y-2">
+          <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Select Workshop Date</Label>
+          <Select value={selectedDate} onValueChange={setSelectedDate}>
+            <SelectTrigger className="h-14 rounded-2xl border-accent/20 bg-accent/5 focus:ring-accent">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-accent" />
+                <SelectValue placeholder="Choose a date" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              {tour.scheduledDates?.length > 0 ? (
+                tour.scheduledDates.map((date) => (
+                  <SelectItem key={date} value={date} className="rounded-xl">
+                    {format(parseISO(date), 'EEEE, MMMM do, yyyy')}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="tba" disabled>No upcoming dates scheduled</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input 
@@ -287,7 +319,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
         <Button 
           type="submit" 
-          disabled={loading || totalGuests === 0}
+          disabled={loading || totalGuests === 0 || !selectedDate}
           className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95 font-bold"
         >
           {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Complete Booking"}
