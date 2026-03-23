@@ -58,15 +58,16 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     } else if (user && !userData && !isInitialized.current) {
       setFormData(prev => ({
         ...prev,
-        email: user.email || prev.email,
-        name: user.displayName || prev.name
+        email: user.email || prev.email || "",
+        name: user.displayName || prev.name || ""
       }));
     }
   }, [userData, user]);
 
   const totalGuests = adults + children;
   const childPrice = tour.childPrice ?? 300;
-  const totalPrice = (adults * tour.price) + (children * childPrice);
+  const totalPrice = (adults * (tour.price || 0)) + (children * childPrice);
+  const remainingCapacity = (tour.capacity || 0) - (tour.bookedSpaces || 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +100,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         specialInstructions: ""
       });
 
-      const isMinGroupReached = (tour.bookedSpaces + totalGuests) >= tour.minGroupSize;
+      const isMinGroupReached = ((tour.bookedSpaces || 0) + totalGuests) >= (tour.minGroupSize || 1);
       const fullPhone = `${formData.countryCode} ${formData.phone}`;
       const bookingId = Math.random().toString(36).substring(7).toUpperCase();
 
@@ -166,8 +167,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       setLoading(false);
     }
   };
-
-  const remainingCapacity = tour.capacity - (tour.bookedSpaces || 0);
 
   return (
     <>
@@ -241,14 +240,14 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                   id="adults" 
                   type="number" 
                   min="0" 
-                  max={remainingCapacity - children} 
+                  max={remainingCapacity > 0 ? remainingCapacity - children : 0} 
                   value={adults}
                   onChange={(e) => setAdults(Math.max(0, parseInt(e.target.value) || 0))}
                   className="rounded-xl h-12"
                   required 
                 />
                 <div className="text-sm text-muted-foreground whitespace-nowrap font-medium">
-                  ₹{tour.price} / Adult
+                  ₹{tour.price || 0} / Adult
                 </div>
               </div>
             </div>
@@ -262,7 +261,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
                   id="children" 
                   type="number" 
                   min="0" 
-                  max={remainingCapacity - adults} 
+                  max={remainingCapacity > 0 ? remainingCapacity - adults : 0} 
                   value={children}
                   onChange={(e) => setChildren(Math.max(0, parseInt(e.target.value) || 0))}
                   className="rounded-xl h-12"
