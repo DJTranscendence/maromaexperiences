@@ -232,13 +232,13 @@ export default function AdminPage() {
       case 'proposal':
         if (deleteConfirm.id) {
           deleteDocumentNonBlocking(doc(firestore, "proposals", deleteConfirm.id));
-          toast({ title: "Proposal Purged" });
+          toast({ title: "Proposal Deleted" });
         }
         break;
       case 'bulk-proposal':
         selectedProposalIds.forEach(id => deleteDocumentNonBlocking(doc(firestore, "proposals", id)));
         setSelectedProposalIds(new Set());
-        toast({ title: "Proposals Purged" });
+        toast({ title: "Proposals Deleted" });
         break;
       case 'bulk-user':
         const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
@@ -948,7 +948,7 @@ export default function AdminPage() {
                           const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
                           const allNonProtectedIds = combinedUsers?.filter(u => 
                             u.email !== "indispirit@gmail.com" && 
-                            !adminIds.has(u.id) && 
+                            !adminIds.has(id) && 
                             !facilitatorEmailsSet.has(u.email.toLowerCase())
                           ).map(u => u.id) || [];
                           if(selectedUserIds.size === allNonProtectedIds.length) setSelectedUserIds(new Set());
@@ -1223,12 +1223,12 @@ export default function AdminPage() {
             <div className="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center mb-6"><AlertCircle className="w-8 h-8 text-rose-600" /></div>
             <AlertDialogTitle className="text-3xl font-headline font-bold text-primary">Confirm Targeted Deletion</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-lg">
-              This action is irreversible. You are about to permanently purge <strong>{deleteConfirm.title}</strong> from the campus database.
+              This action is irreversible. You are about to permanently delete <strong>{deleteConfirm.title}</strong> from the campus database.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-4 mt-10">
             <AlertDialogCancel className="rounded-full h-12 px-8 border-slate-200">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={executeDelete} className="bg-destructive hover:bg-destructive/90 text-white rounded-full h-12 px-10 font-bold">Permanently Purge</AlertDialogAction>
+            <AlertDialogAction onClick={executeDelete} className="bg-destructive hover:bg-destructive/90 text-white rounded-full h-12 px-10 font-bold">Permanently Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
