@@ -9,6 +9,10 @@ interface AvailabilityBadgeProps {
   className?: string;
 }
 
+/**
+ * A highly-visible availability indicator that uses psychological urgency 
+ * to encourage bookings based on real-time occupancy.
+ */
 export default function AvailabilityBadge({ booked, capacity, className }: AvailabilityBadgeProps) {
   const remaining = Math.max(0, capacity - (booked || 0));
   const availablePercent = capacity > 0 ? (remaining / capacity) * 100 : 0;
@@ -22,26 +26,21 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
     colorClass = "bg-red-100 text-red-800 border-red-200";
     dotClass = "bg-red-600";
     label = "Fully Booked";
-  } else if (availablePercent <= 20) {
-    // 1-20% left: High urgency
-    colorClass = "bg-rose-100 text-rose-800 border-rose-200";
+  } else if (availablePercent <= 25) {
+    // 1-25% remaining: High urgency
+    colorClass = "bg-rose-100 text-rose-800 border-rose-200 shadow-sm shadow-rose-100";
     dotClass = "bg-rose-500";
-    label = "Last Few Seats";
-  } else if (availablePercent <= 40) {
-    // 21-40% left: Significant bookings
-    colorClass = "bg-orange-100 text-orange-800 border-orange-200";
+    label = "Almost at Capacity. Book now!";
+  } else if (availablePercent <= 55) {
+    // 26-55% remaining: Moderate urgency (e.g. 11/20 remaining)
+    colorClass = "bg-orange-100 text-orange-800 border-orange-200 shadow-sm shadow-orange-100";
     dotClass = "bg-orange-500";
-    label = "Filling Fast";
-  } else if (availablePercent <= 65) {
-    // 41-65% left: Halfway there
-    colorClass = "bg-amber-100 text-amber-800 border-amber-200";
+    label = "It's almost half full";
+  } else if (availablePercent <= 85) {
+    // 56-85% remaining: Starting to fill
+    colorClass = "bg-amber-100 text-amber-800 border-amber-200 shadow-sm shadow-amber-100";
     dotClass = "bg-amber-500";
-    label = "Moderate Interest";
-  } else if (availablePercent <= 90) {
-    // 66-90% left: Noticing bookings
-    colorClass = "bg-lime-100 text-lime-800 border-lime-200";
-    dotClass = "bg-lime-500";
-    label = "Good Availability";
+    label = "Bookings are coming in";
   }
 
   return (
