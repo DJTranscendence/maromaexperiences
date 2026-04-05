@@ -153,7 +153,7 @@ function ConfirmBookingContent() {
           <CardTitle className="text-3xl font-headline font-bold text-primary">
             {status === 'success' ? "Attendance Confirmed!" : 
              status === 'cancelled' ? "Cancellation Received" : 
-             status === 'error' ? "Invalid Link" : "Final Step"}
+             status === 'error' ? "Invalid Link" : "Are You Coming?"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 p-10 pt-0 text-center">
@@ -164,7 +164,7 @@ function ConfirmBookingContent() {
               ? "We've recorded your cancellation. If your plans change, please feel free to book another session."
               : status === 'error'
               ? "This confirmation link is invalid or has expired. Please contact support if you believe this is an error."
-              : "Please confirm your selected attendance status for the Maroma experience below."}
+              : "We hope so! Please let us know by clicking the button below to proceed."}
           </p>
 
           {bookingData && status === 'idle' && (
@@ -186,7 +186,7 @@ function ConfirmBookingContent() {
             {status === 'idle' ? (
               <Button onClick={handleConfirmStatus} disabled={isProcessing} className="w-full bg-primary rounded-full h-14 font-bold shadow-xl shadow-primary/10 gap-2">
                 {isProcessing ? <Loader2 className="animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-                Confirm Status Change
+                Let Us Know
               </Button>
             ) : (
               <Button asChild className="w-full bg-slate-900 rounded-full h-12 font-bold shadow-lg">
