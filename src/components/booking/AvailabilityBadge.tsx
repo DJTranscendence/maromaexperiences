@@ -20,7 +20,7 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
   // Initializing with "Perfect" availability (100% free)
   let colorClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
   let dotClass = "bg-emerald-500";
-  let label = "Spaces Available";
+  let label = `${remaining} / ${capacity} Spaces Available`;
 
   if (remaining === 0) {
     colorClass = "bg-red-100 text-red-800 border-red-200";
@@ -30,24 +30,24 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
     // 1-25% remaining: High urgency
     colorClass = "bg-rose-100 text-rose-800 border-rose-200 shadow-sm shadow-rose-100";
     dotClass = "bg-rose-500";
-    label = "Almost at Capacity. Book now!";
+    label = `${remaining} / ${capacity} Almost at Capacity. Book now!`;
   } else if (availablePercent <= 55) {
     // 26-55% remaining: Moderate urgency (e.g. 11/20 remaining)
     colorClass = "bg-orange-100 text-orange-800 border-orange-200 shadow-sm shadow-orange-100";
     dotClass = "bg-orange-500";
-    label = "It's almost half full";
+    label = `${remaining} / ${capacity} It's almost half full`;
   } else if (availablePercent <= 85) {
-    // 56-85% remaining: Starting to fill
+    // 56-85% remaining: Starting to fill - Updated with dynamic count
     colorClass = "bg-amber-100 text-amber-800 border-amber-200 shadow-sm shadow-amber-100";
     dotClass = "bg-amber-500";
-    label = "Bookings are coming in";
+    label = `Bookings are coming in! ${remaining} bookings left!`;
   }
 
   return (
     <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold shadow-sm transition-all duration-300", colorClass, className)}>
       <span className={cn("w-2 h-2 rounded-full animate-pulse", dotClass)} />
-      <span className="flex items-center gap-1">
-        {remaining} / {capacity} {label}
+      <span className="flex items-center gap-1 font-body">
+        {label}
       </span>
     </div>
   );
