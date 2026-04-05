@@ -120,31 +120,55 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         customerEmail: formData.email
       });
 
-      // 3. Prepare Notification
-      let emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${totalGuests} Person(s) on ${selectedDate || "TBA"}.\n\nReference: ${bookingId}\n\nWe look forward to seeing you at Maroma!\n\nWarm regards,\nThe Maroma Team`;
+      // 3. Prepare Notification Logic
+      const newTotal = (tour.bookedSpaces || 0) + totalGuests;
+      const firstName = formData.name.split(' ')[0] || "there";
+      let emailBody = "";
 
-      try {
-        const isMinGroupReached = ((tour.bookedSpaces || 0) + totalGuests) >= (tour.minGroupSize || 1);
-        const notification = await generateBookingNotification({
-          eventType: isMinGroupReached ? 'minimum_group_size_reached' : 'booking_confirmation',
-          recipientType: 'booker',
-          bookingDetails: {
-            bookingId: bookingId,
-            tourName: tour.name,
-            tourDate: selectedDate || "TBA",
-            tourTime: "10:00 AM",
-            numberOfGuests: totalGuests,
-            bookedBy: formData.name,
-            bookerEmail: formData.email
-          },
-          currentBookedSpaces: (tour.bookedSpaces || 0) + totalGuests,
-          minGroupSize: tour.minGroupSize,
-          bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
-          supportEmailAddress: "booking@maromaexperience.com"
-        });
-        if (notification?.message) emailBody = notification.message;
-      } catch (aiErr) {
-        console.warn("AI notification fallback triggered.");
+      // Logic: If total bookings (including this one) < 8, use Jesse's template
+      if (newTotal < 8) {
+        emailBody = `Hello ${firstName},
+
+We have received your booking for the "${tour.name}"!
+
+This tour has not yet reached the minimum required number of bookings (eight). Once this tour has reached eight bookings (including yours) we will notify you by email.
+
+If you have other people who you think might also enjoy the Tour, you could create a group (of eight minimum) and we'll setup the tour for you on the next available date.
+
+If you have any questions or queries, please feel free email me at bookings@maromaexperience.com or WhatsApp to +91 948 6623 749.
+
+We look forward to seeing you at Maroma!
+
+Warm regards,
+
+Jesse Fox-Allen
+Maroma Experiences`;
+      } else {
+        // Use standard confirmation or AI confirmation
+        emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${totalGuests} Person(s) on ${selectedDate || "TBA"}.\n\nReference: ${bookingId}\n\nWe look forward to seeing you at Maroma!\n\nWarm regards,\nThe Maroma Team`;
+
+        try {
+          const notification = await generateBookingNotification({
+            eventType: 'minimum_group_size_reached',
+            recipientType: 'booker',
+            bookingDetails: {
+              bookingId: bookingId,
+              tourName: tour.name,
+              tourDate: selectedDate || "TBA",
+              tourTime: "10:00 AM",
+              numberOfGuests: totalGuests,
+              bookedBy: formData.name,
+              bookerEmail: formData.email
+            },
+            currentBookedSpaces: newTotal,
+            minGroupSize: 8,
+            bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
+            supportEmailAddress: "booking@maromaexperience.com"
+          });
+          if (notification?.message) emailBody = notification.message;
+        } catch (aiErr) {
+          console.warn("AI notification fallback triggered.");
+        }
       }
 
       setAiResponse(emailBody);
@@ -152,7 +176,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       // 4. Send Postmark Notification
       const emailResult = await sendEmailNotification({
         to: formData.email,
-        subject: `Booking Confirmed: ${tour.name}`,
+        subject: newTotal < 8 ? `Booking Received: ${tour.name} (Pending Min. Group)` : `Booking Confirmed: ${tour.name}`,
         textBody: emailBody
       });
 
@@ -264,8 +288,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       <Dialog open={!!aiResponse} onOpenChange={() => setAiResponse(null)}>
         <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-primary font-headline text-2xl"><MessageSquare className="w-6 h-6 text-accent" /> Booking Successful!</DialogTitle>
-            <DialogDescription>Your experience at Maroma is confirmed.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2 text-primary font-headline text-2xl"><MessageSquare className="w-6 h-6 text-accent" /> Booking Received!</DialogTitle>
+            <DialogDescription>Your experience at Maroma is being processed.</DialogDescription>
           </DialogHeader>
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mt-4 whitespace-pre-wrap font-body text-primary leading-relaxed text-sm">
             {aiResponse}
