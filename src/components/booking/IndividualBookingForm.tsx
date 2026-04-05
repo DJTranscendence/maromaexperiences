@@ -35,7 +35,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'failed' | 'sent'>('idle');
   
   const [formData, setFormData] = useState({
     name: "",
@@ -90,12 +89,11 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
     setLoading(true);
     setError(null);
-    setEmailStatus('idle');
 
     if (!firestore) return;
 
     try {
-      // 1. Update Tour Capacity
+      // 1. Update Tour Capacity (Non-blocking as per guidelines)
       const tourDocRef = doc(firestore, "tours", tour.id);
       updateDocumentNonBlocking(tourDocRef, {
         bookedSpaces: increment(totalGuests)
@@ -123,6 +121,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         customerEmail: formData.email
       };
 
+      // We await this one because we NEED the resulting ID for the threshold check if we hit 8
       const bookingDoc = await addDocumentNonBlocking(bookingsRef, newBooking);
       const bookingId = bookingDoc?.id;
 
@@ -145,7 +144,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://maromaexperience.com';
 
       if (runningTotal < 8) {
-        // Use Jesse's template
+        // Minimum not reached
         finalEmailBody = `Hello ${firstName},
 
 We have received your booking for the "${tour.name}"!
@@ -169,9 +168,7 @@ Maroma Experiences`;
           textBody: finalEmailBody
         });
       } else {
-        // REACHED THRESHOLD!
-        // Broadcast to EVERYONE in this group if it JUST hit 8 (or if we are adding to a confirmed group)
-        
+        // Threshold reached or exceeded - send interactive confirmation to ALL
         for (const guest of allGuests) {
           const guestFirstName = guest.customerName?.split(' ')[0] || "there";
           const confirmUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=yes`;
@@ -188,7 +185,7 @@ Maroma Experiences`;
                 <p>The <strong>${tour.name}</strong> on <strong>${selectedDate}</strong> has reached the minimum required number of bookings!</p>
                 <p>Please confirm your attendance below:</p>
                 <div style="margin: 30px 0;">
-                  <a href="${confirmUrl}" style="background-color: #4b828b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; margin-right: 10px; display: inline-block;">I'll be there!</a>
+                  <a href="${confirmUrl}" style="background-color: #4b828b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; margin-right: 15px; display: inline-block;">I'll be there!</a>
                   <a href="${cancelUrl}" style="background-color: #f1f5f9; color: #64748b; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block;">I cannot make it</a>
                 </div>
                 <p style="font-size: 12px; color: #94a3b8;">Warm regards,<br>The Maroma Team</p>
@@ -197,7 +194,7 @@ Maroma Experiences`;
           });
         }
 
-        // Notify Admin
+        // Alert Admin
         await sendEmailNotification({
           to: "indispirit@gmail.com",
           subject: `[THRESHOLD REACHED] ${tour.name} on ${selectedDate}`,
@@ -208,7 +205,6 @@ Maroma Experiences`;
       }
 
       setAiResponse(finalEmailBody);
-      setEmailStatus('sent');
       toast({ title: "Booking Successful!" });
 
     } catch (err: any) {
