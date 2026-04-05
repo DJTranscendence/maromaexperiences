@@ -231,7 +231,19 @@ export default function AdminPage() {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
   }, [firestore, isAdmin]);
-  const { data: bookings, isLoading: isBookingsLoading, error: bookingsError } = useCollection<BookingRecord>(bookingsQuery);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection<BookingRecord>(bookingsQuery);
+
+  // Group threshold calculation for dynamic labels
+  const groupTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    if (!bookings) return totals;
+    bookings.forEach(b => {
+      if (b.confirmationStatus === 'cancelled') return;
+      const key = `${b.tourId}_${b.tourDate}`;
+      totals[key] = (totals[key] || 0) + (b.numberOfAttendees || 0);
+    });
+    return totals;
+  }, [bookings]);
 
   const proposalsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
@@ -456,38 +468,45 @@ export default function AdminPage() {
                   {isBookingsLoading ? (
                     <TableRow><TableCell colSpan={8} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
                   ) : bookings && bookings.length > 0 ? (
-                    bookings.map(b => (
-                      <TableRow key={b.id} className="group hover:bg-muted/5">
-                        <TableCell className="pl-8"><Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => { const next = new Set(selectedBookingIds); if(next.has(b.id)) next.delete(b.id); else next.add(b.id); setSelectedBookingIds(next); }} /></TableCell>
-                        <TableCell className="font-bold">{b.tourName}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium">{b.customerName || "Anonymous"}</span>
-                            <span className="text-[10px] text-muted-foreground uppercase">{b.customerEmail || "No Email"}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
-                        <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
-                        <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <Badge className={cn("text-[10px] uppercase", b.bookingStatus === 'confirmed' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>{b.bookingStatus}</Badge>
-                            {b.confirmationStatus === 'attending' && (
-                              <Badge className="bg-emerald-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Attending</Badge>
-                            )}
-                            {b.confirmationStatus === 'cancelled' && (
-                              <Badge className="bg-rose-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><XCircle className="w-2.5 h-2.5" /> Not Coming</Badge>
-                            )}
-                            {b.confirmationStatus === 'pending_min_required' && (
-                              <Badge variant="outline" className="text-[8px] uppercase tracking-widest gap-1"><Clock className="w-2.5 h-2.5" /> Awaiting Min.</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right pr-8">
-                          <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `Booking for ${b.tourName}` })}><Trash2 className="w-4 h-4" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    bookings.map(b => {
+                      const totalForThisTourDate = groupTotals[`${b.tourId}_${b.tourDate}`] || 0;
+                      const isThresholdMet = totalForThisTourDate >= 8;
+                      
+                      return (
+                        <TableRow key={b.id} className="group hover:bg-muted/5">
+                          <TableCell className="pl-8"><Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => { const next = new Set(selectedBookingIds); if(next.has(b.id)) next.delete(b.id); else next.add(b.id); setSelectedBookingIds(next); }} /></TableCell>
+                          <TableCell className="font-bold">{b.tourName}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{b.customerName || "Anonymous"}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase">{b.customerEmail || "No Email"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
+                          <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
+                          <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <Badge className={cn("text-[10px] uppercase", b.bookingStatus === 'confirmed' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>{b.bookingStatus}</Badge>
+                              {b.confirmationStatus === 'attending' && (
+                                <Badge className="bg-emerald-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Attending</Badge>
+                              )}
+                              {b.confirmationStatus === 'cancelled' && (
+                                <Badge className="bg-rose-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><XCircle className="w-2.5 h-2.5" /> Not Coming</Badge>
+                              )}
+                              {b.confirmationStatus === 'pending_min_required' && (
+                                <Badge variant="outline" className={cn("text-[8px] uppercase tracking-widest gap-1", isThresholdMet && "border-amber-500 text-amber-600")}>
+                                  <Clock className="w-2.5 h-2.5" /> {isThresholdMet ? "Pending Confirmation" : "Awaiting Min."}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right pr-8">
+                            <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `Booking for ${b.tourName}` })}><Trash2 className="w-4 h-4" /></Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow><TableCell colSpan={8} className="text-center py-20 text-muted-foreground">No bookings found.</TableCell></TableRow>
                   )}
