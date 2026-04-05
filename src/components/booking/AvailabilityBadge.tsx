@@ -1,4 +1,3 @@
-
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -37,10 +36,10 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
     dotClass = "bg-orange-500";
     label = `${remaining} / ${capacity} It's almost half full`;
   } else if (availablePercent <= 85) {
-    // 56-85% remaining: Starting to fill - Updated with dynamic count
+    // 56-85% remaining: Starting to fill
     colorClass = "bg-amber-100 text-amber-800 border-amber-200 shadow-sm shadow-amber-100";
     dotClass = "bg-amber-500";
-    label = `Bookings are coming in! ${remaining} bookings left!`;
+    label = `Bookings are coming in! ${remaining} spaces left!`;
   }
 
   return (
