@@ -295,7 +295,6 @@ export default function CorporatePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Why Maroma for Business?</h2>
-              <div className="h-1.5 w-24 bg-accent mx-auto rounded-full" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">

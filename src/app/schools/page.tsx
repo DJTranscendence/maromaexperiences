@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -293,7 +292,6 @@ export default function SchoolsPage() {
               <p className="text-muted-foreground max-w-2xl mx-auto font-body">
                 This 8-step programme combines education, craft exposure, and hands-on learning within a functioning production campus.
               </p>
-              <div className="h-1.5 w-24 bg-accent mx-auto rounded-full mt-6" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

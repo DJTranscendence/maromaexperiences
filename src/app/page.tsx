@@ -73,7 +73,6 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-headline font-bold text-primary">Upcoming Experiences</h2>
             <p className="text-muted-foreground mt-3 text-lg font-body">Choose your next adventure from our seasonally curated list.</p>
           </div>
-          <div className="h-1.5 w-24 bg-accent rounded-full hidden md:block" />
         </div>
 
         {isLoading ? (
