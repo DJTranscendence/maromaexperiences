@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -17,7 +18,7 @@ import {
   Settings, AlertCircle, CalendarDays,
   Mail, ClipboardList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCcw, Plus, 
   UserCheck, Edit3, CheckCircle2, Sparkles, Lock,
-  CheckSquare, Database, Shield, Zap
+  CheckSquare, Database, Shield, Zap, RotateCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -582,6 +583,20 @@ export default function AdminPage() {
                       <TableCell>{t.isActive ? <Badge className="bg-green-100 text-green-700">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="text-orange-500 hover:text-orange-600"
+                            title="Reset Badge to 0"
+                            onClick={() => {
+                              if (firestore) {
+                                updateDocumentNonBlocking(doc(firestore, "tours", t.id), { bookedSpaces: 0 });
+                                toast({ title: "Counter Reset", description: `"${t.name}" availability restored to 20/20.` });
+                              }
+                            }}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
                           <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'tour', id: t.id, title: t.name })}><Trash2 className="w-4 h-4" /></Button>
                         </div>
@@ -619,7 +634,7 @@ export default function AdminPage() {
                           >
                             <Zap className="w-2.5 h-2.5 mr-1" /> Sync to DB
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px]" onClick={() => setNewTour({...newTour, bookedSpaces: 0})}><RefreshCcw className="w-2.5 h-2.5 mr-1" /> Reset</Button>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px]" onClick={() => setNewTour({...newTour, bookedSpaces: 0})}><RotateCcw className="w-2.5 h-2.5 mr-1" /> Reset</Button>
                         </div>
                       </div>
                       <Input type="number" value={newTour.bookedSpaces} onChange={e => setNewTour({...newTour, bookedSpaces: parseInt(e.target.value) || 0})} className="rounded-xl h-12 text-lg font-bold bg-white" />
