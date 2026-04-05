@@ -10,13 +10,14 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
 import { 
   Trash2, Edit, Save, Loader2, Check, X, Users, 
   Settings, AlertCircle, CalendarDays,
-  Mail, ClipboardList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, Plus, Eye, EyeOff,
-  UserCheck, UserPlus, Edit3, CheckCircle2, Sparkles, Lock,
-  CheckSquare, RefreshCcw, Database, Baby, Shield
+  Mail, ClipboardList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCcw, Plus, 
+  UserCheck, Edit3, CheckCircle2, Sparkles, Lock,
+  CheckSquare, Database, Shield
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -37,7 +38,7 @@ import {
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 import { sendEmailNotification } from "@/app/actions/notifications";
-import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay, parseISO } from "date-fns";
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay } from "date-fns";
 
 interface UserProfile {
   id: string;
@@ -217,7 +218,6 @@ export default function AdminPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    // We order by bookedAt to ensure recent ones appear first. If documents lack this field, they won't appear.
     return query(collection(firestore, "bookings"), orderBy("bookedAt", "desc"));
   }, [firestore, isAdmin]);
   const { data: bookings, isLoading: isBookingsLoading, error: bookingsError } = useCollection<BookingRecord>(bookingsQuery);
@@ -260,13 +260,6 @@ export default function AdminPage() {
     scheduledDates: [] as string[],
     facilitatorEmail: "",
     facilitatorAssignments: {} as Record<string, string>
-  });
-
-  const [recurrence, setRecurrence] = useState({
-    day: "6",
-    interval: "2",
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: format(addMonths(new Date(), 12), 'yyyy-MM-dd')
   });
 
   const combinedUsers = useMemo(() => {
