@@ -487,7 +487,6 @@ export default function AdminPage() {
                           <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1">
-                              <Badge className={cn("text-[10px] uppercase", b.bookingStatus === 'confirmed' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>{b.bookingStatus}</Badge>
                               {b.confirmationStatus === 'attending' && (
                                 <Badge className="bg-emerald-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Attending</Badge>
                               )}
