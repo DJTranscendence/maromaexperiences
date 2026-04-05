@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2, Baby, Calendar } from "lucide-react";
 import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, increment, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -96,7 +103,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
       // 2. Create Booking Record
       const bookingsRef = collection(firestore, "bookings");
-      const bookingId = Math.random().toString(36).substring(7).toUpperCase();
       
       const newBooking = {
         userId: user.uid,
@@ -117,7 +123,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         customerEmail: formData.email
       };
 
-      await addDocumentNonBlocking(bookingsRef, newBooking);
+      const bookingDoc = await addDocumentNonBlocking(bookingsRef, newBooking);
+      const bookingId = bookingDoc?.id;
 
       // 3. Logic: Check total bookings for this tour/date
       const q = query(collection(firestore, "bookings"), where("tourId", "==", tour.id), where("tourDate", "==", selectedDate));
@@ -127,8 +134,10 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       const allGuests: any[] = [];
       querySnap.forEach(doc => {
         const data = doc.data();
-        runningTotal += (data.numberOfAttendees || 0);
-        allGuests.push({ id: doc.id, ...data });
+        if (data.confirmationStatus !== 'cancelled') {
+          runningTotal += (data.numberOfAttendees || 0);
+          allGuests.push({ id: doc.id, ...data });
+        }
       });
 
       const firstName = formData.name.split(' ')[0] || "there";
@@ -161,46 +170,40 @@ Maroma Experiences`;
       } else {
         // REACHED THRESHOLD!
         // Broadcast to EVERYONE in this group if it JUST hit 8 (or if we are adding to a confirmed group)
-        // If it's exactly 8, we broadcast the "Threshold Reached" request to all.
         
-        const isThresholdHit = runningTotal >= 8;
-        
-        if (isThresholdHit) {
-          // Send to ALL guests for this date
-          for (const guest of allGuests) {
-            const guestFirstName = guest.customerName?.split(' ')[0] || "there";
-            const confirmUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=yes`;
-            const cancelUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=no`;
+        for (const guest of allGuests) {
+          const guestFirstName = guest.customerName?.split(' ')[0] || "there";
+          const confirmUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=yes`;
+          const cancelUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=no`;
 
-            await sendEmailNotification({
-              to: guest.customerEmail,
-              subject: `CONFIRMATION REQUIRED: ${tour.name} on ${selectedDate}`,
-              textBody: `Hello ${guestFirstName},\n\nThe ${tour.name} on ${selectedDate} has reached the minimum required number of bookings!\n\nPlease confirm that you will be attending this Tour by clicking one of the options below:\n\n[YES] I'll be there: ${confirmUrl}\n[NO] I cannot make it: ${cancelUrl}\n\nWe look forward to seeing you at Maroma!`,
-              htmlBody: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                  <h2 style="color: #4b828b;">Minimum Group Size Reached!</h2>
-                  <p>Hello ${guestFirstName},</p>
-                  <p>The <strong>${tour.name}</strong> on <strong>${selectedDate}</strong> has reached the minimum required number of bookings!</p>
-                  <p>Please confirm your attendance below:</p>
-                  <div style="margin: 30px 0;">
-                    <a href="${confirmUrl}" style="background-color: #4b828b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; margin-right: 10px; display: inline-block;">I'll be there!</a>
-                    <a href="${cancelUrl}" style="background-color: #f1f5f9; color: #64748b; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block;">I cannot make it</a>
-                  </div>
-                  <p style="font-size: 12px; color: #94a3b8;">Warm regards,<br>The Maroma Team</p>
-                </div>
-              `
-            });
-          }
-
-          // Notify Admin
           await sendEmailNotification({
-            to: "indispirit@gmail.com",
-            subject: `[THRESHOLD REACHED] ${tour.name} on ${selectedDate}`,
-            textBody: `Good news! The tour for ${tour.name} on ${selectedDate} has reached ${runningTotal} bookings.\n\nConfirmation requests have been dispatched to all guests.`
+            to: guest.customerEmail,
+            subject: `CONFIRMATION REQUIRED: ${tour.name} on ${selectedDate}`,
+            textBody: `Hello ${guestFirstName},\n\nThe ${tour.name} on ${selectedDate} has reached the minimum required number of bookings!\n\nPlease confirm that you will be attending this Tour by clicking one of the options below:\n\n[YES] I'll be there: ${confirmUrl}\n[NO] I cannot make it: ${cancelUrl}\n\nWe look forward to seeing you at Maroma!`,
+            htmlBody: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #4b828b;">Minimum Group Size Reached!</h2>
+                <p>Hello ${guestFirstName},</p>
+                <p>The <strong>${tour.name}</strong> on <strong>${selectedDate}</strong> has reached the minimum required number of bookings!</p>
+                <p>Please confirm your attendance below:</p>
+                <div style="margin: 30px 0;">
+                  <a href="${confirmUrl}" style="background-color: #4b828b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; margin-right: 10px; display: inline-block;">I'll be there!</a>
+                  <a href="${cancelUrl}" style="background-color: #f1f5f9; color: #64748b; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block;">I cannot make it</a>
+                </div>
+                <p style="font-size: 12px; color: #94a3b8;">Warm regards,<br>The Maroma Team</p>
+              </div>
+            `
           });
-
-          finalEmailBody = `The group size for "${tour.name}" has reached the minimum threshold! We have sent a confirmation request to your email. Please check and click "I'll be there!" to finalize your spot.`;
         }
+
+        // Notify Admin
+        await sendEmailNotification({
+          to: "indispirit@gmail.com",
+          subject: `[THRESHOLD REACHED] ${tour.name} on ${selectedDate}`,
+          textBody: `Good news! The tour for ${tour.name} on ${selectedDate} has reached ${runningTotal} bookings.\n\nConfirmation requests have been dispatched to all guests.`
+        });
+
+        finalEmailBody = `The group size for "${tour.name}" has reached the minimum threshold! We have sent a confirmation request to your email. Please check and click "I'll be there!" to finalize your spot.`;
       }
 
       setAiResponse(finalEmailBody);
@@ -218,14 +221,6 @@ Maroma Experiences`;
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <Alert variant="destructive" className="rounded-2xl">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>System Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         <div className="space-y-2">
           <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Select Workshop Date</Label>
           <Select value={selectedDate} onValueChange={setSelectedDate}>
