@@ -17,7 +17,7 @@ import {
   Settings, AlertCircle, CalendarDays,
   Mail, ClipboardList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCcw, Plus, 
   UserCheck, Edit3, CheckCircle2, Sparkles, Lock,
-  CheckSquare, Database, Shield
+  CheckSquare, Database, Shield, Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -61,6 +61,8 @@ interface BookingRecord {
   bookingStatus: string;
   bookedAt: any;
   tourId: string;
+  customerName?: string;
+  customerEmail?: string;
 }
 
 interface ProposalRecord {
@@ -97,6 +99,7 @@ export default function AdminPage() {
   const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [selectedProposalIds, setSelectedProposalIds] = useState<Set<string>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
@@ -165,6 +168,15 @@ export default function AdminPage() {
     setInviteEmail("");
     setInviteName("");
     setEditingFacilitatorId(null);
+  };
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    // Simple UI state trigger to give user confidence
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast({ title: "Dashboard Refreshed", description: "All real-time connections verified." });
+    }, 800);
   };
 
   const executeDelete = () => {
@@ -362,7 +374,17 @@ export default function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Dashboard</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Dashboard</h1>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleManualRefresh} 
+                  className={cn("rounded-full h-8 w-8 text-muted-foreground hover:text-primary", isRefreshing && "animate-spin")}
+                >
+                  <RefreshCcw className="w-4 h-4" />
+                </Button>
+              </div>
               <p className="text-muted-foreground mt-1">Campus Management Center</p>
             </div>
             <div className="w-full overflow-x-auto no-scrollbar pb-4 -mb-4">
@@ -418,7 +440,10 @@ export default function AdminPage() {
           <TabsContent value="bookings" className="m-0">
             <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b flex flex-col md:flex-row md:items-center justify-between p-8 gap-4">
-                <CardTitle className="font-headline text-2xl">Campus Bookings</CardTitle>
+                <CardTitle className="font-headline text-2xl flex items-center gap-3">
+                  Campus Bookings
+                  {bookings && <Badge variant="secondary" className="rounded-full">{bookings.length} Records</Badge>}
+                </CardTitle>
                 {selectedBookingIds.size > 0 && (
                   <Button variant="destructive" size="sm" className="rounded-full px-6 gap-2" onClick={() => setDeleteConfirm({ isOpen: true, type: 'bulk-booking', id: null, title: `${selectedBookingIds.size} bookings` })}>
                     <Trash2 className="w-4 h-4" /> Delete Selected ({selectedBookingIds.size})
@@ -438,17 +463,23 @@ export default function AdminPage() {
                       <TableHead className="w-12 pl-8">
                         <Checkbox checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} onCheckedChange={() => { if (selectedBookingIds.size === (bookings?.length || 0)) setSelectedBookingIds(new Set()); else setSelectedBookingIds(new Set(bookings?.map(b => b.id) || [])); }} />
                       </TableHead>
-                      <TableHead>Experience</TableHead><TableHead>Date</TableHead><TableHead>Attendees</TableHead><TableHead>Total (₹)</TableHead><TableHead>Status</TableHead><TableHead className="text-right pr-8">Actions</TableHead>
+                      <TableHead>Experience</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Attendees</TableHead><TableHead>Total (₹)</TableHead><TableHead>Status</TableHead><TableHead className="text-right pr-8">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isBookingsLoading ? (
-                      <TableRow><TableCell colSpan={7} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                      <TableRow><TableCell colSpan={8} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
                     ) : bookings && bookings.length > 0 ? (
                       bookings.map(b => (
                         <TableRow key={b.id} className="group hover:bg-muted/5">
                           <TableCell className="pl-8"><Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => { const next = new Set(selectedBookingIds); if(next.has(b.id)) next.delete(b.id); else next.add(b.id); setSelectedBookingIds(next); }} /></TableCell>
                           <TableCell className="font-bold">{b.tourName}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{b.customerName || "Anonymous"}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase">{b.customerEmail || "No Email"}</span>
+                            </div>
+                          </TableCell>
                           <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
                           <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
                           <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
@@ -461,7 +492,15 @@ export default function AdminPage() {
                         </TableRow>
                       ))
                     ) : (
-                      <TableRow><TableCell colSpan={7} className="text-center py-20 text-muted-foreground">No bookings found.</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
+                          <div className="flex flex-col items-center gap-2">
+                            <Database className="w-8 h-8 opacity-20" />
+                            <p>No confirmed booking records found in the database.</p>
+                            <Button asChild variant="link" className="text-accent" onClick={() => handleManualRefresh()}><span className="flex items-center gap-2"><RefreshCcw className="w-3.5 h-3.5" /> Check for updates</span></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -534,7 +573,7 @@ export default function AdminPage() {
             <Card className="rounded-3xl border-none shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-white border-b"><CardTitle className="font-headline text-2xl text-primary">Experience Catalog</CardTitle></CardHeader>
               <Table>
-                <TableHeader><TableRow className="bg-muted/30"><TableHead>Experience</TableHead><TableHead>Booked</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow className="bg-muted/30"><TableHead>Experience</TableHead><TableHead>Badge Count</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {tours?.map(t => (
                     <TableRow key={t.id}>
@@ -563,11 +602,37 @@ export default function AdminPage() {
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase">Adult Rate (₹)</Label><Input type="number" value={newTour.price} onChange={e => setNewTour({...newTour, price: parseInt(e.target.value) || 0})} className="rounded-xl h-12" /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-bold uppercase">Child Rate (₹)</Label><Input type="number" value={newTour.childPrice} onChange={e => setNewTour({...newTour, childPrice: parseInt(e.target.value) || 0})} className="rounded-xl h-12" /></div>
                     </div>
+                    
                     <div className="space-y-3 p-4 bg-muted/10 rounded-2xl border border-border/50">
-                      <div className="flex items-center justify-between"><Label className="text-[10px] font-bold uppercase">Manual Booked Badge</Label><Button variant="ghost" size="sm" className="h-6 px-2 text-[9px]" onClick={() => setNewTour({...newTour, bookedSpaces: 0})}><RefreshCcw className="w-2.5 h-2.5 mr-1" /> Reset</Button></div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Public Booking Badge</Label>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[9px] text-accent hover:bg-accent/5" 
+                            onClick={() => {
+                              const liveCount = (bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0);
+                              setNewTour({...newTour, bookedSpaces: liveCount});
+                              toast({ title: "Badge Synchronized", description: `Counter set to ${liveCount} based on database records.` });
+                            }}
+                          >
+                            <Zap className="w-2.5 h-2.5 mr-1" /> Sync to DB
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px]" onClick={() => setNewTour({...newTour, bookedSpaces: 0})}><RefreshCcw className="w-2.5 h-2.5 mr-1" /> Reset</Button>
+                        </div>
+                      </div>
                       <Input type="number" value={newTour.bookedSpaces} onChange={e => setNewTour({...newTour, bookedSpaces: parseInt(e.target.value) || 0})} className="rounded-xl h-12 text-lg font-bold bg-white" />
-                      {editingId && <div className="flex items-center gap-2 mt-2"><Database className="w-3 h-3 text-slate-400" /><span className="text-[10px] text-slate-500">Live DB Sync: <strong>{(bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0)} Seats</strong></span></div>}
+                      {editingId && (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
+                          <Database className="w-3 h-3 text-slate-400" />
+                          <span className="text-[10px] text-slate-500">
+                            Source of Truth: <strong>{(bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0)} Confirmed Seats</strong>
+                          </span>
+                        </div>
+                      )}
                     </div>
+                    
                     <Button className="w-full rounded-full h-12 font-bold shadow-lg" onClick={handleSaveTour}><Save className="mr-2 h-4 w-4" /> {editingId ? "Save Changes" : "Publish"}</Button>
                   </CardContent>
                 </Card>

@@ -31,7 +31,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'failed'>('idle');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'failed' | 'sent'>('idle');
   
   const [formData, setFormData] = useState({
     name: "",
@@ -161,9 +161,10 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         toast({
           variant: "destructive",
           title: "Registration Saved (Email Failed)",
-          description: "Booking confirmed in system, but email notification failed. Please screenshot this confirmation.",
+          description: "Booking confirmed in system, but email notification failed. Please check Postmark configuration.",
         });
       } else {
+        setEmailStatus('sent');
         toast({
           title: "Booking Successful!",
           description: `Confirmed for ${totalGuests} person(s). A receipt has been sent to your email.`,
@@ -272,7 +273,10 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           {emailStatus === 'failed' && (
             <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-rose-800 leading-tight">Note: We were unable to send an automated email to <strong>{formData.email}</strong>. Please take a screenshot of this confirmation for your records.</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-[11px] font-bold text-rose-900">Email Notification Failed</p>
+                <p className="text-[10px] text-rose-800 leading-tight">We were unable to send an automated receipt. Please take a screenshot of this confirmation for your records.</p>
+              </div>
             </div>
           )}
           <Button onClick={() => setAiResponse(null)} className="w-full mt-6 bg-primary rounded-full font-bold">Done</Button>
