@@ -8,11 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2, Baby, Calendar } from "lucide-react";
-import { generateBookingNotification } from "@/ai/flows/generate-booking-notification";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, increment, collection, serverTimestamp } from "firebase/firestore";
+import { doc, increment, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { sendEmailNotification } from "@/app/actions/notifications";
 import { format, parseISO } from "date-fns";
 
@@ -76,7 +73,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const totalGuests = adults + children;
   const childPrice = tour.childPrice ?? 300;
   const totalPrice = (adults * (tour.price || 0)) + (children * childPrice);
-  const remainingCapacity = (tour.capacity || 0) - (tour.bookedSpaces || 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +89,8 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
     try {
       // 1. Update Tour Capacity
-      const tourRef = doc(firestore, "tours", tour.id);
-      updateDocumentNonBlocking(tourRef, {
+      const tourDocRef = doc(firestore, "tours", tour.id);
+      updateDocumentNonBlocking(tourDocRef, {
         bookedSpaces: increment(totalGuests)
       });
 
@@ -102,7 +98,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
       const bookingsRef = collection(firestore, "bookings");
       const bookingId = Math.random().toString(36).substring(7).toUpperCase();
       
-      addDocumentNonBlocking(bookingsRef, {
+      const newBooking = {
         userId: user.uid,
         tourId: tour.id,
         tourName: tour.name,
@@ -114,20 +110,33 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         childCount: children,
         totalPrice: totalPrice,
         bookingStatus: 'confirmed',
+        confirmationStatus: 'pending_min_required',
         bookedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         customerName: formData.name,
         customerEmail: formData.email
+      };
+
+      await addDocumentNonBlocking(bookingsRef, newBooking);
+
+      // 3. Logic: Check total bookings for this tour/date
+      const q = query(collection(firestore, "bookings"), where("tourId", "==", tour.id), where("tourDate", "==", selectedDate));
+      const querySnap = await getDocs(q);
+      
+      let runningTotal = 0;
+      const allGuests: any[] = [];
+      querySnap.forEach(doc => {
+        const data = doc.data();
+        runningTotal += (data.numberOfAttendees || 0);
+        allGuests.push({ id: doc.id, ...data });
       });
 
-      // 3. Prepare Notification Logic
-      const newTotal = (tour.bookedSpaces || 0) + totalGuests;
       const firstName = formData.name.split(' ')[0] || "there";
-      let emailBody = "";
+      let finalEmailBody = "";
 
-      // Logic: If total bookings (including this one) < 8, use Jesse's template
-      if (newTotal < 8) {
-        emailBody = `Hello ${firstName},
+      if (runningTotal < 8) {
+        // Use Jesse's template
+        finalEmailBody = `Hello ${firstName},
 
 We have received your booking for the "${tour.name}"!
 
@@ -143,57 +152,60 @@ Warm regards,
 
 Jesse Fox-Allen
 Maroma Experiences`;
-      } else {
-        // Use standard confirmation or AI confirmation
-        emailBody = `Hello ${formData.name},\n\nYour booking for "${tour.name}" has been confirmed for ${totalGuests} Person(s) on ${selectedDate || "TBA"}.\n\nReference: ${bookingId}\n\nWe look forward to seeing you at Maroma!\n\nWarm regards,\nThe Maroma Team`;
 
-        try {
-          const notification = await generateBookingNotification({
-            eventType: 'minimum_group_size_reached',
-            recipientType: 'booker',
-            bookingDetails: {
-              bookingId: bookingId,
-              tourName: tour.name,
-              tourDate: selectedDate || "TBA",
-              tourTime: "10:00 AM",
-              numberOfGuests: totalGuests,
-              bookedBy: formData.name,
-              bookerEmail: formData.email
-            },
-            currentBookedSpaces: newTotal,
-            minGroupSize: 8,
-            bookingDetailsBaseUrl: "https://maromaexperience.com/bookings",
-            supportEmailAddress: "booking@maromaexperience.com"
+        await sendEmailNotification({
+          to: formData.email,
+          subject: `Booking Received: ${tour.name} (Pending Min. Group)`,
+          textBody: finalEmailBody
+        });
+      } else {
+        // REACHED THRESHOLD!
+        // Broadcast to EVERYONE in this group if it JUST hit 8 (or if we are adding to a confirmed group)
+        // If it's exactly 8, we broadcast the "Threshold Reached" request to all.
+        
+        const isThresholdHit = runningTotal >= 8;
+        
+        if (isThresholdHit) {
+          // Send to ALL guests for this date
+          for (const guest of allGuests) {
+            const guestFirstName = guest.customerName?.split(' ')[0] || "there";
+            const confirmUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=yes`;
+            const cancelUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=no`;
+
+            await sendEmailNotification({
+              to: guest.customerEmail,
+              subject: `CONFIRMATION REQUIRED: ${tour.name} on ${selectedDate}`,
+              textBody: `Hello ${guestFirstName},\n\nThe ${tour.name} on ${selectedDate} has reached the minimum required number of bookings!\n\nPlease confirm that you will be attending this Tour by clicking one of the options below:\n\n[YES] I'll be there: ${confirmUrl}\n[NO] I cannot make it: ${cancelUrl}\n\nWe look forward to seeing you at Maroma!`,
+              htmlBody: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #4b828b;">Minimum Group Size Reached!</h2>
+                  <p>Hello ${guestFirstName},</p>
+                  <p>The <strong>${tour.name}</strong> on <strong>${selectedDate}</strong> has reached the minimum required number of bookings!</p>
+                  <p>Please confirm your attendance below:</p>
+                  <div style="margin: 30px 0;">
+                    <a href="${confirmUrl}" style="background-color: #4b828b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; margin-right: 10px; display: inline-block;">I'll be there!</a>
+                    <a href="${cancelUrl}" style="background-color: #f1f5f9; color: #64748b; padding: 12px 25px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block;">I cannot make it</a>
+                  </div>
+                  <p style="font-size: 12px; color: #94a3b8;">Warm regards,<br>The Maroma Team</p>
+                </div>
+              `
+            });
+          }
+
+          // Notify Admin
+          await sendEmailNotification({
+            to: "indispirit@gmail.com",
+            subject: `[THRESHOLD REACHED] ${tour.name} on ${selectedDate}`,
+            textBody: `Good news! The tour for ${tour.name} on ${selectedDate} has reached ${runningTotal} bookings.\n\nConfirmation requests have been dispatched to all guests.`
           });
-          if (notification?.message) emailBody = notification.message;
-        } catch (aiErr) {
-          console.warn("AI notification fallback triggered.");
+
+          finalEmailBody = `The group size for "${tour.name}" has reached the minimum threshold! We have sent a confirmation request to your email. Please check and click "I'll be there!" to finalize your spot.`;
         }
       }
 
-      setAiResponse(emailBody);
-
-      // 4. Send Postmark Notification
-      const emailResult = await sendEmailNotification({
-        to: formData.email,
-        subject: newTotal < 8 ? `Booking Received: ${tour.name} (Pending Min. Group)` : `Booking Confirmed: ${tour.name}`,
-        textBody: emailBody
-      });
-
-      if (!emailResult.success) {
-        setEmailStatus('failed');
-        toast({
-          variant: "destructive",
-          title: "Registration Saved (Email Failed)",
-          description: "Booking confirmed in system, but email notification failed. Please check Postmark configuration.",
-        });
-      } else {
-        setEmailStatus('sent');
-        toast({
-          title: "Booking Successful!",
-          description: `Confirmed for ${totalGuests} person(s). A receipt has been sent to your email.`,
-        });
-      }
+      setAiResponse(finalEmailBody);
+      setEmailStatus('sent');
+      toast({ title: "Booking Successful!" });
 
     } catch (err: any) {
       setError(err.message || "Submission failed.");
@@ -294,15 +306,6 @@ Maroma Experiences`;
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mt-4 whitespace-pre-wrap font-body text-primary leading-relaxed text-sm">
             {aiResponse}
           </div>
-          {emailStatus === 'failed' && (
-            <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div className="flex flex-col gap-1">
-                <p className="text-[11px] font-bold text-rose-900">Email Notification Failed</p>
-                <p className="text-[10px] text-rose-800 leading-tight">We were unable to send an automated receipt. Please take a screenshot of this confirmation for your records.</p>
-              </div>
-            </div>
-          )}
           <Button onClick={() => setAiResponse(null)} className="w-full mt-6 bg-primary rounded-full font-bold">Done</Button>
         </DialogContent>
       </Dialog>

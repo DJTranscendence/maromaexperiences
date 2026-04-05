@@ -1,4 +1,3 @@
-
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -18,7 +17,7 @@ import {
   Settings, AlertCircle, CalendarDays,
   Mail, ClipboardList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCcw, Plus, 
   UserCheck, Edit3, CheckCircle2, Sparkles, Lock,
-  CheckSquare, Database, Shield, Zap, RotateCcw
+  CheckSquare, Database, Shield, Zap, RotateCcw, XCircle, Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
@@ -60,6 +59,7 @@ interface BookingRecord {
   childCount?: number;
   totalPrice: number;
   bookingStatus: string;
+  confirmationStatus?: 'pending_min_required' | 'attending' | 'cancelled';
   bookedAt: any;
   tourId: string;
   customerName?: string;
@@ -173,10 +173,9 @@ export default function AdminPage() {
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
-    // Simple UI state trigger to give user confidence
     setTimeout(() => {
       setIsRefreshing(false);
-      toast({ title: "Dashboard Refreshed", description: "All real-time connections verified." });
+      toast({ title: "Dashboard Refreshed" });
     }, 800);
   };
 
@@ -211,7 +210,6 @@ export default function AdminPage() {
           const isProtected = profile?.email === "indispirit@gmail.com" || adminIds.has(id) || (profile && facilitatorEmailsSet.has(profile.email.toLowerCase()));
           if (!isProtected) {
             deleteDocumentNonBlocking(doc(firestore, "users", id));
-            if (adminIds.has(id)) deleteDocumentNonBlocking(doc(firestore, "roles_admin", id));
           }
         });
         setSelectedUserIds(new Set());
@@ -324,7 +322,6 @@ export default function AdminPage() {
     toast({ title: "Experience Saved" });
   };
 
-  // Calendar Engine
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const calendarEvents = useMemo(() => {
     const events: { date: string, title: string, type: string, id: string, count: number }[] = [];
@@ -377,12 +374,7 @@ export default function AdminPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Dashboard</h1>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleManualRefresh} 
-                  className={cn("rounded-full h-8 w-8 text-muted-foreground hover:text-primary", isRefreshing && "animate-spin")}
-                >
+                <Button variant="ghost" size="icon" onClick={handleManualRefresh} className={cn("rounded-full h-8 w-8 text-muted-foreground hover:text-primary", isRefreshing && "animate-spin")}>
                   <RefreshCcw className="w-4 h-4" />
                 </Button>
               </div>
@@ -451,61 +443,56 @@ export default function AdminPage() {
                   </Button>
                 )}
               </CardHeader>
-              {bookingsError ? (
-                <div className="p-20 text-center text-destructive">
-                  <AlertCircle className="w-10 h-10 mx-auto mb-4" />
-                  <p className="font-bold">Sync Error</p>
-                  <p className="text-sm opacity-70">Could not retrieve booking records. Please check database permissions.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/5">
-                      <TableHead className="w-12 pl-8">
-                        <Checkbox checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} onCheckedChange={() => { if (selectedBookingIds.size === (bookings?.length || 0)) setSelectedBookingIds(new Set()); else setSelectedBookingIds(new Set(bookings?.map(b => b.id) || [])); }} />
-                      </TableHead>
-                      <TableHead>Experience</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Attendees</TableHead><TableHead>Total (₹)</TableHead><TableHead>Status</TableHead><TableHead className="text-right pr-8">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isBookingsLoading ? (
-                      <TableRow><TableCell colSpan={8} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
-                    ) : bookings && bookings.length > 0 ? (
-                      bookings.map(b => (
-                        <TableRow key={b.id} className="group hover:bg-muted/5">
-                          <TableCell className="pl-8"><Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => { const next = new Set(selectedBookingIds); if(next.has(b.id)) next.delete(b.id); else next.add(b.id); setSelectedBookingIds(next); }} /></TableCell>
-                          <TableCell className="font-bold">{b.tourName}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{b.customerName || "Anonymous"}</span>
-                              <span className="text-[10px] text-muted-foreground uppercase">{b.customerEmail || "No Email"}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
-                          <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
-                          <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
-                          <TableCell>
-                            <Badge className={cn("text-[10px] uppercase", b.bookingStatus === 'confirmed' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>{b.bookingStatus}</Badge>
-                          </TableCell>
-                          <TableCell className="text-right pr-8">
-                            <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `Booking for ${b.tourName}` })}><Trash2 className="w-4 h-4" /></Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
-                          <div className="flex flex-col items-center gap-2">
-                            <Database className="w-8 h-8 opacity-20" />
-                            <p>No confirmed booking records found in the database.</p>
-                            <Button asChild variant="link" className="text-accent" onClick={() => handleManualRefresh()}><span className="flex items-center gap-2"><RefreshCcw className="w-3.5 h-3.5" /> Check for updates</span></Button>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/5">
+                    <TableHead className="w-12 pl-8">
+                      <Checkbox checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} onCheckedChange={() => { if (selectedBookingIds.size === (bookings?.length || 0)) setSelectedBookingIds(new Set()); else setSelectedBookingIds(new Set(bookings?.map(b => b.id) || [])); }} />
+                    </TableHead>
+                    <TableHead>Experience</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Attendees</TableHead><TableHead>Total (₹)</TableHead><TableHead>Status</TableHead><TableHead className="text-right pr-8">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isBookingsLoading ? (
+                    <TableRow><TableCell colSpan={8} className="text-center py-20"><Loader2 className="animate-spin mx-auto text-accent" /></TableCell></TableRow>
+                  ) : bookings && bookings.length > 0 ? (
+                    bookings.map(b => (
+                      <TableRow key={b.id} className="group hover:bg-muted/5">
+                        <TableCell className="pl-8"><Checkbox checked={selectedBookingIds.has(b.id)} onCheckedChange={() => { const next = new Set(selectedBookingIds); if(next.has(b.id)) next.delete(b.id); else next.add(b.id); setSelectedBookingIds(next); }} /></TableCell>
+                        <TableCell className="font-bold">{b.tourName}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{b.customerName || "Anonymous"}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase">{b.customerEmail || "No Email"}</span>
                           </div>
                         </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{b.tourDate}</TableCell>
+                        <TableCell className="text-sm font-medium">{b.numberOfAttendees} Person(s)</TableCell>
+                        <TableCell className="text-sm font-bold">₹{b.totalPrice}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <Badge className={cn("text-[10px] uppercase", b.bookingStatus === 'confirmed' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>{b.bookingStatus}</Badge>
+                            {b.confirmationStatus === 'attending' && (
+                              <Badge className="bg-emerald-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Attending</Badge>
+                            )}
+                            {b.confirmationStatus === 'cancelled' && (
+                              <Badge className="bg-rose-600 text-white text-[8px] uppercase font-black tracking-widest gap-1"><XCircle className="w-2.5 h-2.5" /> Not Coming</Badge>
+                            )}
+                            {b.confirmationStatus === 'pending_min_required' && (
+                              <Badge variant="outline" className="text-[8px] uppercase tracking-widest gap-1"><Clock className="w-2.5 h-2.5" /> Awaiting Min.</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right pr-8">
+                          <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => setDeleteConfirm({ isOpen: true, type: 'booking', id: b.id, title: `Booking for ${b.tourName}` })}><Trash2 className="w-4 h-4" /></Button>
+                        </TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={8} className="text-center py-20 text-muted-foreground">No bookings found.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </Card>
           </TabsContent>
 
@@ -532,8 +519,7 @@ export default function AdminPage() {
                 </TableHeader>
                 <TableBody>
                   {combinedUsers.map(u => {
-                    const isFacilitator = facilitators?.some(f => f.email.toLowerCase() === u.email.toLowerCase());
-                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id) || isFacilitator;
+                    const isProtected = u.email === "indispirit@gmail.com" || adminIds.has(u.id);
                     return (
                       <TableRow key={u.id} className={cn(isProtected && "bg-slate-50/50")}>
                         <TableCell className="pl-6">
@@ -548,7 +534,6 @@ export default function AdminPage() {
                         <TableCell>
                           <div className="flex gap-1.5">
                             {adminIds.has(u.id) && <Badge className="bg-primary text-white">Admin</Badge>}
-                            {isFacilitator && <Badge className="bg-accent text-white">Facilitator</Badge>}
                             {!isProtected && <Badge variant="outline">Guest</Badge>}
                           </div>
                         </TableCell>
@@ -583,20 +568,7 @@ export default function AdminPage() {
                       <TableCell>{t.isActive ? <Badge className="bg-green-100 text-green-700">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="text-orange-500 hover:text-orange-600"
-                            title="Reset Badge to 0"
-                            onClick={() => {
-                              if (firestore) {
-                                updateDocumentNonBlocking(doc(firestore, "tours", t.id), { bookedSpaces: 0 });
-                                toast({ title: "Counter Reset", description: `"${t.name}" availability restored to 20/20.` });
-                              }
-                            }}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </Button>
+                          <Button size="icon" variant="ghost" className="text-orange-500" onClick={() => { updateDocumentNonBlocking(doc(firestore, "tours", t.id), { bookedSpaces: 0 }); toast({ title: "Counter Reset" }); }}><RotateCcw className="w-4 h-4" /></Button>
                           <Button size="icon" variant="ghost" onClick={() => handleEditTour(t)}><Edit className="w-4 h-4" /></Button>
                           <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm({ isOpen: true, type: 'tour', id: t.id, title: t.name })}><Trash2 className="w-4 h-4" /></Button>
                         </div>
@@ -621,31 +593,13 @@ export default function AdminPage() {
                     <div className="space-y-3 p-4 bg-muted/10 rounded-2xl border border-border/50">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Public Booking Badge</Label>
-                        <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 px-2 text-[9px] text-accent hover:bg-accent/5" 
-                            onClick={() => {
-                              const liveCount = (bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0);
-                              setNewTour({...newTour, bookedSpaces: liveCount});
-                              toast({ title: "Badge Synchronized", description: `Counter set to ${liveCount} based on database records.` });
-                            }}
-                          >
-                            <Zap className="w-2.5 h-2.5 mr-1" /> Sync to DB
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px]" onClick={() => setNewTour({...newTour, bookedSpaces: 0})}><RotateCcw className="w-2.5 h-2.5 mr-1" /> Reset</Button>
-                        </div>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px] text-accent" onClick={() => {
+                          const liveCount = (bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed' && b.confirmationStatus !== 'cancelled').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0);
+                          setNewTour({...newTour, bookedSpaces: liveCount});
+                          toast({ title: "Badge Synchronized" });
+                        }}><Zap className="w-2.5 h-2.5 mr-1" /> Sync to DB</Button>
                       </div>
                       <Input type="number" value={newTour.bookedSpaces} onChange={e => setNewTour({...newTour, bookedSpaces: parseInt(e.target.value) || 0})} className="rounded-xl h-12 text-lg font-bold bg-white" />
-                      {editingId && (
-                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
-                          <Database className="w-3 h-3 text-slate-400" />
-                          <span className="text-[10px] text-slate-500">
-                            Source of Truth: <strong>{(bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0)} Confirmed Seats</strong>
-                          </span>
-                        </div>
-                      )}
                     </div>
                     
                     <Button className="w-full rounded-full h-12 font-bold shadow-lg" onClick={handleSaveTour}><Save className="mr-2 h-4 w-4" /> {editingId ? "Save Changes" : "Publish"}</Button>
