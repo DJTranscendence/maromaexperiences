@@ -142,6 +142,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
       const firstName = formData.name.split(' ')[0] || "there";
       let finalEmailBody = "";
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://maromaexperience.com';
 
       if (runningTotal < 8) {
         // Use Jesse's template
@@ -173,8 +174,8 @@ Maroma Experiences`;
         
         for (const guest of allGuests) {
           const guestFirstName = guest.customerName?.split(' ')[0] || "there";
-          const confirmUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=yes`;
-          const cancelUrl = `https://maromaexperience.com/confirm-booking?id=${guest.id}&action=no`;
+          const confirmUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=yes`;
+          const cancelUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=no`;
 
           await sendEmailNotification({
             to: guest.customerEmail,

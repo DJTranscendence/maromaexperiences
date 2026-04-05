@@ -70,7 +70,12 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow create: if isSignedIn();
       allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
-      allow update, delete: if isAdmin();
+      // Allow guests to update their own attendance status
+      allow update: if isSignedIn() && (
+        (request.auth.uid == resource.data.userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmationStatus', 'updatedAt'])) || 
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
     match /bookings {
       allow list: if isAdmin();
@@ -100,6 +105,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.1.4 - Allowed standard users to update tour counter for bookings
+    // Deployment trigger comment: v1.1.5 - Allowed guests to self-confirm attendance
   }
 }
