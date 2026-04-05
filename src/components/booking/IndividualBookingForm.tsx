@@ -201,7 +201,7 @@ Maroma Experiences`;
           textBody: `Good news! The tour for ${tour.name} on ${selectedDate} has reached ${runningTotal} bookings.\n\nConfirmation requests have been dispatched to all guests.`
         });
 
-        finalEmailBody = `The group size for "${tour.name}" has reached the minimum threshold! We have sent a confirmation request to your email. Please check and click "I'll be there!" to finalize your spot.`;
+        finalEmailBody = `The group size for "${tour.name}" has reached the required number of bookings to go ahead! We have sent a confirmation request to your email. Please check and click "I'll be there!" to finalise your spot.`;
       }
 
       setAiResponse(finalEmailBody);
