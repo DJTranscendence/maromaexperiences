@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -89,12 +90,17 @@ export default function CorporateBookingForm({ tour }: CorporateBookingFormProps
 
       if (!emailResult.success) {
         console.error("Email delivery reported error:", emailResult.error);
+        toast({
+          variant: "destructive",
+          title: "Proposal Logged",
+          description: "Request received, but email confirmation failed. Our team will contact you shortly.",
+        });
+      } else {
+        toast({
+          title: "Proposal Requested",
+          description: "Your request has been sent. Check your email for a confirmation receipt.",
+        });
       }
-
-      toast({
-        title: "Proposal Requested",
-        description: "Your request has been sent. Check your email for a confirmation receipt.",
-      });
     } catch (err) {
       toast({ variant: "destructive", title: "Error", description: "Could not submit proposal request." });
     } finally {

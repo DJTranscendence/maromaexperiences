@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -33,16 +34,25 @@ export default function SchoolBookingForm({ tour }: SchoolBookingFormProps) {
     
     try {
       // Send notification to the school contact
-      await sendEmailNotification({
+      const emailResult = await sendEmailNotification({
         to: formData.email,
         subject: `School Inquiry Received: ${tour.name}`,
         textBody: `Hello ${formData.contactPerson},\n\nThank you for inquiring about educational experiences at Maroma. We have received your request for "${tour.name}" for ${formData.schoolName}.\n\nOur educational team is reviewing your requirements for ${formData.studentCount} students (${formData.educationLevel}). We will contact you within 24 hours with a custom quote and educational plan.\n\nBest regards,\nThe Maroma Education Team\nhttps://maromaexperience.com`
       });
 
-      toast({
-        title: "Inquiry Sent",
-        description: "Our educational team will contact you within 24 hours. A receipt has been sent to your email.",
-      });
+      if (!emailResult.success) {
+        console.error("Email Delivery Error:", emailResult.error);
+        toast({
+          variant: "destructive",
+          title: "Inquiry Logged",
+          description: "Inquiry received, but email confirmation failed. Our educational team will still review your request.",
+        });
+      } else {
+        toast({
+          title: "Inquiry Sent",
+          description: "Our educational team will contact you within 24 hours. A receipt has been sent to your email.",
+        });
+      }
     } catch (err) {
       toast({
         variant: "destructive",

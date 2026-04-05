@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -23,7 +24,7 @@ interface IndividualBookingFormProps {
 export default function IndividualBookingForm({ tour }: IndividualBookingFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   
   const [selectedDate, setSelectedDate] = useState("");
   const [adults, setAdults] = useState(1);
@@ -79,6 +80,11 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast({ variant: "destructive", title: "Session Initializing", description: "Please wait a moment for your session to start." });
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -92,7 +98,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
       const bookingsRef = collection(firestore, "bookings");
       addDocumentNonBlocking(bookingsRef, {
-        userId: user?.uid || "guest",
+        userId: user.uid,
         tourId: tour.id,
         tourName: tour.name,
         tourDate: selectedDate || "TBA",
@@ -143,11 +149,27 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
       setAiResponse(emailBody);
 
-      await sendEmailNotification({
+      const emailResult = await sendEmailNotification({
         to: formData.email,
         subject: `Booking Confirmed: ${tour.name}`,
         textBody: emailBody
       });
+
+      if (!emailResult.success) {
+        console.error("Postmark Delivery Error:", emailResult.error);
+        toast({
+          variant: "destructive",
+          title: "Registration Logged",
+          description: "Booking confirmed, but we had trouble sending your confirmation email. Please take a screenshot of this screen.",
+        });
+      } else {
+        toast({
+          title: "Booking Successful!",
+          description: isMinGroupReached 
+            ? `Min group reached! This experience is guaranteed to run.` 
+            : `Your reservation has been confirmed. A confirmation email has been sent.`,
+        });
+      }
 
       if (tour.facilitatorEmail) {
         await sendEmailNotification({
@@ -156,13 +178,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
           textBody: `Hello,\n\nA new booking has been confirmed for your experience "${tour.name}".\n\nDate: ${selectedDate || "TBA"}\nTotal Guests: ${totalGuests} (${adults} A / ${children} C)\nTotal Booked: ${(tour.bookedSpaces || 0) + totalGuests}\n\nBooked By: ${formData.name}\n\nWarm regards,\nMaroma System`
         });
       }
-
-      toast({
-        title: "Booking Successful!",
-        description: isMinGroupReached 
-          ? `Min group reached! This experience is guaranteed to run.` 
-          : `Your reservation has been confirmed. A confirmation email has been sent.`,
-      });
 
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again later.");
@@ -319,7 +334,7 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
 
         <Button 
           type="submit" 
-          disabled={loading || totalGuests === 0 || !selectedDate}
+          disabled={loading || totalGuests === 0 || !selectedDate || isUserLoading}
           className="w-full bg-accent hover:bg-accent/90 text-white rounded-full h-12 flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all active:scale-95 font-bold"
         >
           {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Complete Booking"}

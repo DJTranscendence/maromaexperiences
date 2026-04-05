@@ -1,3 +1,4 @@
+
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
@@ -653,8 +654,8 @@ export default function AdminPage() {
                       <Checkbox 
                         checked={bookings && bookings.length > 0 && selectedBookingIds.size === bookings.length} 
                         onCheckedChange={() => {
-                          if (selectedBookingIds.size === bookings?.length) setSelectedBookingIds(new Set());
-                          else setSelectedBookingIds(new Set(bookings?.map(b => b.id)));
+                          if (selectedBookingIds.size === (bookings?.length || 0)) setSelectedBookingIds(new Set());
+                          else setSelectedBookingIds(new Set(bookings?.map(b => b.id) || []));
                         }} 
                       />
                     </TableHead>
@@ -745,8 +746,8 @@ export default function AdminPage() {
                       <Checkbox 
                         checked={proposals && proposals.length > 0 && selectedProposalIds.size === proposals.length} 
                         onCheckedChange={() => {
-                          if (selectedProposalIds.size === proposals?.length) setSelectedProposalIds(new Set());
-                          else setSelectedProposalIds(new Set(proposals?.map(p => p.id)));
+                          if (selectedProposalIds.size === (proposals?.length || 0)) setSelectedProposalIds(new Set());
+                          else setSelectedProposalIds(new Set(proposals?.map(p => p.id) || []));
                         }} 
                       />
                     </TableHead>
@@ -948,7 +949,7 @@ export default function AdminPage() {
                           const facilitatorEmailsSet = new Set(facilitators?.map(f => f.email.toLowerCase()) || []);
                           const allNonProtectedIds = combinedUsers?.filter(u => 
                             u.email !== "indispirit@gmail.com" && 
-                            !adminIds.has(id) && 
+                            !adminIds.has(u.id) && 
                             !facilitatorEmailsSet.has(u.email.toLowerCase())
                           ).map(u => u.id) || [];
                           if(selectedUserIds.size === allNonProtectedIds.length) setSelectedUserIds(new Set());
@@ -1151,7 +1152,7 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2 mt-2 px-1">
                             <Database className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-medium text-slate-500">
-                              System Live Sync: <strong className="text-primary">{totalBookingsForActiveTour} Confirmed Seats</strong>
+                              System Live Sync: <strong className="text-primary">{(bookings || []).filter(b => b.tourId === editingId && b.bookingStatus === 'confirmed').reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0)} Confirmed Seats</strong>
                             </span>
                           </div>
                         )}
