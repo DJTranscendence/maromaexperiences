@@ -264,14 +264,14 @@ export default function SchoolsPage() {
         <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden py-12">
           <Image
             src={SCHOOL_HERO_URL}
-            alt="School Campus Experience"
+            alt="Educational Field Trip Auroville"
             fill
             className="object-cover brightness-[0.5]"
             priority
           />
           <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
             <Badge className="mb-8 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
-              School Campus Experience
+              Educational School Programme
             </Badge>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-2xl leading-tight">
               Ignite Curiosity in the Classroom of Life.
@@ -290,7 +290,7 @@ export default function SchoolsPage() {
             <div className="text-center mb-20">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Programme Itinerary: The Maroma Tour</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto font-body">
-                This 8-step programme combines education, craft exposure, and hands-on learning within a functioning production campus.
+                This 8-step programme combines education, craft exposure, and hands-on learning within a functioning production campus. Perfect for primary and secondary field trips.
               </p>
             </div>
 
@@ -340,7 +340,7 @@ export default function SchoolsPage() {
                     Join the game here
                   </h2>
                   <p className="text-slate-300 text-xl max-w-xl font-body leading-relaxed">
-                    Name your team, create your product and see how it performs!
+                    Name your team, create your product and see how it performs in our market simulator!
                   </p>
                 </div>
 

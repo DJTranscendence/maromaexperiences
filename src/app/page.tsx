@@ -42,7 +42,7 @@ export default function Home() {
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
         <Image
           src={HERO_IMAGE_URL}
-          alt="Maroma Experiences Hero"
+          alt="Auroville Artisan Workshops and Maroma Tours"
           fill
           className="object-cover brightness-[0.6] transition-transform duration-10000 hover:scale-110"
           priority
@@ -52,7 +52,7 @@ export default function Home() {
             Curated experiences for curious travellers.
           </h1>
           <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md">
-            From Campus-wide tours to artisan-led workshops, Maroma Experiences promises you an eye-opening and enriching enounter.
+            From Campus-wide tours to artisan-led workshops in Auroville, Maroma Experiences promises you an eye-opening and enriching enounter with sustainable craft.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -60,7 +60,7 @@ export default function Home() {
               onClick={scrollToWorkshops}
               className="bg-primary text-white hover:bg-primary/90 rounded-full px-16 text-xl h-16 font-bold shadow-2xl transition-all hover:scale-105 active:scale-95"
             >
-              Book Now
+              Book Your Workshop
             </Button>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
           <div>
             <h2 className="text-4xl md:text-5xl font-headline font-bold text-primary">Upcoming Experiences</h2>
-            <p className="text-muted-foreground mt-3 text-lg font-body">Choose your next adventure from our seasonally curated list.</p>
+            <p className="text-muted-foreground mt-3 text-lg font-body">Choose your next adventure from our seasonally curated list of tours and artisan sessions.</p>
           </div>
         </div>
 
@@ -87,7 +87,7 @@ export default function Home() {
                   <div className="relative h-72 overflow-hidden">
                     <Image
                       src={tour.imageUrl}
-                      alt={tour.name}
+                      alt={`${tour.name} - Artisan Experience`}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
@@ -180,7 +180,7 @@ export default function Home() {
             <div className="relative w-full max-w-[280px] h-40 sm:max-w-[440px] sm:h-60 shrink-0 z-10 mb-8">
               <Image 
                 src={GAME_TITLE_URL}
-                alt="The Maroma Product Game"
+                alt="The Maroma Product Game - Workshop Simulator"
                 fill
                 className="object-contain group-hover:scale-105 transition-transform duration-700"
               />
@@ -189,20 +189,20 @@ export default function Home() {
             <div className="flex-grow text-center space-y-8 relative z-10 flex flex-col items-center">
               <div className="space-y-4 flex flex-col items-center">
                 <Badge className="bg-accent text-white px-6 py-1.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-bold border-none shadow-lg">
-                  Workshop Session Active
+                  Educational Experience Active
                 </Badge>
                 <h2 className="text-4xl md:text-6xl font-headline font-bold text-white leading-tight">
                   Join the game here
                 </h2>
                 <p className="text-slate-300 text-xl max-w-xl font-body leading-relaxed">
-                  Name your team, create your product and see how it performs!
+                  Name your team, create your ethical product and see how it performs in the Maroma market simulator!
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 rounded-full px-12 h-16 text-xl font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3 w-full sm:w-auto">
                   <Link href="/simulator">
-                    <PlayCircle className="w-6 h-6" /> Join Game
+                    <PlayCircle className="w-6 h-6" /> Launch Simulator
                   </Link>
                 </Button>
                 <div className="flex items-center gap-2 text-slate-500 text-sm font-bold uppercase tracking-widest mt-2 sm:mt-0 sm:ml-4">

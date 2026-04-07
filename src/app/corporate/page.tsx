@@ -263,24 +263,24 @@ export default function CorporatePage() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section - Optimized for perfect centering on all devices */}
+        {/* Hero Section */}
         <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden py-12">
           <Image
             src={heroImage}
-            alt="Corporate Retreat"
+            alt="Corporate Retreat and Team Building Auroville"
             fill
             className="object-cover brightness-[0.5]"
             priority
           />
           <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
             <Badge className="mb-8 bg-accent text-white border-none px-8 py-2.5 rounded-full uppercase tracking-[0.3em] font-bold text-xs shadow-xl">
-              Corporate Excellence
+              Corporate Retreat Excellence
             </Badge>
             <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6 drop-shadow-2xl leading-tight">
               Elevate Your Team's Connection.
             </h1>
             <p className="text-xl text-white/90 mb-10 font-body max-w-2xl mx-auto drop-shadow-md leading-relaxed">
-              Maroma provides the perfect canvas for corporate groups to reconnect, strategize, and grow through curated artisan workshops and high-end logistics.
+              Maroma provides the perfect canvas for corporate groups to reconnect, strategize, and grow through curated artisan workshops and premium logistics.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={() => setIsBuilderOpen(true)} className="bg-primary text-white hover:bg-primary/90 rounded-full px-14 h-16 text-lg font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
@@ -295,6 +295,7 @@ export default function CorporatePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Why Maroma for Business?</h2>
+              <p className="text-muted-foreground font-body">Premium team-building activities and offsite locations in South India.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -320,7 +321,7 @@ export default function CorporatePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Signature Packages</h2>
-              <p className="text-muted-foreground font-body">Choose a foundation and customise it to your specific goals.</p>
+              <p className="text-muted-foreground font-body">Choose a foundation and customise it to your specific corporate goals.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -733,7 +734,7 @@ export default function CorporatePage() {
               <div className="max-w-xl">
                 <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-4">Evocative Spaces</h2>
                 <p className="text-muted-foreground font-body leading-relaxed">
-                  Our venues are designed to inspire quiet focus and loud collaboration in equal measure.
+                  Our venues are designed to inspire quiet focus and loud collaboration in equal measure. Perfect for offsite team building and creative brainstorms.
                 </p>
               </div>
               <Button variant="outline" className="rounded-full px-8 h-12 border-accent text-accent hover:bg-accent/5" asChild>
@@ -751,7 +752,7 @@ export default function CorporatePage() {
                   <div key={item.id} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
                     <Image
                       src={item.url}
-                      alt={item.altText || `Gallery ${i}`}
+                      alt={item.altText || `Corporate Event Venue ${i}`}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
@@ -765,7 +766,7 @@ export default function CorporatePage() {
                   <div key={i} className={cn("relative overflow-hidden rounded-[2rem] shadow-lg group h-72", (i === 0 || i === 4) && 'md:col-span-2')}>
                     <Image
                       src={img}
-                      alt={`Gallery ${i}`}
+                      alt={`Corporate Event Space ${i}`}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
@@ -785,7 +786,7 @@ export default function CorporatePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
               <div>
                 <Badge className="bg-white/10 text-white border-none rounded-full px-4 py-1.5 mb-6 uppercase tracking-widest text-[10px] font-bold">
-                  Bespoke Services
+                  Bespoke Corporate Services
                 </Badge>
                 <h2 className="text-4xl font-headline font-bold mb-8">Every detail, curated for your team.</h2>
                 
@@ -812,7 +813,7 @@ export default function CorporatePage() {
                 <div className="aspect-square relative rounded-[3rem] overflow-hidden rotate-3 shadow-2xl border-8 border-white/5">
                   <Image
                     src={mediaItems?.[7]?.url || "https://picsum.photos/seed/luxury/800/800"}
-                    alt="Luxury Service"
+                    alt="Luxury Corporate Service"
                     fill
                     className="object-cover"
                   />
@@ -834,7 +835,7 @@ export default function CorporatePage() {
           <div className="max-w-3xl mx-auto px-4">
             <h2 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-8">Ready to transform your corporate culture?</h2>
             <p className="text-lg text-muted-foreground mb-12 font-body leading-relaxed">
-              Our event designers are ready to help you craft an experience that matches your team's unique vision and goals.
+              Our event designers are ready to help you craft a corporate retreat experience that matches your team's unique vision and goals.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button onClick={() => setIsBuilderOpen(true)} size="lg" className="bg-accent text-white hover:bg-accent/90 rounded-full px-12 h-14 font-bold shadow-xl">
