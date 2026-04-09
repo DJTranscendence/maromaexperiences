@@ -1,36 +1,34 @@
 # Maroma Experiences - Site Setup & Deployment Guide
 
-Your application code is successfully deployed to Firebase App Hosting. To make it visible at `maromaexperience.com`, follow the DNS configuration steps below.
+Your application code is successfully deployed to Firebase App Hosting. To make it visible at `maromaexperience.com`, follow the DNS configuration steps below using the specific records provided.
 
 ## 1. Resolving the "Site can't be reached" (NXDOMAIN) Error
-The `NXDOMAIN` error indicates that your domain registrar does not yet know to send traffic to your Firebase backend.
+The `NXDOMAIN` error indicates that your domain registrar (GoDaddy, Namecheap, etc.) does not yet know to send traffic to your Firebase backend.
 
 ### Step-by-Step DNS Setup:
-1.  **Open the Firebase Console**: Go to [console.firebase.google.com](https://console.firebase.google.com/).
-2.  **Navigate to App Hosting**: Select your project, then find the **App Hosting** section in the left sidebar.
-3.  **Find Your Backend**: Click on your project's backend name.
-4.  **Custom Domains**: Go to the **Settings** tab and find the **Custom Domains** section.
-5.  **Copy Records**: Firebase will provide two `A` records (IP addresses).
-6.  **Update Your Registrar (GoDaddy, Namecheap, etc.)**:
-    *   Log in to your domain provider's account.
-    *   Find the **DNS Management** or **Name Server** settings for `maromaexperience.com`.
-    *   **Delete** any old `A` records for the `@` host.
-    *   **Add two new `A` records**: Host: `@`, Value: [The IP addresses provided by Firebase].
-    *   **Add a `CNAME` record**: Host: `www`, Value: `maromaexperience.com`.
-7.  **Propagation**: Wait 1–24 hours for the changes to spread across the internet.
+1.  **Open your Domain Registrar**: Log in to your account where you purchased `maromaexperience.com`.
+2.  **Navigate to DNS Management**: Find the advanced DNS settings or Name Server settings.
+3.  **Update the WWW record**:
+    *   **Type**: `CNAME`
+    *   **Host/Name**: `www`
+    *   **Value/Target**: `ghs.googlehosted.com`
+4.  **Update the Root (@) record**:
+    *   Firebase App Hosting typically provides two `A` records (IP addresses) in the Firebase Console under **App Hosting > [Your Backend] > Settings > Custom Domains**. 
+    *   Add those IP addresses as `A` records for the `@` host.
+5.  **Propagation**: Wait 1–24 hours for the changes to spread across the internet.
 
 ## 2. SEO & Search Optimization
-We have implemented a high-performance SEO engine:
-*   **Dynamic Sitemap**: Located at `/sitemap.xml` to ensure Google indexes all your tours.
+We have implemented a high-performance SEO engine to target Schools, Corporates, and Individual travelers:
+*   **Dynamic Sitemap**: Located at `/sitemap.xml` to ensure Google indexes all your tours and workshops.
 *   **Robots.txt**: Located at `/robots.txt` to guide search crawlers efficiently.
-*   **Targeted Metadata**: Roles for Schools, Corporates, and Individuals are baked into every page.
-*   **PWA Ready**: A `manifest.json` has been added to allow users to "Install" the app on their phones.
+*   **Targeted Metadata**: Role-specific keywords (e.g., "Educational Field Trips", "Corporate Team Building") are embedded in the site structure.
+*   **PWA Ready**: A `manifest.json` has been added to allow users to "Install" the app on their mobile devices.
 
 ## 3. Technical Stack
 *   **Framework**: Next.js 15 (App Router)
 *   **Backend**: Firebase (Auth, Firestore, App Hosting)
-*   **AI**: Genkit (Gemini 2.5 Flash)
-*   **Notifications**: Postmark API integration for group thresholds.
+*   **AI**: Genkit (Gemini 2.5 Flash) for intelligent market feedback and notifications.
+*   **Notifications**: Postmark API integration for reliable threshold-based group alerts.
 
 ---
 *For support with booking thresholds or admin access, please refer to the internal documentation in the /docs folder.*

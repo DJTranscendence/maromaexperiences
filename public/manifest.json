@@ -1,10 +1,10 @@
 {
   "name": "Maroma Experiences",
   "short_name": "Maroma",
-  "description": "Immersive artisan workshops and campus tours in Auroville.",
+  "description": "Curated artisan workshops and campus tours in Auroville.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#ebebeb",
   "theme_color": "#4b828b",
   "icons": [
     {
