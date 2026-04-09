@@ -5,12 +5,13 @@ import { FirebaseClientProvider } from "@/firebase";
 import AuthProvider from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://maromaexperience.com'),
   title: {
     default: "Maroma Experiences | Auroville Artisan Workshops & Campus Tours",
     template: "%s | Maroma Experiences"
   },
   description:
-    "Discover the heart of Auroville through Maroma Experiences. Premium curated tours and artisan-led workshops for individuals, schools, and corporate retreats. Focused on sustainability, ethical production, and timeless craft.",
+    "Immersive artisan-led workshops and campus tours in Auroville. Discover sustainable production, ethical craft, and educational field trips for schools and corporate team-building retreats.",
   keywords: [
     "Auroville tours",
     "artisan workshops India",
@@ -19,9 +20,15 @@ export const metadata: Metadata = {
     "corporate team building Auroville",
     "handcrafted incense workshop",
     "ethical enterprise tours",
+    "corporate retreats India",
+    "educational tours for schools",
     "Puducherry activities",
-    "cultural experiences South India"
+    "curriculum-aligned field trips",
+    "executive strategy sessions"
   ],
+  alternates: {
+    canonical: '/',
+  },
   authors: [{ name: "Maroma Experiences" }],
   creator: "Maroma",
   publisher: "Maroma Experiences",
@@ -36,10 +43,10 @@ export const metadata: Metadata = {
     url: "https://maromaexperience.com",
     siteName: "Maroma Experiences",
     title: "Maroma Experiences | Curated Artisan Tours & Workshops",
-    description: "Immersive educational and corporate experiences at the Maroma Campus in Auroville.",
+    description: "Immersive educational and corporate experiences at the Maroma Campus in Auroville focusing on sustainability and timeless craft.",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Clay%20Perfume%20Hero.png?alt=media&token=29a10f37-f9c6-4ec5-98b0-6cf2ce53d8e2",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Maroma Experiences - Curated Tours",
@@ -49,10 +56,21 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Maroma Experiences | Artisan Workshops & Tours",
-    description: "Immersive educational and corporate experiences at the Maroma Campus.",
-    images: ["https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Clay%20Perfume%20Hero.png?alt=media&token=29a10f37-f9c6-4ec5-98b0-6cf2ce53d8e2"],
+    description: "Immersive educational and corporate experiences at the Maroma Campus in Auroville.",
+    images: ["/og-image.png"],
   },
   manifest: "/manifest.json",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
