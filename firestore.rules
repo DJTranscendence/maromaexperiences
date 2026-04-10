@@ -71,8 +71,7 @@ service cloud.firestore {
       allow create: if isSignedIn();
       // Allow public read for the confirmation landing page
       allow read: if true;
-      // Allow guests to update their own attendance status even if not logged in (via email link ID)
-      // Restricted to only the confirmation fields
+      // Allow guests to update their own attendance status
       allow update: if (
         (isSignedIn() && request.auth.uid == resource.data.userId) || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmationStatus', 'updatedAt']) ||
@@ -81,7 +80,8 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     match /bookings {
-      allow list: if isAdmin();
+      // Required for threshold check logic in individual booking form
+      allow list: if isSignedIn();
     }
     
     // Role Management
@@ -108,6 +108,6 @@ service cloud.firestore {
       allow list: if true;
     }
     
-    // Deployment trigger comment: v1.1.6 - Adjusted permissions for public email confirmation
+    // Deployment trigger comment: v1.1.7 - Enabled list permissions for group threshold checks
   }
 }

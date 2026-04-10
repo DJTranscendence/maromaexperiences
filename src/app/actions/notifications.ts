@@ -35,16 +35,24 @@ async function postmarkRequest(payload: any) {
     });
 
     const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Postmark API Response Error:", {
+        status: response.status,
+        statusText: response.statusText,
+        data: data
+      });
+    }
+
     return { ok: response.ok, data };
   } catch (err: any) {
+    console.error("Postmark Fetch Error:", err.message);
     return { ok: false, data: { Message: err.message } };
   }
 }
 
 /**
  * Sends an email to the customer and a separate, distinct alert to the admin.
- * This separate-dispatch approach ensures high visibility in the admin's inbox
- * and prevents thread-grouping issues in Gmail.
  */
 export async function sendEmailNotification({
   to,
@@ -53,6 +61,7 @@ export async function sendEmailNotification({
   htmlBody
 }: EmailParams) {
   if (!to) {
+    console.warn("Attempted to send notification without recipient email.");
     return { success: false, error: "Recipient email is required" };
   }
 
@@ -65,7 +74,7 @@ export async function sendEmailNotification({
   });
 
   // 2. Send a separate alert to the Admin
-  // We use a distinct subject prefix to ensure it stands out in the admin console.
+  // Failure here doesn't stop the customer result, but we await it for sequencing
   await postmarkRequest({
     To: ADMIN_EMAIL,
     Subject: `[ADMIN ALERT] ${subject}`,
@@ -73,8 +82,10 @@ export async function sendEmailNotification({
   });
 
   if (!customerResult.ok) {
-    console.error("Postmark API Error (Customer):", customerResult.data);
-    return { success: false, error: customerResult.data.Message || "Failed to send email" };
+    return { 
+      success: false, 
+      error: customerResult.data.Message || "Postmark delivery failed. Check server logs." 
+    };
   }
 
   return { success: true, messageId: customerResult.data.MessageID };
