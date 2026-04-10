@@ -65,8 +65,8 @@ function ConfirmBookingContent() {
         updatedAt: serverTimestamp()
       });
 
-      // 1. Notify Admin
-      sendEmailNotification({
+      // 1. Notify Admin (Awaited for reliability)
+      await sendEmailNotification({
         to: "indispirit@gmail.com",
         subject: `[ATTENDANCE UPDATE] ${bookingData.tourName} - ${bookingData.customerName}`,
         textBody: `Customer ${bookingData.customerName} has ${isConfirming ? 'CONFIRMED' : 'CANCELLED'} for ${bookingData.tourName} on ${bookingData.tourDate}.\n\nTotal attendees in this group: ${bookingData.numberOfAttendees}\n\nManage Bookings: https://maromaexperience.com/admin`
@@ -97,20 +97,23 @@ function ConfirmBookingContent() {
 
         // If dropping below 8, notify everyone else
         if (totalCount < 8) {
-          for (const guest of others) {
+          const othersPromises = others.map(guest => {
             const firstName = guest.customerName?.split(' ')[0] || "there";
-            sendEmailNotification({
+            return sendEmailNotification({
               to: guest.customerEmail,
               subject: `Update: ${bookingData.tourName} Status`,
               textBody: `Dear ${firstName},\n\nSorry! Due to a last-minute cancellation, this Maroma Campus Tour will not be going ahead on this date.\n\nHowever, if we receive more bookings for this date, we will notify you that the tour is going ahead.\n\nWarm regards,\nThe Maroma Team`
             });
-          }
+          });
           
-          sendEmailNotification({
+          // Add drop alert to admin
+          othersPromises.push(sendEmailNotification({
             to: "indispirit@gmail.com",
             subject: `[TOUR CANCELLED] ${bookingData.tourName} dropped below 8`,
             textBody: `The tour on ${bookingData.tourDate} has dropped below the minimum required number of 8 bookings due to a cancellation by ${bookingData.customerName}.\n\nRemaining guests have been notified.`
-          });
+          }));
+
+          await Promise.all(othersPromises);
         }
         
         setStatus('cancelled');

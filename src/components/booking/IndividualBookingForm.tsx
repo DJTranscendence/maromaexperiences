@@ -167,19 +167,19 @@ Warm regards,
 Jesse Fox-Allen
 Maroma Experiences`;
 
-        sendEmailNotification({
+        await sendEmailNotification({
           to: formData.email,
           subject: `Booking Received: ${tour.name} (Pending Min. Group)`,
           textBody: finalEmailBody
         });
       } else {
         // Threshold reached or exceeded - send interactive confirmation to ALL
-        for (const guest of allGuests) {
+        const notificationPromises = allGuests.map(guest => {
           const guestFirstName = guest.customerName?.split(' ')[0] || "there";
           const confirmUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=yes`;
           const cancelUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=no`;
 
-          sendEmailNotification({
+          return sendEmailNotification({
             to: guest.customerEmail,
             subject: `CONFIRMATION REQUIRED: ${tour.name} on ${selectedDate}`,
             textBody: `Hello ${guestFirstName},\n\nThe ${tour.name} on ${selectedDate} has reached the minimum required number of bookings!\n\nPlease confirm that you will be attending this Tour by clicking one of the options below:\n\n[YES] I'll be there: ${confirmUrl}\n[NO] I cannot make it: ${cancelUrl}\n\nWe look forward to seeing you at Maroma!`,
@@ -197,14 +197,17 @@ Maroma Experiences`;
               </div>
             `
           });
-        }
+        });
 
-        // Alert Admin
-        sendEmailNotification({
+        // Add admin alert to the batch
+        notificationPromises.push(sendEmailNotification({
           to: "indispirit@gmail.com",
           subject: `[THRESHOLD REACHED] ${tour.name} on ${selectedDate}`,
           textBody: `Good news! The tour for ${tour.name} on ${selectedDate} has reached ${runningTotal} bookings.\n\nConfirmation requests have been dispatched to all guests.`
-        });
+        }));
+
+        // Await all notifications in parallel for efficiency
+        await Promise.all(notificationPromises);
 
         finalEmailBody = `The group size for "${tour.name}" has reached the required number of bookings to go ahead! We have sent a confirmation request to your email. Please check and click "I'll be there!" to finalise your spot.`;
       }
@@ -213,6 +216,7 @@ Maroma Experiences`;
       toast({ title: "Booking Successful!" });
 
     } catch (err: any) {
+      console.error("Booking Logic Error:", err);
       toast({ variant: "destructive", title: "Error", description: "Could not process booking." });
     } finally {
       setLoading(false);

@@ -75,7 +75,7 @@ export async function sendEmailNotification({
 
   // 2. Send a separate alert to the Admin
   // Failure here doesn't stop the customer result, but we await it for sequencing
-  await postmarkRequest({
+  const adminResult = await postmarkRequest({
     To: ADMIN_EMAIL,
     Subject: `[ADMIN ALERT] ${subject}`,
     TextBody: `--- ADMINISTRATIVE NOTIFICATION ---\n\nRecipient: ${to}\nOriginal Subject: ${subject}\n\nMessage Content:\n------------------------------\n${textBody}\n------------------------------\n\nView recent bookings: https://maromaexperience.com/admin`,
