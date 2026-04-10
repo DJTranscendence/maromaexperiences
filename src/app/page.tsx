@@ -24,6 +24,13 @@ export default function Home() {
 
   const { data: tours, isLoading } = useCollection<Tour>(toursQuery);
 
+  // Real-time bookings query to calculate live occupancy
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "bookings");
+  }, [firestore]);
+  const { data: allBookings } = useCollection(bookingsQuery);
+
   const HERO_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Clay%20Perfume%20Hero.png?alt=media&token=29a10f37-f9c6-4ec5-98b0-6cf2ce53d8e2";
   const GAME_TITLE_URL = "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/Product%20Game%20Title%202.png?alt=media&token=f7698e9d-9e74-45e2-a0c1-916f1b9904db";
 
@@ -81,84 +88,94 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {tours?.map((tour) => (
-              <Link href={`/tours/${tour.id}`} key={tour.id}>
-                <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2rem] bg-white h-full flex flex-col relative border border-border/50">
-                  <div className="relative h-72 overflow-hidden">
-                    <Image
-                      src={tour.imageUrl}
-                      alt={`${tour.name} - Artisan Experience`}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-1000"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                    <div className="absolute bottom-6 left-6">
-                      <span className="text-white text-[10px] font-bold uppercase tracking-[0.2em] bg-black/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                        {tour.type}
-                      </span>
+            {tours?.map((tour) => {
+              // Calculate live occupancy for this specific tour card
+              const liveBooked = allBookings
+                ?.filter(b => b.tourId === tour.id && b.confirmationStatus !== 'cancelled')
+                .reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0) || 0;
+
+              return (
+                <Link href={`/tours/${tour.id}`} key={tour.id}>
+                  <Card className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2rem] bg-white h-full flex flex-col relative border border-border/50">
+                    <div className="relative h-72 overflow-hidden">
+                      <Image
+                        src={tour.imageUrl}
+                        alt={`${tour.name} - Artisan Experience`}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                      <div className="absolute bottom-6 left-6">
+                        <span className="text-white text-[10px] font-bold uppercase tracking-[0.2em] bg-black/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                          {tour.type}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <CardContent className="p-8 flex-grow flex flex-col text-left">
-                    <h3 className="text-3xl font-headline font-bold text-primary group-hover:text-accent transition-colors mb-3 leading-tight">
-                      {tour.name}
-                    </h3>
-                    <div className="flex items-center gap-5 text-sm text-muted-foreground mb-6">
-                      <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-accent" /> {tour.location}</span>
-                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-accent" /> {tour.duration}</span>
-                    </div>
-                    <p className="text-muted-foreground line-clamp-3 text-base leading-relaxed mb-8 font-body">
-                      {tour.description}
-                    </p>
-                    
-                    <div className={cn(
-                      "mt-auto pt-4 flex flex-col gap-3",
-                      tour.status === 'coming-soon' ? "items-center" : "items-start"
-                    )}>
-                      {tour.status === 'coming-soon' ? (
-                        <Badge className="bg-[#FF8C00] text-white hover:bg-[#FF8C00]/90 border-none shadow-lg rounded-full px-5 py-2 gap-2 backdrop-blur-sm font-bold uppercase tracking-widest text-[10px]">
-                          <Sparkles className="w-3.5 h-3.5 fill-current" /> Coming Soon
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-green-600/90 text-white hover:bg-green-600 border-none shadow-lg rounded-full px-5 py-2 gap-2 backdrop-blur-sm font-bold uppercase tracking-widest text-[10px]">
-                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live
-                        </Badge>
-                      )}
-                      {tour.status !== 'coming-soon' && (
-                        <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} className="px-4 py-1.5" />
-                      )}
+                    <CardContent className="p-8 flex-grow flex flex-col text-left">
+                      <h3 className="text-3xl font-headline font-bold text-primary group-hover:text-accent transition-colors mb-3 leading-tight">
+                        {tour.name}
+                      </h3>
+                      <div className="flex items-center gap-5 text-sm text-muted-foreground mb-6">
+                        <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-accent" /> {tour.location}</span>
+                        <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-accent" /> {tour.duration}</span>
+                      </div>
+                      <p className="text-muted-foreground line-clamp-3 text-base leading-relaxed mb-8 font-body">
+                        {tour.description}
+                      </p>
                       
-                      {tour.status === 'coming-soon' && (
-                        <div className="w-full mt-2 p-4 bg-[#FF8C00]/5 rounded-2xl border border-[#FF8C00]/20 flex items-center gap-4">
-                          <Bell className="w-5 h-5 text-[#FF8C00] shrink-0" />
-                          <div className="flex flex-col">
-                            <span className="text-xs text-[#FF8C00] leading-snug font-medium">Be notified when this event goes live on campus.</span>
+                      <div className={cn(
+                        "mt-auto pt-4 flex flex-col gap-3",
+                        tour.status === 'coming-soon' ? "items-center" : "items-start"
+                      )}>
+                        {tour.status === 'coming-soon' ? (
+                          <Badge className="bg-[#FF8C00] text-white hover:bg-[#FF8C00]/90 border-none shadow-lg rounded-full px-5 py-2 gap-2 backdrop-blur-sm font-bold uppercase tracking-widest text-[10px]">
+                            <span className="w-3.5 h-3.5 relative flex items-center justify-center">
+                              <Sparkles className="w-full h-full fill-current" />
+                            </span>
+                            Coming Soon
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-green-600/90 text-white hover:bg-green-600 border-none shadow-lg rounded-full px-5 py-2 gap-2 backdrop-blur-sm font-bold uppercase tracking-widest text-[10px]">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live
+                          </Badge>
+                        )}
+                        {tour.status !== 'coming-soon' && (
+                          <AvailabilityBadge booked={liveBooked} capacity={tour.capacity} className="px-4 py-1.5" />
+                        )}
+                        
+                        {tour.status === 'coming-soon' && (
+                          <div className="w-full mt-2 p-4 bg-[#FF8C00]/5 rounded-2xl border border-[#FF8C00]/20 flex items-center gap-4">
+                            <Bell className="w-5 h-5 text-[#FF8C00] shrink-0" />
+                            <div className="flex flex-col">
+                              <span className="text-xs text-[#FF8C00] leading-snug font-medium">Be notified when this event goes live on campus.</span>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className={cn(
-                    "px-8 py-6 border-t border-border/50 flex bg-gray-50/30",
-                    tour.status === 'coming-soon' ? "flex-col items-center gap-4 text-center" : "items-center justify-between"
-                  )}>
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest mb-0.5">Rate</span>
-                      <span className="text-2xl font-bold text-primary font-headline">₹{tour.price} <span className="text-sm font-normal text-muted-foreground">/ Person</span></span>
-                    </div>
-                    <Button 
-                      className={cn(
-                        "text-white rounded-full px-12 font-bold h-12 shadow-xl transition-all hover:scale-105 active:scale-95",
-                        tour.status === 'coming-soon' 
-                          ? "bg-[#FF8C00] hover:bg-[#FF8C00]/90 shadow-[#FF8C00]/20" 
-                          : "bg-accent hover:bg-accent/90 shadow-accent/20"
-                      )}
-                    >
-                      {tour.status === 'coming-soon' ? 'Notify Me' : 'Book Now'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </Link>
-            ))}
+                        )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className={cn(
+                      "px-8 py-6 border-t border-border/50 flex bg-gray-50/30",
+                      tour.status === 'coming-soon' ? "flex-col items-center gap-4 text-center" : "items-center justify-between"
+                    )}>
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest mb-0.5">Rate</span>
+                        <span className="text-2xl font-bold text-primary font-headline">₹{tour.price} <span className="text-sm font-normal text-muted-foreground">/ Person</span></span>
+                      </div>
+                      <Button 
+                        className={cn(
+                          "text-white rounded-full px-12 font-bold h-12 shadow-xl transition-all hover:scale-105 active:scale-95",
+                          tour.status === 'coming-soon' 
+                            ? "bg-[#FF8C00] hover:bg-[#FF8C00]/90 shadow-[#FF8C00]/20" 
+                            : "bg-accent hover:bg-accent/90 shadow-accent/20"
+                        )}
+                      >
+                        {tour.status === 'coming-soon' ? 'Notify Me' : 'Book Now'}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              );
+            })}
             {(!tours || tours.length === 0) && (
               <div className="col-span-full text-center py-24 bg-muted/20 rounded-[3rem] border border-dashed border-border flex flex-col items-center gap-4">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">

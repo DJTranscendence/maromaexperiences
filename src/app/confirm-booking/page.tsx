@@ -2,8 +2,8 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
+import { doc, getDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
+import { useFirestore, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2, Calendar, MapPin, ArrowRight, AlertCircle } from "lucide-react";
@@ -59,14 +59,14 @@ function ConfirmBookingContent() {
       const isConfirming = action === 'yes';
       const bookingRef = doc(firestore, "bookings", bookingId);
       
-      // Update specific booking status
-      await updateDoc(bookingRef, {
+      // Update specific booking status using non-blocking pattern
+      updateDocumentNonBlocking(bookingRef, {
         confirmationStatus: isConfirming ? 'attending' : 'cancelled',
         updatedAt: serverTimestamp()
       });
 
       // 1. Notify Admin
-      await sendEmailNotification({
+      sendEmailNotification({
         to: "indispirit@gmail.com",
         subject: `[ATTENDANCE UPDATE] ${bookingData.tourName} - ${bookingData.customerName}`,
         textBody: `Customer ${bookingData.customerName} has ${isConfirming ? 'CONFIRMED' : 'CANCELLED'} for ${bookingData.tourName} on ${bookingData.tourDate}.\n\nTotal attendees in this group: ${bookingData.numberOfAttendees}\n\nManage Bookings: https://maromaexperience.com/admin`
@@ -84,13 +84,14 @@ function ConfirmBookingContent() {
         let totalCount = 0;
         const others: any[] = [];
         
-        allSnap.forEach(doc => {
-          const b = doc.data();
-          if (b.confirmationStatus !== 'cancelled') {
+        allSnap.forEach(docSnap => {
+          const b = docSnap.data();
+          // We must treat the current booking as cancelled locally
+          const currentStatus = docSnap.id === bookingId ? 'cancelled' : b.confirmationStatus;
+          
+          if (currentStatus !== 'cancelled') {
             totalCount += (b.numberOfAttendees || 0);
-            if (doc.id !== bookingId) {
-              others.push({ id: doc.id, ...b });
-            }
+            others.push({ id: docSnap.id, ...b });
           }
         });
 
@@ -98,14 +99,14 @@ function ConfirmBookingContent() {
         if (totalCount < 8) {
           for (const guest of others) {
             const firstName = guest.customerName?.split(' ')[0] || "there";
-            await sendEmailNotification({
+            sendEmailNotification({
               to: guest.customerEmail,
               subject: `Update: ${bookingData.tourName} Status`,
               textBody: `Dear ${firstName},\n\nSorry! Due to a last-minute cancellation, this Maroma Campus Tour will not be going ahead on this date.\n\nHowever, if we receive more bookings for this date, we will notify you that the tour is going ahead.\n\nWarm regards,\nThe Maroma Team`
             });
           }
           
-          await sendEmailNotification({
+          sendEmailNotification({
             to: "indispirit@gmail.com",
             subject: `[TOUR CANCELLED] ${bookingData.tourName} dropped below 8`,
             textBody: `The tour on ${bookingData.tourDate} has dropped below the minimum required number of 8 bookings due to a cancellation by ${bookingData.customerName}.\n\nRemaining guests have been notified.`

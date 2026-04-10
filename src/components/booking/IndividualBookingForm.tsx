@@ -14,8 +14,8 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { Users, ChevronRight, MessageSquare, AlertCircle, Phone, Loader2, Baby, Calendar } from "lucide-react";
-import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { Users, ChevronRight, MessageSquare, Phone, Loader2, Calendar } from "lucide-react";
+import { useFirestore, updateDocumentNonBlocking, setDocumentNonBlocking, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, increment, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { sendEmailNotification } from "@/app/actions/notifications";
 import { format, parseISO } from "date-fns";
@@ -34,7 +34,6 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
   const [children, setChildren] = useState(0);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -88,20 +87,22 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
     }
 
     setLoading(true);
-    setError(null);
 
     if (!firestore) return;
 
     try {
-      // 1. Update Tour Capacity (Non-blocking as per guidelines)
+      // 1. Generate ID synchronously so we can use it for non-blocking logic
+      const bookingsRef = collection(firestore, "bookings");
+      const bookingDocRef = doc(bookingsRef);
+      const bookingId = bookingDocRef.id;
+
+      // 2. Update Tour Capacity (Non-blocking)
       const tourDocRef = doc(firestore, "tours", tour.id);
       updateDocumentNonBlocking(tourDocRef, {
         bookedSpaces: increment(totalGuests)
       });
 
-      // 2. Create Booking Record
-      const bookingsRef = collection(firestore, "bookings");
-      
+      // 3. Create Booking Record (Non-blocking)
       const newBooking = {
         userId: user.uid,
         tourId: tour.id,
@@ -121,23 +122,27 @@ export default function IndividualBookingForm({ tour }: IndividualBookingFormPro
         customerEmail: formData.email
       };
 
-      // We await this one because we NEED the resulting ID for the threshold check if we hit 8
-      const bookingDoc = await addDocumentNonBlocking(bookingsRef, newBooking);
-      const bookingId = bookingDoc?.id;
+      setDocumentNonBlocking(bookingDocRef, newBooking, { merge: true });
 
-      // 3. Logic: Check total bookings for this tour/date
+      // 4. Logic: Check total bookings for this tour/date
       const q = query(collection(firestore, "bookings"), where("tourId", "==", tour.id), where("tourDate", "==", selectedDate));
       const querySnap = await getDocs(q);
       
       let runningTotal = 0;
       const allGuests: any[] = [];
-      querySnap.forEach(doc => {
-        const data = doc.data();
+      querySnap.forEach(docSnap => {
+        const data = docSnap.data();
         if (data.confirmationStatus !== 'cancelled') {
           runningTotal += (data.numberOfAttendees || 0);
-          allGuests.push({ id: doc.id, ...data });
+          allGuests.push({ id: docSnap.id, ...data });
         }
       });
+
+      // Explicitly add the new booking count if query ran too fast for Firestore's optimistic cache
+      if (!allGuests.some(g => g.id === bookingId)) {
+        runningTotal += totalGuests;
+        allGuests.push({ id: bookingId, ...newBooking });
+      }
 
       const firstName = formData.name.split(' ')[0] || "there";
       let finalEmailBody = "";
@@ -162,7 +167,7 @@ Warm regards,
 Jesse Fox-Allen
 Maroma Experiences`;
 
-        await sendEmailNotification({
+        sendEmailNotification({
           to: formData.email,
           subject: `Booking Received: ${tour.name} (Pending Min. Group)`,
           textBody: finalEmailBody
@@ -174,7 +179,7 @@ Maroma Experiences`;
           const confirmUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=yes`;
           const cancelUrl = `${currentOrigin}/confirm-booking?id=${guest.id}&action=no`;
 
-          await sendEmailNotification({
+          sendEmailNotification({
             to: guest.customerEmail,
             subject: `CONFIRMATION REQUIRED: ${tour.name} on ${selectedDate}`,
             textBody: `Hello ${guestFirstName},\n\nThe ${tour.name} on ${selectedDate} has reached the minimum required number of bookings!\n\nPlease confirm that you will be attending this Tour by clicking one of the options below:\n\n[YES] I'll be there: ${confirmUrl}\n[NO] I cannot make it: ${cancelUrl}\n\nWe look forward to seeing you at Maroma!`,
@@ -195,7 +200,7 @@ Maroma Experiences`;
         }
 
         // Alert Admin
-        await sendEmailNotification({
+        sendEmailNotification({
           to: "indispirit@gmail.com",
           subject: `[THRESHOLD REACHED] ${tour.name} on ${selectedDate}`,
           textBody: `Good news! The tour for ${tour.name} on ${selectedDate} has reached ${runningTotal} bookings.\n\nConfirmation requests have been dispatched to all guests.`
@@ -208,7 +213,6 @@ Maroma Experiences`;
       toast({ title: "Booking Successful!" });
 
     } catch (err: any) {
-      setError(err.message || "Submission failed.");
       toast({ variant: "destructive", title: "Error", description: "Could not process booking." });
     } finally {
       setLoading(false);

@@ -28,12 +28,11 @@ import {
   Trees,
   Users2,
   CheckCircle2,
-  ExternalLink,
-  Baby
+  ExternalLink
 } from "lucide-react";
 import Image from "next/image";
-import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { doc, collection, query, where } from "firebase/firestore";
 import { Tour } from "@/lib/types";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -73,6 +72,17 @@ export default function TourDetailsPage() {
   }, [firestore, id]);
 
   const { data: tour, isLoading } = useDoc<Tour>(tourRef);
+
+  // Real-time calculation of occupancy for this tour
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return query(collection(firestore, "bookings"), where("tourId", "==", id));
+  }, [firestore, id]);
+  const { data: tourBookings } = useCollection(bookingsQuery);
+
+  const liveBooked = tourBookings
+    ?.filter(b => b.confirmationStatus !== 'cancelled')
+    .reduce((acc, b) => acc + (b.numberOfAttendees || 0), 0) || 0;
 
   const handleNotifyMe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,7 +181,7 @@ export default function TourDetailsPage() {
                 </Badge>
               )}
               {!isComingSoon && (
-                <AvailabilityBadge booked={tour.bookedSpaces} capacity={tour.capacity} className="bg-white/90 backdrop-blur-md shadow-lg" />
+                <AvailabilityBadge booked={liveBooked} capacity={tour.capacity} className="bg-white/90 backdrop-blur-md shadow-lg" />
               )}
             </div>
           </div>
