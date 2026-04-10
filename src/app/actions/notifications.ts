@@ -2,6 +2,7 @@
 
 /**
  * @fileOverview Server actions for handling email notifications via Postmark.
+ * Configured with the Server API Token for production delivery.
  */
 
 const POSTMARK_API_KEY = "28bd521a-3c8c-4d7e-bf77-ed84a7c5689d";
@@ -16,7 +17,7 @@ interface EmailParams {
 }
 
 /**
- * Internal helper to interface with Postmark API
+ * Internal helper to interface with Postmark API using the Server Token.
  */
 async function postmarkRequest(payload: any) {
   try {
@@ -65,7 +66,7 @@ export async function sendEmailNotification({
     return { success: false, error: "Recipient email is required" };
   }
 
-  // 1. Send the primary email to the Customer
+  // 1. Send the primary email to the Recipient
   const customerResult = await postmarkRequest({
     To: to,
     Subject: subject,

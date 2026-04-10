@@ -29,12 +29,12 @@ export default function AvailabilityBadge({ booked, capacity, className }: Avail
     // 1-25% remaining: High urgency
     colorClass = "bg-rose-100 text-rose-800 border-rose-200 shadow-sm shadow-rose-100";
     dotClass = "bg-rose-500";
-    label = `${remaining} / ${capacity} Almost at Capacity. Book now!`;
+    label = `Almost at Capacity. Book now!`;
   } else if (availablePercent <= 55) {
-    // 26-55% remaining: Moderate urgency (e.g. 11/20 remaining)
+    // 26-55% remaining: Moderate urgency
     colorClass = "bg-orange-100 text-orange-800 border-orange-200 shadow-sm shadow-orange-100";
     dotClass = "bg-orange-500";
-    label = `${remaining} / ${capacity} It's almost half full`;
+    label = `It's almost half full`;
   } else if (availablePercent <= 85) {
     // 56-85% remaining: Starting to fill
     colorClass = "bg-amber-100 text-amber-800 border-amber-200 shadow-sm shadow-amber-100";
