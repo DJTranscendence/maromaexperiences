@@ -4,7 +4,7 @@
  * @fileOverview Server actions for handling email notifications via Postmark.
  */
 
-const POSTMARK_API_KEY = "05f9ac9f-6a50-4119-8924-410f25432adc";
+const POSTMARK_API_KEY = "4d39d096-fdf7-4fb8-a5c6-ff47705cb4b2";
 const SENDER_EMAIL = "booking@maromaexperience.com";
 const ADMIN_EMAIL = "indispirit@gmail.com";
 
