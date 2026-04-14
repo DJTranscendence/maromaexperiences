@@ -262,7 +262,7 @@ Maroma Experiences`;
             <Label htmlFor="phone">Phone Number</Label>
             <div className="flex gap-2">
               <Select value={formData.countryCode} onValueChange={v => setFormData({...formData, countryCode: v})}>
-                <SelectTrigger className="w-24 h-12 rounded-xl"><SelectValue placeholder="+91" /></SelectTrigger>
+                <SelectTrigger className="w-24 h-12 rounded-xl"><SelectValue placeholder="+91" /></SelectValue></SelectTrigger>
                 <SelectContent><SelectItem value="+91">IN (+91)</SelectItem><SelectItem value="+1">US (+1)</SelectItem></SelectContent>
               </Select>
               <div className="relative flex-1">

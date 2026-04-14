@@ -1,7 +1,7 @@
 {
   "name": "Maroma Experiences",
   "short_name": "Maroma",
-  "description": "Curated artisan workshops and campus tours in Auroville.",
+  "description": "Artisan workshops and campus tours in Auroville.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ebebeb",
@@ -9,9 +9,13 @@
   "icons": [
     {
       "src": "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://firebasestorage.googleapis.com/v0/b/studio-139117361-c9162.firebasestorage.app/o/LOGO%20only%20NEW%20TRANS%202025.png?alt=media&token=916bf295-69a1-4640-9f92-d8d2560ee0c2",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

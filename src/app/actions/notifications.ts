@@ -54,6 +54,7 @@ async function postmarkRequest(payload: any) {
 
 /**
  * Sends an email to the customer and a separate, distinct alert to the admin.
+ * This function strictly awaits results to ensure delivery before the caller proceeds.
  */
 export async function sendEmailNotification({
   to,
@@ -75,7 +76,6 @@ export async function sendEmailNotification({
   });
 
   // 2. Send a separate alert to the Admin
-  // Failure here doesn't stop the customer result, but we await it for sequencing
   const adminResult = await postmarkRequest({
     To: ADMIN_EMAIL,
     Subject: `[ADMIN ALERT] ${subject}`,
@@ -85,7 +85,7 @@ export async function sendEmailNotification({
   if (!customerResult.ok) {
     return { 
       success: false, 
-      error: customerResult.data.Message || "Postmark delivery failed. Check server logs." 
+      error: customerResult.data.Message || "Postmark delivery failed. Check server logs for details." 
     };
   }
 
